@@ -1,0 +1,17 @@
+Flask
+Flask-Caching
+gunicorn
+supabase
+cloudinary
+pandas
+openpyxl
+requests
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+waitress
+flask_cors
+python-dotenv
+pydub
+speechrecognition
