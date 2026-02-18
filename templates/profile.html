@@ -1,0 +1,1131 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings - Capital College{% endblock %}
+
+{% block page_title %}Profile Settings{% endblock %}
+{% block page_subtitle %}Manage your account and security settings{% endblock %}
+
+{% block content %}
+<style>
+    /* Desktop Styles */
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        margin-right: 1.5rem;
+    }
+    
+    .profile-info h2 {
+        margin: 0 0 0.5rem 0;
+        color: #1f2937;
+    }
+    
+    .profile-info p {
+        margin: 0;
+        color: #6b7280;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-input.error {
+        border-color: #ef4444;
+    }
+    
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+    
+    .success-message {
+        color: #10b981;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+        background: #4b5563;
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .otp-section {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .otp-timer {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.5rem;
+    }
+    
+    .otp-input-group {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    .otp-input {
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        font-size: 1.25rem;
+        font-weight: bold;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+    }
+    
+    .otp-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+    
+    .alert-success {
+        background: #d1fae5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+    
+    .alert-error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+    
+    .alert-info {
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+    }
+    
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s ease;
+    }
+    
+    .strength-weak { background: #ef4444; width: 33%; }
+    .strength-medium { background: #f59e0b; width: 66%; }
+    .strength-strong { background: #10b981; width: 100%; }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 1rem;
+        }
+        
+        .profile-card {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-info h2 {
+            font-size: 1.25rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-input {
+            padding: 0.75rem;
+            font-size: 16px; /* Prevent zoom on iOS */
+        }
+        
+        .btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .otp-section {
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .otp-input-group {
+            gap: 0.25rem;
+            justify-content: center;
+        }
+        
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .button-group .btn {
+            margin: 0;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Success/Error Alerts -->
+    <div id="successAlert" class="alert alert-success"></div>
+    <div id="errorAlert" class="alert alert-error"></div>
+    
+    <!-- Profile Information Card -->
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar" id="userAvatar">
+                {{ session.get('user_full_name', 'U')[0] }}
+            </div>
+            <div class="profile-info">
+                <h2 id="userFullName">{{ session.get('user_full_name', 'User') }}</h2>
+                <p id="userEmail">{{ session.get('user_email', 'user@example.com') }}</p>
+                <p>CPA Level {{ session.get('cpa_level', '0') }}</p>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" value="{{ session.get('user_full_name', 'User') }}" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" value="{{ session.get('user_email', 'user@example.com') }}" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">CPA Level</label>
+            <input type="text" class="form-input" value="Level {{ session.get('cpa_level', '0') }}" readonly>
+        </div>
+    </div>
+    
+    <!-- Change Password Card -->
+    <div class="profile-card">
+        <h3 style="margin-bottom: 1.5rem; color: #1f2937;">Change Password</h3>
+        
+        <form id="changePasswordForm">
+            <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" class="form-input" id="currentPassword" name="current_password" required>
+                <div class="error-message" id="currentPasswordError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-input" id="newPassword" name="new_password" required>
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                </div>
+                <div class="error-message" id="newPasswordError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" class="form-input" id="confirmPassword" name="confirm_password" required>
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+            
+            <!-- OTP Verification Section -->
+            <div class="otp-section" id="otpSection" style="display: none;">
+                <h4 style="margin-bottom: 1rem; color: #374151;">OTP Verification</h4>
+                <p style="color: #6b7280; margin-bottom: 1rem;">
+                    We've sent a verification code to your email. Enter the code below to verify your identity.
+                </p>
+                
+                <div class="otp-input-group">
+                    <input type="text" class="otp-input" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="otp-input" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="otp-input" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="otp-input" maxlength="1" data-index="4" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="otp-input" maxlength="1" data-index="5" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" class="otp-input" maxlength="1" data-index="6" inputmode="numeric" pattern="[0-9]*">
+                </div>
+                
+                <input type="hidden" id="otpCode" name="otp">
+                
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" id="resendOtpBtn" disabled>
+                        Resend OTP (<span id="otpTimer">60</span>s)
+                    </button>
+                    <div class="error-message" id="otpError"></div>
+                </div>
+            </div>
+            
+            <div class="button-group" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn btn-primary" id="sendOtpBtn">
+                    Send Verification Code
+                </button>
+                <button type="submit" class="btn btn-primary" id="changePasswordBtn" style="display: none;">
+                    Change Password
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // DOM Elements
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const otpSection = document.getElementById('otpSection');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const otpTimer = document.getElementById('otpTimer');
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpCodeInput = document.getElementById('otpCode');
+    
+    // Alert elements
+    const successAlert = document.getElementById('successAlert');
+    const errorAlert = document.getElementById('errorAlert');
+    
+    // State
+    let otpCountdown = 60;
+    let countdownInterval = null;
+    
+    // Utility Functions
+    function showAlert(alertElement, message) {
+        alertElement.textContent = message;
+        alertElement.style.display = 'block';
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+        }, 5000);
+    }
+    
+    function showError(message) {
+        showAlert(errorAlert, message);
+    }
+    
+    function showSuccess(message) {
+        showAlert(successAlert, message);
+    }
+    
+    function setLoading(loading) {
+        const buttons = [sendOtpBtn, changePasswordBtn, resendOtpBtn];
+        buttons.forEach(btn => {
+            btn.disabled = loading;
+            btn.classList.toggle('loading', loading);
+        });
+    }
+    
+    function validatePassword(password) {
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long';
+        }
+        return null;
+    }
+    
+    function updatePasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        let strength = 'weak';
+        
+        if (password.length >= 12) {
+            strength = 'strong';
+        } else if (password.length >= 8) {
+            strength = 'medium';
+        }
+        
+        strengthBar.className = 'password-strength-bar';
+        strengthBar.classList.add(`strength-${strength}`);
+    }
+    
+    // OTP Functions
+    function startOtpCountdown() {
+        otpCountdown = 60;
+        resendOtpBtn.disabled = true;
+        otpTimer.textContent = otpCountdown;
+        
+        countdownInterval = setInterval(() => {
+            otpCountdown--;
+            otpTimer.textContent = otpCountdown;
+            
+            if (otpCountdown <= 0) {
+                clearInterval(countdownInterval);
+                resendOtpBtn.disabled = false;
+                otpTimer.textContent = '0';
+            }
+        }, 1000);
+    }
+    
+    function resetOtpInputs() {
+        otpInputs.forEach(input => {
+            input.value = '';
+        });
+        otpCodeInput.value = '';
+    }
+    
+    function handleOtpInput(e) {
+        const input = e.target;
+        const index = parseInt(input.dataset.index);
+        
+        // Only allow numbers
+        input.value = input.value.replace(/[^0-9]/g, '');
+        
+        // Move to next input
+        if (input.value !== '' && index < 6) {
+            otpInputs[index].focus();
+        }
+        
+        // Update hidden OTP field
+        updateOtpCode();
+    }
+    
+    function handleOtpBackspace(e) {
+        if (e.key === 'Backspace') {
+            const input = e.target;
+            const index = parseInt(input.dataset.index);
+            
+            if (input.value === '' && index > 1) {
+                otpInputs[index - 2].focus();
+            }
+        }
+    }
+    
+    function updateOtpCode() {
+        const otp = Array.from(otpInputs).map(input => input.value).join('');
+        otpCodeInput.value = otp;
+    }
+    
+    // API Functions
+    async function sendOtp() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        // Validate form
+        if (!currentPassword) {
+            showError('Please enter your current password');
+            return;
+        }
+        
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) {
+            showError(passwordError);
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showError('New passwords do not match');
+            return;
+        }
+        
+        setLoading(true);
+        
+        try {
+            const response = await fetch('/profile/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showSuccess(data.message);
+                otpSection.style.display = 'block';
+                sendOtpBtn.style.display = 'none';
+                changePasswordBtn.style.display = 'inline-flex';
+                cancelBtn.style.display = 'inline-flex';
+                startOtpCountdown();
+                resetOtpInputs();
+                otpInputs[0].focus();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            showError('Failed to send OTP. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    async function changePassword(formData) {
+        setLoading(true);
+        
+        try {
+            const response = await fetch('/profile/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showSuccess(data.message);
+                resetForm();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            showError('Failed to change password. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    // Event Listeners
+    sendOtpBtn.addEventListener('click', sendOtp);
+    
+    resendOtpBtn.addEventListener('click', () => {
+        sendOtp();
+        startOtpCountdown();
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+        resetForm();
+    });
+    
+    changePasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            current_password: document.getElementById('currentPassword').value,
+            new_password: document.getElementById('newPassword').value,
+            confirm_password: document.getElementById('confirmPassword').value,
+            otp: otpCodeInput.value
+        };
+        
+        if (formData.otp.length !== 6) {
+            showError('Please enter the complete 6-digit OTP');
+            return;
+        }
+        
+        await changePassword(formData);
+    });
+    
+    // OTP Input handling
+    otpInputs.forEach(input => {
+        input.addEventListener('input', handleOtpInput);
+        input.addEventListener('keydown', handleOtpBackspace);
+        
+        // Prevent paste on OTP inputs
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+        });
+    });
+    
+    // Password strength indicator
+    document.getElementById('newPassword').addEventListener('input', (e) => {
+        updatePasswordStrength(e.target.value);
+    });
+    
+    // Reset form function
+    function resetForm() {
+        changePasswordForm.reset();
+        otpSection.style.display = 'none';
+        sendOtpBtn.style.display = 'inline-flex';
+        changePasswordBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+        resetOtpInputs();
+        
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+        resendOtpBtn.disabled = false;
+        otpTimer.textContent = '60';
+        
+        document.getElementById('passwordStrengthBar').className = 'password-strength-bar';
+    }
+    
+    // Mobile-specific optimizations
+    function optimizeForMobile() {
+        // Add touch-friendly styles
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.btn, .otp-input').forEach(element => {
+                element.style.cursor = 'pointer';
+            });
+        }
+        
+        // Prevent zoom on input focus for mobile
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', () => {
+                element.style.fontSize = '16px';
+            });
+        });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        optimizeForMobile();
+        console.log('Profile page loaded');
+    });
+</script>
+{% endblock %}
+
+{% block mobile_content %}
+<!-- Mobile-specific content with full functionality -->
+<div class="mobile-profile-container" style="padding: 1rem; max-width: 100%;">
+    <!-- Success/Error Alerts -->
+    <div id="mobileSuccessAlert" class="alert alert-success" style="display: none;"></div>
+    <div id="mobileErrorAlert" class="alert alert-error" style="display: none;"></div>
+    
+    <!-- Profile Information Card -->
+    <div class="mobile-profile-card" style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="mobile-profile-header" style="text-align: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9;">
+            <div class="mobile-profile-avatar" style="width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">
+                {{ session.get('user_full_name', 'U')[0] }}
+            </div>
+            <div class="mobile-profile-info">
+                <h2 style="margin: 0 0 0.5rem 0; color: #1f2937; font-size: 1.25rem;">{{ session.get('user_full_name', 'User') }}</h2>
+                <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">{{ session.get('user_email', 'user@example.com') }}</p>
+                <p style="margin: 0.25rem 0 0 0; color: #6b7280; font-size: 0.9rem;">CPA Level {{ session.get('cpa_level', '0') }}</p>
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">Full Name</label>
+            <input type="text" class="form-input" value="{{ session.get('user_full_name', 'User') }}" readonly style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">Email Address</label>
+            <input type="email" class="form-input" value="{{ session.get('user_email', 'user@example.com') }}" readonly style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">CPA Level</label>
+            <input type="text" class="form-input" value="Level {{ session.get('cpa_level', '0') }}" readonly style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem;">
+        </div>
+    </div>
+    
+    <!-- Change Password Card -->
+    <div class="mobile-profile-card" style="background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.25rem;">Change Password</h3>
+        
+        <form id="mobileChangePasswordForm">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">Current Password</label>
+                <input type="password" class="form-input" id="mobileCurrentPassword" name="current_password" required style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <div class="error-message" id="mobileCurrentPasswordError" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">New Password</label>
+                <input type="password" class="form-input" id="mobileNewPassword" name="new_password" required style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <div class="password-strength" style="margin-top: 0.5rem; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden;">
+                    <div class="password-strength-bar" id="mobilePasswordStrengthBar" style="height: 100%; width: 0%; transition: all 0.3s ease;"></div>
+                </div>
+                <div class="error-message" id="mobileNewPasswordError" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; font-size: 0.9rem;">Confirm New Password</label>
+                <input type="password" class="form-input" id="mobileConfirmPassword" name="confirm_password" required style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px;">
+                <div class="error-message" id="mobileConfirmPasswordError" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: none;"></div>
+            </div>
+            
+            <!-- OTP Verification Section -->
+            <div class="otp-section" id="mobileOtpSection" style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem 0; display: none;">
+                <h4 style="margin-bottom: 1rem; color: #374151; font-size: 1rem;">OTP Verification</h4>
+                <p style="color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem;">
+                    We've sent a verification code to your email. Enter the code below to verify your identity.
+                </p>
+                
+                <div class="otp-input-group" style="display: flex; gap: 0.25rem; margin: 1rem 0; justify-content: center;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="4" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="5" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                    <input type="text" class="otp-input" maxlength="1" data-index="6" inputmode="numeric" pattern="[0-9]*" style="width: 40px; height: 40px; text-align: center; font-size: 1rem; font-weight: bold; border: 2px solid #e5e7eb; border-radius: 8px; background: white;">
+                </div>
+                
+                <input type="hidden" id="mobileOtpCode" name="otp">
+                
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" id="mobileResendOtpBtn" disabled style="padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: #6b7280; color: white;">
+                        Resend OTP (<span id="mobileOtpTimer">60</span>s)
+                    </button>
+                    <div class="error-message" id="mobileOtpError" style="color: #ef4444; font-size: 0.875rem; display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="button-group" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-primary" id="mobileSendOtpBtn" style="padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: #3b82f6; color: white; width: 100%;">
+                    Send Verification Code
+                </button>
+                <button type="submit" class="btn btn-primary" id="mobileChangePasswordBtn" style="padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: #3b82f6; color: white; width: 100%; display: none;">
+                    Change Password
+                </button>
+                <button type="button" class="btn btn-secondary" id="mobileCancelBtn" style="padding: 0.75rem 1rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; background: #6b7280; color: white; width: 100%; display: none;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <a href="{{ url_for('auth.logout') }}" 
+    class="flex items-center space-x-2 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-all">
+     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+     </svg>
+     <span class="text-sm font-medium">Logout</span>
+ </a>
+</div>
+
+<!-- Mobile JavaScript Functionality -->
+<script>
+    // Mobile DOM Elements
+    const mobileChangePasswordForm = document.getElementById('mobileChangePasswordForm');
+    const mobileOtpSection = document.getElementById('mobileOtpSection');
+    const mobileSendOtpBtn = document.getElementById('mobileSendOtpBtn');
+    const mobileChangePasswordBtn = document.getElementById('mobileChangePasswordBtn');
+    const mobileCancelBtn = document.getElementById('mobileCancelBtn');
+    const mobileResendOtpBtn = document.getElementById('mobileResendOtpBtn');
+    const mobileOtpTimer = document.getElementById('mobileOtpTimer');
+    const mobileOtpInputs = document.querySelectorAll('#mobileOtpSection .otp-input');
+    const mobileOtpCodeInput = document.getElementById('mobileOtpCode');
+    
+    // Mobile Alert elements
+    const mobileSuccessAlert = document.getElementById('mobileSuccessAlert');
+    const mobileErrorAlert = document.getElementById('mobileErrorAlert');
+    
+    // Mobile State
+    let mobileOtpCountdown = 60;
+    let mobileCountdownInterval = null;
+    
+    // Mobile Utility Functions
+    function showMobileAlert(alertElement, message) {
+        alertElement.textContent = message;
+        alertElement.style.display = 'block';
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+        }, 5000);
+    }
+    
+    function showMobileError(message) {
+        showMobileAlert(mobileErrorAlert, message);
+    }
+    
+    function showMobileSuccess(message) {
+        showMobileAlert(mobileSuccessAlert, message);
+    }
+    
+    function setMobileLoading(loading) {
+        const buttons = [mobileSendOtpBtn, mobileChangePasswordBtn, mobileResendOtpBtn];
+        buttons.forEach(btn => {
+            btn.disabled = loading;
+            btn.style.opacity = loading ? '0.7' : '1';
+            btn.style.pointerEvents = loading ? 'none' : 'auto';
+        });
+    }
+    
+    function validateMobilePassword(password) {
+        if (password.length < 8) {
+            return 'Password must be at least 8 characters long';
+        }
+        return null;
+    }
+    
+    function updateMobilePasswordStrength(password) {
+        const strengthBar = document.getElementById('mobilePasswordStrengthBar');
+        let strength = 'weak';
+        
+        if (password.length >= 12) {
+            strength = 'strong';
+        } else if (password.length >= 8) {
+            strength = 'medium';
+        }
+        
+        strengthBar.className = 'password-strength-bar';
+        strengthBar.classList.add(`strength-${strength}`);
+    }
+    
+    // Mobile OTP Functions
+    function startMobileOtpCountdown() {
+        mobileOtpCountdown = 60;
+        mobileResendOtpBtn.disabled = true;
+        mobileOtpTimer.textContent = mobileOtpCountdown;
+        
+        mobileCountdownInterval = setInterval(() => {
+            mobileOtpCountdown--;
+            mobileOtpTimer.textContent = mobileOtpCountdown;
+            
+            if (mobileOtpCountdown <= 0) {
+                clearInterval(mobileCountdownInterval);
+                mobileResendOtpBtn.disabled = false;
+                mobileOtpTimer.textContent = '0';
+            }
+        }, 1000);
+    }
+    
+    function resetMobileOtpInputs() {
+        mobileOtpInputs.forEach(input => {
+            input.value = '';
+        });
+        mobileOtpCodeInput.value = '';
+    }
+    
+    function handleMobileOtpInput(e) {
+        const input = e.target;
+        const index = parseInt(input.dataset.index);
+        
+        // Only allow numbers
+        input.value = input.value.replace(/[^0-9]/g, '');
+        
+        // Move to next input
+        if (input.value !== '' && index < 6) {
+            mobileOtpInputs[index].focus();
+        }
+        
+        // Update hidden OTP field
+        updateMobileOtpCode();
+    }
+    
+    function handleMobileOtpBackspace(e) {
+        if (e.key === 'Backspace') {
+            const input = e.target;
+            const index = parseInt(input.dataset.index);
+            
+            if (input.value === '' && index > 1) {
+                mobileOtpInputs[index - 2].focus();
+            }
+        }
+    }
+    
+    function updateMobileOtpCode() {
+        const otp = Array.from(mobileOtpInputs).map(input => input.value).join('');
+        mobileOtpCodeInput.value = otp;
+    }
+    
+    // Mobile API Functions
+    async function sendMobileOtp() {
+        const currentPassword = document.getElementById('mobileCurrentPassword').value;
+        const newPassword = document.getElementById('mobileNewPassword').value;
+        const confirmPassword = document.getElementById('mobileConfirmPassword').value;
+        
+        // Validate form
+        if (!currentPassword) {
+            showMobileError('Please enter your current password');
+            return;
+        }
+        
+        const passwordError = validateMobilePassword(newPassword);
+        if (passwordError) {
+            showMobileError(passwordError);
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showMobileError('New passwords do not match');
+            return;
+        }
+        
+        setMobileLoading(true);
+        
+        try {
+            const response = await fetch('/profile/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMobileSuccess(data.message);
+                mobileOtpSection.style.display = 'block';
+                mobileSendOtpBtn.style.display = 'none';
+                mobileChangePasswordBtn.style.display = 'block';
+                mobileCancelBtn.style.display = 'block';
+                startMobileOtpCountdown();
+                resetMobileOtpInputs();
+                mobileOtpInputs[0].focus();
+            } else {
+                showMobileError(data.message);
+            }
+        } catch (error) {
+            showMobileError('Failed to send OTP. Please try again.');
+        } finally {
+            setMobileLoading(false);
+        }
+    }
+    
+    async function changeMobilePassword(formData) {
+        setMobileLoading(true);
+        
+        try {
+            const response = await fetch('/profile/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMobileSuccess(data.message);
+                resetMobileForm();
+            } else {
+                showMobileError(data.message);
+            }
+        } catch (error) {
+            showMobileError('Failed to change password. Please try again.');
+        } finally {
+            setMobileLoading(false);
+        }
+    }
+    
+    // Mobile Event Listeners
+    mobileSendOtpBtn.addEventListener('click', sendMobileOtp);
+    
+    mobileResendOtpBtn.addEventListener('click', () => {
+        sendMobileOtp();
+        startMobileOtpCountdown();
+    });
+    
+    mobileCancelBtn.addEventListener('click', () => {
+        resetMobileForm();
+    });
+    
+    mobileChangePasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            current_password: document.getElementById('mobileCurrentPassword').value,
+            new_password: document.getElementById('mobileNewPassword').value,
+            confirm_password: document.getElementById('mobileConfirmPassword').value,
+            otp: mobileOtpCodeInput.value
+        };
+        
+        if (formData.otp.length !== 6) {
+            showMobileError('Please enter the complete 6-digit OTP');
+            return;
+        }
+        
+        await changeMobilePassword(formData);
+    });
+    
+    // Mobile OTP Input handling
+    mobileOtpInputs.forEach(input => {
+        input.addEventListener('input', handleMobileOtpInput);
+        input.addEventListener('keydown', handleMobileOtpBackspace);
+        
+        // Prevent paste on OTP inputs
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+        });
+    });
+    
+    // Mobile password strength indicator
+    document.getElementById('mobileNewPassword').addEventListener('input', (e) => {
+        updateMobilePasswordStrength(e.target.value);
+    });
+    
+    // Mobile form reset function
+    function resetMobileForm() {
+        mobileChangePasswordForm.reset();
+        mobileOtpSection.style.display = 'none';
+        mobileSendOtpBtn.style.display = 'block';
+        mobileChangePasswordBtn.style.display = 'none';
+        mobileCancelBtn.style.display = 'none';
+        resetMobileOtpInputs();
+        
+        if (mobileCountdownInterval) {
+            clearInterval(mobileCountdownInterval);
+        }
+        mobileResendOtpBtn.disabled = false;
+        mobileOtpTimer.textContent = '60';
+        
+        document.getElementById('mobilePasswordStrengthBar').className = 'password-strength-bar';
+    }
+    
+    // Mobile-specific optimizations
+    function optimizeForMobile() {
+        // Add touch-friendly styles
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.btn, .otp-input').forEach(element => {
+                element.style.cursor = 'pointer';
+            });
+        }
+        
+        // Prevent zoom on input focus for mobile
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', () => {
+                element.style.fontSize = '16px';
+            });
+            
+            element.addEventListener('blur', () => {
+                element.style.fontSize = '';
+            });
+        });
+        
+        // Handle virtual keyboard issues
+        window.addEventListener('resize', function() {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                window.scrollTo(0, document.activeElement.offsetTop - 100);
+            }
+        });
+    }
+    
+    // Mobile initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        optimizeForMobile();
+        console.log('Mobile profile page loaded');
+        
+        // Add touch event listeners for better mobile UX
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            
+            btn.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    });
+    
+    // Handle mobile back button
+    window.addEventListener('popstate', function(event) {
+        if (mobileOtpSection.style.display === 'block') {
+            resetMobileForm();
+            history.pushState(null, null, window.location.href);
+        }
+    });
+    
+    // Prevent form resubmission on mobile refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+</script>
+{% endblock %}

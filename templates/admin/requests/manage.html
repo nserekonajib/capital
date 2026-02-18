@@ -1,0 +1,664 @@
+{% extends "admin/base.html" %}
+{% block title %}Courses Requests Management - Admin Panel{% endblock %}
+
+{% block content %}
+    <style>
+        .sparkle-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Toggle Switch Styles */
+        .toggle-cont {
+            --primary: #3b82f6;
+            --light: #d9d9d9;
+            --dark: #121212;
+            --gray: #414344;
+            position: relative;
+            z-index: 10;
+            width: fit-content;
+            height: 30px;
+            border-radius: 9999px;
+        }
+
+        .toggle-cont .toggle-input {
+            display: none;
+        }
+
+        .toggle-cont .toggle-label {
+            --gap: 3px;
+            --width: 30px;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            padding: 0.3rem;
+            width: calc((var(--width) + var(--gap)) * 2);
+            height: 100%;
+            background-color: var(--dark);
+            border: 1px solid #777777;
+            border-bottom: 0;
+            border-radius: 9999px;
+            box-sizing: content-box;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .toggle-cont .toggle-input:checked + .toggle-label {
+            background-color: #41434400;
+            border: 1px solid #3d6970;
+            border-bottom: 0;
+        }
+
+        .toggle-cont .toggle-input:checked + .toggle-label .cont-icon {
+            transform: translateX(calc((var(--gap) * 2) + 100%)) rotate(-225deg);
+            background-image: radial-gradient(circle at 50% 0%, #045ab1 0%, var(--primary) 100%);
+            border: 1px solid var(--primary);
+            border-bottom: 0;
+        }
+
+        .toggle-cont .toggle-label .cont-icon {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: var(--width);
+            height: 30px;
+            background-image: radial-gradient(circle at 50% 0%, #666666 0%, var(--gray) 100%);
+            border: 1px solid #aaaaaa;
+            border-bottom: 0;
+            border-radius: 9999px;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .cont-icon .icon {
+            width: 0.8rem;
+            fill: var(--light);
+        }
+
+        /* Loading animation */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Course Requests</h1>
+                    <p class="text-sm text-gray-600">Manage student course enrollment requests</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="stats" class="flex space-x-4 text-sm">
+                        <!-- Stats will be loaded here -->
+                    </div>
+                    <a href="/admin/courses/manage" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                        Back to Courses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filters and Actions -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <!-- Search -->
+                <div class="flex-1 max-w-md">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search by student, course, or email..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="flex items-center space-x-4">
+                    <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="declined">Declined</option>
+                    </select>
+
+                    <!-- Bulk Actions -->
+                    <div class="flex items-center space-x-2" id="bulkActions" style="display: none;">
+                        <span id="selectedCount" class="text-sm text-gray-600">0 selected</span>
+                        <button onclick="bulkApprove()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            Approve Selected
+                        </button>
+                        <button onclick="bulkDecline()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                            Decline Selected
+                        </button>
+                        <button onclick="clearSelection()" class="text-gray-500 hover:text-gray-700 text-sm">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requests Table -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="w-8 px-4 py-3">
+                                <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student & Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPA Level</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Requests will be loaded here -->
+                        <tr id="loadingRow">
+                            <td colspan="6" class="px-6 py-8 text-center">
+                                <div class="flex justify-center items-center space-x-2">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                    <span class="text-gray-500">Loading requests...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden p-8 text-center">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No requests found</h3>
+                <p class="text-gray-500">There are no course requests matching your criteria.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let allRequests = [];
+        let selectedRequests = new Set();
+    
+        // Load requests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRequests();
+            loadStats();
+            
+            // Set up event listeners
+            document.getElementById('searchInput').addEventListener('input', filterRequests);
+            document.getElementById('statusFilter').addEventListener('change', filterRequests);
+            document.getElementById('selectAll').addEventListener('change', toggleSelectAll);
+        });
+    
+        // Load requests data with proper error handling
+        // Load requests data with proper error handling
+async function loadRequests() {
+    try {
+        console.log('Loading requests...');
+        
+        // Safely get elements
+        const tbody = document.getElementById('requestsTable');
+        const loadingRow = document.getElementById('loadingRow');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Check if elements exist before manipulating them
+        if (!tbody) {
+            console.error('requestsTable element not found');
+            showError('Page element not found');
+            return;
+        }
+        
+        // Show loading state safely
+        if (loadingRow) {
+            loadingRow.style.display = '';
+        }
+        
+        if (emptyState) {
+            emptyState.classList.add('hidden');
+        }
+        
+        // Clear existing content safely
+        tbody.innerHTML = '';
+        if (loadingRow) {
+            tbody.appendChild(loadingRow);
+        }
+
+        const response = await fetch('/admin/requests/data');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const requests = await response.json();
+        console.log('Requests loaded:', requests);
+        
+        if (Array.isArray(requests)) {
+            allRequests = requests;
+            renderRequests(requests);
+        } else {
+            console.error('Invalid response format:', requests);
+            showError('Failed to load requests: Invalid data format');
+            renderRequests([]);
+        }
+    } catch (error) {
+        console.error('Error loading requests:', error);
+        showError('Failed to load requests: ' + error.message);
+        renderRequests([]);
+    }
+}
+    
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/requests/stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const stats = await response.json();
+                console.log('Stats loaded:', stats);
+                
+                // Ensure we have numbers
+                const total = Number(stats.total) || 0;
+                const pending = Number(stats.pending) || 0;
+                const approved = Number(stats.approved) || 0;
+                const declined = Number(stats.declined) || 0;
+                
+                document.getElementById('stats').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-gray-900">${total}</div>
+                        <div class="text-xs text-gray-500">Total</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-yellow-600">${pending}</div>
+                        <div class="text-xs text-gray-500">Pending</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600">${approved}</div>
+                        <div class="text-xs text-gray-500">Approved</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-red-600">${declined}</div>
+                        <div class="text-xs text-gray-500">Declined</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Set zero stats on error
+                document.getElementById('stats').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-gray-900">0</div>
+                        <div class="text-xs text-gray-500">Total</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-yellow-600">0</div>
+                        <div class="text-xs text-gray-500">Pending</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600">0</div>
+                        <div class="text-xs text-gray-500">Approved</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-red-600">0</div>
+                        <div class="text-xs text-gray-500">Declined</div>
+                    </div>
+                `;
+            }
+        }
+    
+        // Render requests table
+        function renderRequests(requests) {
+            const tbody = document.getElementById('requestsTable');
+            const emptyState = document.getElementById('emptyState');
+            const loadingRow = document.getElementById('loadingRow');
+            
+            // Hide loading row
+            if (loadingRow) loadingRow.style.display = 'none';
+            
+            if (!requests || requests.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            tbody.innerHTML = requests.map(request => {
+                // Safely handle potentially null data
+                const studentName = request.students?.full_name || 'Unknown Student';
+                const courseTitle = request.courses?.title || 'Unknown Course';
+                const studentEmail = request.students?.email || '';
+                const cpaLevel = request.courses?.cpa_level || request.students?.cpa_level || 'N/A';
+                const requestDate = request.requested_at ? new Date(request.requested_at).toLocaleDateString() : 'N/A';
+                
+                return `
+                    <tr class="hover:bg-gray-50 transition-colors" data-request-id="${request.id}">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <input type="checkbox" value="${request.id}" 
+                                   class="request-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                   onchange="toggleRequestSelection(${request.id})"
+                                   ${request.status !== 'pending' ? 'disabled' : ''}>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                                    ${studentName.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${studentName}</div>
+                                    <div class="text-sm text-gray-500">${courseTitle}</div>
+                                    <div class="text-xs text-gray-400">${studentEmail}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                ${cpaLevel}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${requestDate}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${getStatusBadge(request.status)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            ${request.status === 'pending' ? `
+                                <div class="flex items-center space-x-2">
+                                    <div class="toggle-cont">
+                                        <input class="toggle-input" id="toggle-${request.id}" type="checkbox" 
+                                               onchange="toggleRequestStatus(${request.id}, this.checked)"
+                                               ${request.status === 'approved' ? 'checked' : ''}>
+                                        <label class="toggle-label" for="toggle-${request.id}">
+                                            <div class="cont-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 30 30" class="icon">
+                                                    <path d="M0.96233 28.61C1.36043 29.0081 1.96007 29.1255 2.47555 28.8971L10.4256 25.3552C13.2236 24.11 16.4254 24.1425 19.2107 25.4401L27.4152 29.2747C27.476 29.3044 27.5418 29.3023 27.6047 29.32C27.6563 29.3348 27.7079 29.3497 27.761 29.3574C27.843 29.3687 27.9194 29.3758 28 29.3688C28.1273 29.3617 28.2531 29.3405 28.3726 29.2945C28.4447 29.262 28.5162 29.2287 28.5749 29.1842C28.6399 29.1446 28.6993 29.0994 28.7509 29.0477L28.9008 28.8582C28.9468 28.7995 28.9793 28.7274 29.0112 28.656C29.0599 28.5322 29.0811 28.4036 29.0882 28.2734C29.0939 28.1957 29.0868 28.1207 29.0769 28.0415C29.0705 27.9955 29.0585 27.9524 29.0472 27.9072C29.0295 27.8343 29.0302 27.7601 28.9984 27.6901L25.1638 19.4855C23.8592 16.7073 23.8273 13.5048 25.0726 10.7068L28.6145 2.75679C28.8429 2.24131 28.7318 1.63531 28.3337 1.2372C27.9165 0.820011 27.271 0.721743 26.7491 0.9961L19.8357 4.59596C16.8418 6.15442 13.2879 6.18696 10.2615 4.70062L1.80308 0.520214C1.7055 0.474959 1.60722 0.441742 1.50964 0.421943C1.44459 0.409215 1.37882 0.395769 1.3074 0.402133C1.14406 0.395769 0.981436 0.428275 0.818095 0.499692C0.77284 0.519491 0.719805 0.545671 0.67455 0.578198C0.596061 0.617088 0.524653 0.675786 0.4596 0.74084C0.394546 0.805894 0.335843 0.877306 0.296245 0.956502C0.263718 1.00176 0.237561 1.05477 0.217762 1.10003C0.152708 1.24286 0.126545 1.40058 0.120181 1.54978C0.120181 1.61483 0.126527 1.6735 0.132891 1.73219C0.15269 1.85664 0.178881 1.97332 0.237571 2.08434L4.41798 10.5427C5.91139 13.5621 5.87250 17.1238 4.3204 20.1099L0.720514 27.0233C0.440499 27.5536 0.545137 28.1928 0.96233 28.61Z"></path>
+                                                </svg>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <span class="text-xs text-gray-500">Approve</span>
+                                </div>
+                            ` : `
+                                <button onclick="resetRequest(${request.id})" class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                                    Reset to Pending
+                                </button>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Update bulk actions state
+            updateBulkActions();
+        }
+    
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>',
+                'approved': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>',
+                'declined': '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Declined</span>'
+            };
+            return badges[status] || badges.pending;
+        }
+    
+        // Filter requests based on search and status
+        function filterRequests() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const filtered = allRequests.filter(request => {
+                const studentName = request.students?.full_name || '';
+                const studentEmail = request.students?.email || '';
+                const courseTitle = request.courses?.title || '';
+                const courseInstructor = request.courses?.instructor || '';
+                
+                const matchesSearch = 
+                    studentName.toLowerCase().includes(searchTerm) ||
+                    studentEmail.toLowerCase().includes(searchTerm) ||
+                    courseTitle.toLowerCase().includes(searchTerm) ||
+                    courseInstructor.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderRequests(filtered);
+        }
+    
+        // Toggle request status
+        async function toggleRequestStatus(requestId, approved) {
+            const status = approved ? 'approved' : 'declined';
+            const toggleElement = document.getElementById(`toggle-${requestId}`);
+            
+            console.log(`Toggling request ${requestId} to ${status}`);
+            
+            // Show loading state
+            toggleElement.disabled = true;
+            
+            try {
+                const response = await fetch(`/admin/requests/${requestId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: status })
+                });
+                
+                const result = await response.json();
+                console.log('Toggle response:', result);
+                
+                if (result.success) {
+                    showSuccess(result.message);
+                    // Reload data with a small delay to ensure backend has processed
+                    setTimeout(async () => {
+                        await loadRequests();
+                        await loadStats();
+                    }, 500);
+                } else {
+                    showError(result.error || 'Failed to update request status');
+                    // Reset the toggle to its previous state
+                    toggleElement.checked = !approved;
+                }
+            } catch (error) {
+                console.error('Error updating request status:', error);
+                showError('Failed to update request status: ' + error.message);
+                // Reset the toggle on error
+                toggleElement.checked = !approved;
+            } finally {
+                // Re-enable the toggle
+                toggleElement.disabled = false;
+            }
+        }
+    
+        // Reset request to pending
+        async function resetRequest(requestId) {
+            if (!confirm('Reset this request to pending status?')) return;
+            
+            console.log(`Resetting request ${requestId} to pending`);
+            
+            try {
+                const response = await fetch(`/admin/requests/${requestId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        status: 'pending',
+                        notes: 'Reset by admin'
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Reset response:', result);
+                
+                if (result.success) {
+                    showSuccess('Request reset to pending');
+                    // Reload data with a small delay
+                    setTimeout(async () => {
+                        await loadRequests();
+                        await loadStats();
+                    }, 500);
+                } else {
+                    showError(result.error || 'Failed to reset request');
+                }
+            } catch (error) {
+                console.error('Error resetting request:', error);
+                showError('Failed to reset request: ' + error.message);
+            }
+        }
+    
+        // Selection management
+        function toggleRequestSelection(requestId) {
+            if (selectedRequests.has(requestId)) {
+                selectedRequests.delete(requestId);
+            } else {
+                selectedRequests.add(requestId);
+            }
+            updateBulkActions();
+        }
+    
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.request-checkbox:not(:disabled)');
+            const selectAll = document.getElementById('selectAll').checked;
+            
+            selectedRequests.clear();
+            if (selectAll) {
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.disabled) {
+                        selectedRequests.add(parseInt(checkbox.value));
+                        checkbox.checked = true;
+                    }
+                });
+            } else {
+                checkboxes.forEach(checkbox => checkbox.checked = false);
+            }
+            updateBulkActions();
+        }
+    
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = `${selectedRequests.size} selected`;
+            
+            if (selectedRequests.size > 0) {
+                bulkActions.style.display = 'flex';
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+    
+        function clearSelection() {
+            selectedRequests.clear();
+            document.querySelectorAll('.request-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+            updateBulkActions();
+        }
+    
+        // Bulk actions
+        async function bulkApprove() {
+            if (selectedRequests.size === 0) return;
+            
+            if (!confirm(`Approve ${selectedRequests.size} selected requests?`)) return;
+            
+            await bulkAction('approve', Array.from(selectedRequests));
+        }
+    
+        async function bulkDecline() {
+            if (selectedRequests.size === 0) return;
+            
+            if (!confirm(`Decline ${selectedRequests.size} selected requests?`)) return;
+            
+            await bulkAction('decline', Array.from(selectedRequests));
+        }
+    
+        async function bulkAction(action, requestIds) {
+            try {
+                const response = await fetch('/admin/requests/bulk-action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        request_ids: requestIds
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(result.message);
+                    clearSelection();
+                    // Reload data
+                    setTimeout(async () => {
+                        await loadRequests();
+                        await loadStats();
+                    }, 500);
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                console.error('Error performing bulk action:', error);
+                showError('Failed to perform bulk action: ' + error.message);
+            }
+        }
+    
+        // Utility functions
+        function showSuccess(message) {
+            showNotification(message, 'green');
+        }
+    
+        function showError(message) {
+            showNotification(message, 'red');
+        }
+    
+        function showNotification(message, color) {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.fixed-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `fixed-notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-semibold z-50 ${
+                color === 'green' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+{% endblock %}

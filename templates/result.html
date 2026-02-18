@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Player - Clean Demo</title>
+<link rel="stylesheet" href="../static/csPlayer.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #0f172a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 20px;
+  }
+
+  .demo-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .player-section {
+    background: #1e293b;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid #334155;
+  }
+
+  .player-header {
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-bottom: 1px solid #334155;
+  }
+
+  .player-header h1 {
+    color: #f1f5f9;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .player-header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+  }
+
+  .player-wrapper {
+    position: relative;
+    width: 100%;
+    background: #000;
+    aspect-ratio: 16/9;
+  }
+
+  #player {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Ensure the player fills its container */
+  #player .csPlayer {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  #player .csPlayer .csPlayer-container {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  #player .csPlayer .csPlayer-container iframe {
+    width: 100% !important;
+    height: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Custom theme variables */
+  #player .csPlayer {
+    --playerBg: #000000;
+    --playerColor: #00ffcc;
+    --playerBR: 0px;
+    --startLoaderColor: #00ffcc;
+    --startBtnSize: 70px;
+    --startBtnBg: #00ffcc;
+    --startBtnIconColor: #000000;
+    --playPauseIconColor: #00ffcc;
+    --forwardIconColor: #00ffcc;
+    --backwardIconColor: #00ffcc;
+    --sliderBg: #334155;
+    --sliderThumbSize: 16px;
+    --sliderThumbColor: #00ffcc;
+    --sliderSeekTrackColor: #00ffcc;
+    --sliderLoadedTrackColor: #64748b;
+    --currentTimeTextColor: #00ffcc;
+    --durationTextColor: #00ffcc;
+    --settingsBtnColor: #00ffcc;
+    --fullscreenBtnColor: #00ffcc;
+    --settingsBg: #1e293b;
+    --settingsTextColor: #f1f5f9;
+    --settingsInputIconBg: #334155;
+    --settingsInputIconColor: #00ffcc;
+  }
+
+  /* Fullscreen styles */
+  .csPlayer:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    background: #000 !important;
+  }
+
+  .csPlayer:fullscreen .csPlayer-container {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  .controls-section {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid #334155;
+  }
+
+  .controls-section h2 {
+    color: #f1f5f9;
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .btn {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #334155;
+    color: #f1f5f9;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: #475569;
+    transform: translateY(-2px);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary {
+    background: #00ffcc;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    background: #00e6b8;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .video-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .video-option {
+    padding: 16px;
+    background: #334155;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #f1f5f9;
+    text-align: center;
+  }
+
+  .video-option:hover {
+    border-color: #00ffcc;
+    background: #475569;
+  }
+
+  .video-option.active {
+    background: #00ffcc;
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .status-panel {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 25px;
+    border: 1px solid #334155;
+  }
+
+  .status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .status-title {
+    color: #f1f5f9;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .status-clear {
+    background: transparent;
+    border: 1px solid #64748b;
+    color: #64748b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+  }
+
+  .status-clear:hover {
+    border-color: #00ffcc;
+    color: #00ffcc;
+  }
+
+  .status-output {
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .status-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #1e293b;
+    border-radius: 8px;
+    border-left: 4px solid #00ffcc;
+    color: #f1f5f9;
+  }
+
+  .status-item.error {
+    border-left-color: #ef4444;
+    background: #1f1d2b;
+  }
+
+  .status-item.success {
+    border-left-color: #10b981;
+    background: #1a2a1f;
+  }
+
+  .status-time {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+
+  /* Fullscreen toggle button */
+  .fullscreen-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ffcc;
+    color: #00ffcc;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 10;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .fullscreen-toggle:hover {
+    background: #00ffcc;
+    color: #000;
+  }
+
+  /* Loading indicator */
+  .loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #00ffcc;
+    font-size: 1rem;
+    z-index: 5;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .demo-container {
+      gap: 20px;
+    }
+    
+    .controls-section {
+      padding: 20px;
+    }
+    
+    .control-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .video-selector {
+      grid-template-columns: 1fr;
+    }
+
+    .fullscreen-toggle {
+      top: 10px;
+      right: 10px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 10px;
+    }
+    
+    .player-header {
+      padding: 15px 20px;
+    }
+    
+    .player-header h1 {
+      font-size: 1.25rem;
+    }
+    
+    .btn {
+      padding: 16px 20px;
+    }
+
+    .control-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-container">
+  <!-- Player Section -->
+  <section class="player-section">
+    <div class="player-header">
+      <h1>CS Player - Clean Demo</h1>
+      <p>Custom YouTube player with modern controls and theming</p>
+    </div>
+    <div class="player-wrapper">
+      <button class="fullscreen-toggle" onclick="toggleFullscreen()" id="fullscreenBtn">
+        ⛶ Enter Fullscreen
+      </button>
+      <div id="player"></div>
+      <div class="loading-indicator" id="loadingIndicator">Loading player...</div>
+    </div>
+  </section>
+
+  <!-- Controls Section -->
+  <section class="controls-section">
+    <h2>Player Controls</h2>
+    
+    <div class="control-grid">
+      <button class="btn btn-primary" onclick="playVideo()">
+        <span>▶</span> Play
+      </button>
+      <button class="btn" onclick="pauseVideo()">
+        <span>⏸</span> Pause
+      </button>
+      <button class="btn" onclick="seekBackward()">
+        <span>⏪</span> -10s
+      </button>
+      <button class="btn" onclick="seekForward()">
+        <span>⏩</span> +10s
+      </button>
+      <button class="btn" onclick="toggleFullscreen()">
+        <span>⛶</span> Fullscreen
+      </button>
+      <button class="btn" onclick="getPlayerStatus()">
+        <span>ℹ</span> Status
+      </button>
+      <button class="btn btn-danger" onclick="destroyPlayer()">
+        <span>🗑</span> Destroy
+      </button>
+    </div>
+
+    <h3 style="color: #f1f5f9; margin: 25px 0 15px 0;">Video Selection</h3>
+    <div class="video-selector" id="videoSelector">
+      <!-- Video options will be populated by JavaScript -->
+    </div>
+
+    <div class="status-panel">
+      <div class="status-header">
+        <div class="status-title">Debug Console</div>
+        <button class="status-clear" onclick="clearStatus()">Clear Log</button>
+      </div>
+      <div class="status-output" id="statusOutput">
+        <div class="status-item">
+          <div class="status-time">System Ready</div>
+          Player demo initialized. Select a video to begin.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="../static/csPlayer.js"></script>
+
+<script>
+  // Video content configuration
+  const videoOptions = [
+    { id: '3JZ_D3ELwOQ', title: 'Countdown Timer', category: 'Utility' },
+    { id: 'dQw4w9WgXcQ', title: 'Internet Classic', category: 'Culture' },
+    { id: 'jNQXAC9IVRw', title: 'First YouTube Video', category: 'History' },
+    { id: 'LXb3EKWsInQ', title: 'Nature Documentary', category: 'Education' },
+    { id: 'R_kB2D2QoE4', title: 'Coding Tutorial', category: 'Learning' }
+  ];
+
+  const playerId = 'player';
+  let currentVideoId = videoOptions[0].id;
+  let isFullscreen = false;
+  let youtubePlayer = null;
+
+  // Initialize when YouTube API is ready
+  function onYouTubeIframeAPIReady() {
+    initializePlayer();
+  }
+
+  async function initializePlayer() {
+    try {
+      showLoadingIndicator(true);
+      
+      await csPlayer.init(playerId, {
+        defaultId: currentVideoId,
+        theme: 'default',
+        thumbnail: true,
+        loop: false
+      });
+      
+      // Get the YouTube player instance
+      youtubePlayer = csPlayer.csPlayers[playerId].videoTag;
+      
+      updateStatus('success', '🎉 Player initialized successfully!');
+      populateVideoSelector();
+      
+      // Listen for fullscreen changes
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      
+      showLoadingIndicator(false);
+      
+    } catch (error) {
+      updateStatus('error', `❌ Initialization failed: ${error.message}`);
+      showLoadingIndicator(false);
+    }
+  }
+
+  function showLoadingIndicator(show) {
+    const indicator = document.getElementById('loadingIndicator');
+    if (indicator) {
+      indicator.style.display = show ? 'block' : 'none';
+    }
+  }
+
+  // Handle fullscreen changes
+  function handleFullscreenChange() {
+    isFullscreen = !!document.fullscreenElement;
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    
+    if (fullscreenBtn) {
+      fullscreenBtn.textContent = isFullscreen ? '⛶ Exit Fullscreen' : '⛶ Enter Fullscreen';
+    }
+    
+    updateStatus('info', isFullscreen ? '🖥️ Entered fullscreen mode' : '📱 Exited fullscreen mode');
+  }
+
+  // Toggle fullscreen function
+  function toggleFullscreen() {
+    const playerElement = document.querySelector('.csPlayer');
+    
+    if (!playerElement) {
+      updateStatus('error', '❌ Player element not found');
+      return;
+    }
+
+    try {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (playerElement.requestFullscreen) {
+          playerElement.requestFullscreen();
+        } else if (playerElement.mozRequestFullScreen) {
+          playerElement.mozRequestFullScreen();
+        } else if (playerElement.webkitRequestFullscreen) {
+          playerElement.webkitRequestFullscreen();
+        } else if (playerElement.msRequestFullscreen) {
+          playerElement.msRequestFullscreen();
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+    } catch (error) {
+      updateStatus('error', `❌ Fullscreen failed: ${error.message}`);
+    }
+  }
+
+  // Populate video selection buttons
+  function populateVideoSelector() {
+    const selector = document.getElementById('videoSelector');
+    selector.innerHTML = '';
+    
+    videoOptions.forEach((video, index) => {
+      const button = document.createElement('button');
+      button.className = `video-option ${index === 0 ? 'active' : ''}`;
+      button.innerHTML = `
+        <strong>${video.title}</strong>
+        <small style="display: block; margin-top: 4px; opacity: 0.8;">${video.category}</small>
+      `;
+      button.onclick = () => selectVideo(video.id, video.title, button);
+      selector.appendChild(button);
+    });
+  }
+
+  // Handle video selection
+  function selectVideo(videoId, title, element) {
+    // Update active state
+    document.querySelectorAll('.video-option').forEach(opt => {
+      opt.classList.remove('active');
+    });
+    element.classList.add('active');
+    
+    currentVideoId = videoId;
+    updateStatus('info', `📺 Selected: "${title}"`);
+    
+    // Auto-change video if player is initialized
+    if (csPlayer.initialized(playerId)) {
+      changeVideo();
+    }
+  }
+
+  // Player control functions
+  async function playVideo() {
+    try {
+      await csPlayer.play(playerId);
+      updateStatus('success', '▶ Playback started');
+    } catch (error) {
+      updateStatus('error', `❌ Play failed: ${error.message}`);
+    }
+  }
+
+  function pauseVideo() {
+    try {
+      csPlayer.pause(playerId);
+      updateStatus('info', '⏸ Playback paused');
+    } catch (error) {
+      updateStatus('error', `❌ Pause failed: ${error.message}`);
+    }
+  }
+
+  // FIXED: Seek functions using proper YouTube Player API
+  async function seekBackward() {
+    try {
+      if (!youtubePlayer || typeof youtubePlayer.seekTo !== 'function') {
+        throw new Error('YouTube player not properly initialized');
+      }
+      
+      const currentTime = await csPlayer.getCurrentTime(playerId);
+      const newTime = Math.max(0, currentTime - 10);
+      youtubePlayer.seekTo(newTime, true);
+      updateStatus('info', `⏪ Seeked backward to ${Math.round(newTime)}s`);
+    } catch (error) {
+      updateStatus('error', `❌ Seek failed: ${error.message}`);
+    }
+  }
+
+  async function seekForward() {
+    try {
+      if (!youtubePlayer || typeof youtubePlayer.seekTo !== 'function') {
+        throw new Error('YouTube player not properly initialized');
+      }
+      
+      const currentTime = await csPlayer.getCurrentTime(playerId);
+      const duration = await csPlayer.getDuration(playerId);
+      const newTime = Math.min(duration, currentTime + 10);
+      youtubePlayer.seekTo(newTime, true);
+      updateStatus('info', `⏩ Seeked forward to ${Math.round(newTime)}s`);
+    } catch (error) {
+      updateStatus('error', `❌ Seek failed: ${error.message}`);
+    }
+  }
+
+  async function changeVideo() {
+    try {
+      showLoadingIndicator(true);
+      await csPlayer.changeVideo(playerId, currentVideoId);
+      updateStatus('success', `🔄 Video changed successfully`);
+      showLoadingIndicator(false);
+    } catch (error) {
+      updateStatus('error', `❌ Video change failed: ${error.message}`);
+      showLoadingIndicator(false);
+    }
+  }
+
+  async function getPlayerStatus() {
+    try {
+      if (csPlayer.initialized(playerId)) {
+        const state = csPlayer.getPlayerState(playerId);
+        const duration = csPlayer.getDuration(playerId);
+        const currentTime = csPlayer.getCurrentTime(playerId);
+        const title = csPlayer.getVideoTitle(playerId);
+        
+        updateStatus('info', `
+          <strong>📊 Player Status:</strong><br>
+          • State: ${state}<br>
+          • Title: ${title}<br>
+          • Duration: ${Math.round(duration)}s<br>
+          • Current Time: ${Math.round(currentTime)}s<br>
+          • Fullscreen: ${isFullscreen ? 'Yes' : 'No'}<br>
+          • YouTube Player: ${youtubePlayer ? 'Available' : 'Not Available'}
+        `);
+      } else {
+        updateStatus('warning', '⚠ Player not initialized');
+      }
+    } catch (error) {
+      updateStatus('error', `❌ Status check failed: ${error.message}`);
+    }
+  }
+
+  function destroyPlayer() {
+    try {
+      csPlayer.destroy(playerId);
+      youtubePlayer = null;
+      updateStatus('warning', '🗑 Player destroyed. Refresh page to reinitialize.');
+      
+      // Disable controls
+      document.querySelectorAll('.btn, .video-option').forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      });
+      
+    } catch (error) {
+      updateStatus('error', `❌ Destroy failed: ${error.message}`);
+    }
+  }
+
+  // Status management
+  function updateStatus(type, message) {
+    const statusOutput = document.getElementById('statusOutput');
+    const statusItem = document.createElement('div');
+    statusItem.className = `status-item ${type}`;
+    statusItem.innerHTML = `
+      <div class="status-time">${new Date().toLocaleTimeString()}</div>
+      ${message}
+    `;
+    
+    statusOutput.appendChild(statusItem);
+    statusOutput.scrollTop = statusOutput.scrollHeight;
+  }
+
+  function clearStatus() {
+    const statusOutput = document.getElementById('statusOutput');
+    statusOutput.innerHTML = `
+      <div class="status-item">
+        <div class="status-time">Console Cleared</div>
+        🧹 Debug console cleared. New messages will appear here.
+      </div>
+    `;
+  }
+
+  // Fallback initialization
+  if (typeof YT !== 'undefined' && YT.loaded) {
+    initializePlayer();
+  }
+
+  // Error handling for YouTube API
+  window.addEventListener('error', (e) => {
+    updateStatus('error', `🚨 Script error: ${e.message}`);
+  });
+
+  
+</script>
+
+</body>
+</html>

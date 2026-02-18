@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+{% block title %}Library - Study Resources{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Study Library</h1>
+        <p class="text-gray-600 mt-2">Access your course materials and study resources</p>
+        <div class="mt-2 flex items-center gap-2 text-sm text-blue-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span id="studentInfo">Loading your courses...</span>
+        </div>
+      </div>
+      <div class="relative">
+        <input type="text" id="searchResources" placeholder="Search resources..."
+               class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64">
+        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+        <div class="p-3 rounded-xl bg-blue-50">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Available Resources</p>
+          <p id="totalResources" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+        <div class="p-3 rounded-xl bg-green-50">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Your Courses</p>
+          <p id="studentCourses" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+        <div class="p-3 rounded-xl bg-purple-50">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Materials</p>
+          <p id="totalMaterials" class="text-2xl font-bold text-gray-900">0 MB</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources Grid -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Study Materials</h3>
+        <p class="text-gray-600 text-sm mt-1">Resources for your enrolled courses</p>
+      </div>
+      
+      <div id="resourcesGrid" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Resources will be dynamically loaded here -->
+      </div>
+      
+      <div id="emptyState" class="text-center py-12 hidden">
+        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="text-gray-700 font-medium text-lg mb-2">No study materials available</h3>
+        <p class="text-gray-500">There are no resources available for your enrolled courses at the moment.</p>
+      </div>
+
+      <div id="loadingState" class="text-center py-12 hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="text-gray-500 mt-4">Loading study materials...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+class StudentLibrary {
+  constructor() {
+    this.resources = [];
+    this.enrolledCourses = [];
+    this.baseUrl = '/api/library';
+    this.init();
+  }
+
+  async init() {
+    this.showLoading();
+    await this.loadStudentInfo();
+    await this.loadResources();
+    this.attachEventListeners();
+  }
+
+  showLoading() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('emptyState').classList.add('hidden');
+  }
+
+  hideLoading() {
+    document.getElementById('loadingState').classList.add('hidden');
+  }
+
+  async loadStudentInfo() {
+    try {
+      const res = await fetch('/api/student/courses');
+      if (res.ok) {
+        const data = await res.json();
+        this.enrolledCourses = data.courses || [];
+        this.updateStudentInfo();
+      }
+    } catch (err) { console.error('Error loading student info:', err); }
+  }
+
+  updateStudentInfo() {
+    const studentInfo = document.getElementById('studentInfo');
+    if (this.enrolledCourses.length > 0) {
+      studentInfo.textContent = `Enrolled in: ${this.enrolledCourses.map(c => c.title).join(', ')}`;
+    } else {
+      studentInfo.textContent = 'Not enrolled in any courses';
+    }
+    document.getElementById('studentCourses').textContent = this.enrolledCourses.length;
+  }
+
+  async loadResources() {
+    try {
+      const res = await fetch(`${this.baseUrl}/resources`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.resources = await res.json();
+      this.renderResources();
+      this.updateStats();
+    } catch (err) {
+      console.error('Failed to load resources:', err);
+    } finally {
+      this.hideLoading();
+    }
+  }
+
+  renderResources() {
+    const container = document.getElementById('resourcesGrid');
+    const emptyState = document.getElementById('emptyState');
+    const searchTerm = document.getElementById('searchResources').value.toLowerCase();
+
+    const filtered = this.resources.filter(r =>
+      r.title.toLowerCase().includes(searchTerm) ||
+      (r.description && r.description.toLowerCase().includes(searchTerm))
+    );
+
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = filtered.map(r => {
+      const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Unknown';
+      return `
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6">
+          <h3 class="font-semibold text-gray-900 text-lg mb-2">${this.escapeHtml(r.title)}</h3>
+          ${r.description ? `<p class="text-gray-600 text-sm mb-3">${this.escapeHtml(r.description)}</p>` : ''}
+          <div class="flex justify-between text-sm text-gray-500 mb-3">
+            <span>${r.formatted_size || '0 B'}</span>
+            <span>${createdDate}</span>
+          </div>
+          <a href="${r.pdf_url}" target="_blank"
+             class="block bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+             View PDF
+          </a>
+        </div>`;
+    }).join('');
+  }
+
+  escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+  }
+
+  updateStats() {
+    const accessible = this.resources;
+    document.getElementById('totalResources').textContent = accessible.length;
+    const size = accessible.reduce((s, r) => s + (r.file_size || 0), 0);
+    document.getElementById('totalMaterials').textContent = (size / (1024*1024)).toFixed(1) + ' MB';
+  }
+
+  attachEventListeners() {
+    document.getElementById('searchResources').addEventListener('input', () => this.renderResources());
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.studentLibrary = new StudentLibrary();
+});
+</script>
+{% endblock %}
+
+{% block mobile_content %}
+<!-- Mobile-Optimized Student Library -->
+<div class="min-h-screen bg-gray-50 pb-20">
+  <!-- Mobile Header -->
+  <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div class="px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">Study Library</h1>
+          <p class="text-gray-600 text-sm mt-1">Your course materials</p>
+        </div>
+        <div class="relative">
+          <input type="text" id="mobileSearchResources" placeholder="Search..."
+                 class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-32 text-sm">
+          <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Student Info -->
+      <div class="mt-3 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span id="mobileStudentInfo" class="truncate">Loading your courses...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Stats Cards - Horizontal Scroll -->
+  <div class="px-4 py-4">
+    <div class="flex space-x-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
+      <!-- Available Resources Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[140px] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-blue-50">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-600">Resources</p>
+            <p id="mobileTotalResources" class="text-lg font-bold text-gray-900">0</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Your Courses Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[140px] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-green-50">
+            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-600">Courses</p>
+            <p id="mobileStudentCourses" class="text-lg font-bold text-gray-900">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Materials Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[140px] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-purple-50">
+            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-600">Materials</p>
+            <p id="mobileTotalMaterials" class="text-lg font-bold text-gray-900">0 MB</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Resources List -->
+  <div class="px-4 pb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- Section Header -->
+      <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <h3 class="font-semibold text-gray-900">Study Materials</h3>
+        <p class="text-gray-600 text-xs mt-0.5">Resources for your enrolled courses</p>
+      </div>
+      
+      <!-- Resources List -->
+      <div id="mobileResourcesList" class="divide-y divide-gray-100">
+        <!-- Resources will be dynamically loaded here -->
+      </div>
+      
+      <!-- Empty State -->
+      <div id="mobileEmptyState" class="text-center py-8 px-4 hidden">
+        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="text-gray-700 font-medium text-sm mb-1">No study materials</h3>
+        <p class="text-gray-500 text-xs">No resources available for your courses</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="mobileLoadingState" class="text-center py-8 hidden">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="text-gray-500 text-sm mt-3">Loading materials...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+</style>
+
+<script>
+// Mobile-Specific Student Library
+class MobileStudentLibrary {
+  constructor() {
+    this.resources = [];
+    this.enrolledCourses = [];
+    this.baseUrl = '/api/library';
+    this.init();
+  }
+
+  async init() {
+    this.showMobileLoading();
+    await this.loadMobileStudentInfo();
+    await this.loadMobileResources();
+    this.attachMobileEventListeners();
+  }
+
+  showMobileLoading() {
+    document.getElementById('mobileLoadingState').classList.remove('hidden');
+    document.getElementById('mobileEmptyState').classList.add('hidden');
+  }
+
+  hideMobileLoading() {
+    document.getElementById('mobileLoadingState').classList.add('hidden');
+  }
+
+  async loadMobileStudentInfo() {
+    try {
+      const res = await fetch('/api/student/courses');
+      if (res.ok) {
+        const data = await res.json();
+        this.enrolledCourses = data.courses || [];
+        this.updateMobileStudentInfo();
+      }
+    } catch (err) { 
+      console.error('Error loading mobile student info:', err); 
+    }
+  }
+
+  updateMobileStudentInfo() {
+    const studentInfo = document.getElementById('mobileStudentInfo');
+    if (this.enrolledCourses.length > 0) {
+      const courseNames = this.enrolledCourses.map(c => c.title).join(', ');
+      studentInfo.textContent = courseNames.length > 30 ? courseNames.substring(0, 30) + '...' : courseNames;
+    } else {
+      studentInfo.textContent = 'Not enrolled in any courses';
+    }
+    document.getElementById('mobileStudentCourses').textContent = this.enrolledCourses.length;
+  }
+
+  async loadMobileResources() {
+    try {
+      const res = await fetch(`${this.baseUrl}/resources`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.resources = await res.json();
+      this.renderMobileResources();
+      this.updateMobileStats();
+    } catch (err) {
+      console.error('Failed to load mobile resources:', err);
+    } finally {
+      this.hideMobileLoading();
+    }
+  }
+
+  renderMobileResources() {
+    const container = document.getElementById('mobileResourcesList');
+    const emptyState = document.getElementById('mobileEmptyState');
+    const searchTerm = document.getElementById('mobileSearchResources').value.toLowerCase();
+
+    const filtered = this.resources.filter(r =>
+      r.title.toLowerCase().includes(searchTerm) ||
+      (r.description && r.description.toLowerCase().includes(searchTerm))
+    );
+
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    container.innerHTML = filtered.map(r => {
+      const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Unknown';
+      const fileSize = r.formatted_size || '0 B';
+      
+      return `
+        <div class="p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors">
+          <div class="flex items-start gap-3">
+            <!-- PDF Icon -->
+            <div class="p-2 bg-red-50 rounded-lg flex-shrink-0">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">${this.escapeHtml(r.title)}</h3>
+              ${r.description ? `<p class="text-gray-600 text-xs mb-2 line-clamp-2">${this.escapeHtml(r.description)}</p>` : ''}
+              
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  ${createdDate}
+                </span>
+                <span>${fileSize}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Button -->
+          <a href="${r.pdf_url}" target="_blank" 
+             class="mt-3 w-full bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            View PDF
+          </a>
+        </div>`;
+    }).join('');
+  }
+
+  escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+  }
+
+  updateMobileStats() {
+    const accessible = this.resources;
+    document.getElementById('mobileTotalResources').textContent = accessible.length;
+    const size = accessible.reduce((s, r) => s + (r.file_size || 0), 0);
+    document.getElementById('mobileTotalMaterials').textContent = (size / (1024*1024)).toFixed(1) + ' MB';
+  }
+
+  attachMobileEventListeners() {
+    document.getElementById('mobileSearchResources').addEventListener('input', () => this.renderMobileResources());
+  }
+}
+
+// Initialize mobile library when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if we're on mobile view
+  if (window.innerWidth < 768) {
+    window.mobileStudentLibrary = new MobileStudentLibrary();
+  }
+});
+
+// Re-initialize on resize if switching to mobile
+window.addEventListener('resize', () => {
+  if (window.innerWidth < 768 && !window.mobileStudentLibrary) {
+    window.mobileStudentLibrary = new MobileStudentLibrary();
+  }
+});
+</script>
+{% endblock %}

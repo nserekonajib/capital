@@ -1,0 +1,83 @@
+{% extends "templates/admin/base.html" %}
+{% block title %}Edit Lecture - CPA LMS{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="mb-6">
+                <div class="flex items-center space-x-3 mb-2">
+                    <a href="{{ url_for('courses.course_detail', course_id=lecture.course_id) }}" 
+                       class="text-blue-600 hover:text-blue-800 transition duration-200">
+                        ← Back to Course
+                    </a>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Edit Lecture</h1>
+                <p class="text-gray-600">Update lecture details for: <span class="font-semibold">{{ lecture.courses.title }}</span></p>
+                <div class="flex items-center space-x-2 mt-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
+                        Lecture {{ lecture.lecture_number }}
+                    </span>
+                    <span class="text-sm text-gray-600">• Last updated: {{ lecture.updated_at|string|truncate(10, true, '') }}</span>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                <div class="space-y-4">
+                    <!-- Lecture Title -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                            Lecture Title *
+                        </label>
+                        <input type="text" id="title" name="title" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               value="{{ lecture.title }}">
+                    </div>
+
+                    <!-- YouTube Link -->
+                    <div>
+                        <label for="youtube_link" class="block text-sm font-medium text-gray-700 mb-2">
+                            YouTube Video Link *
+                        </label>
+                        <input type="url" id="youtube_link" name="youtube_link" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               value="{{ lecture.youtube_link }}">
+                        <p class="text-xs text-gray-500 mt-1">Update the YouTube URL for this lecture</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Lecture Description *
+                        </label>
+                        <textarea id="description" name="description" rows="5" required
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Describe what students will learn in this lecture...">{{ lecture.description }}</textarea>
+                    </div>
+
+                    <!-- Current Video Preview -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Current Video</h3>
+                        <a href="{{ lecture.youtube_link }}" target="_blank" 
+                           class="text-blue-600 hover:text-blue-800 text-sm break-all">
+                            {{ lecture.youtube_link }}
+                        </a>
+                        <p class="text-xs text-gray-500 mt-1">Click to open current video in new tab</p>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-4 pt-6 border-t">
+                    <a href="{{ url_for('courses.course_detail', course_id=lecture.course_id) }}" 
+                       class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                        Update Lecture
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

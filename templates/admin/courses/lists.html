@@ -1,0 +1,514 @@
+{% extends "admin/base.html" %}
+{% block title %}Courses Management - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header / Actions -->
+    <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <h1 class="text-2xl font-bold text-gray-700">Courses Management</h1>
+      <div class="flex gap-2">
+        <button id="createCourseBtn"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create Course
+        </button>
+        <button id="addLectureBtn"
+          class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition flex items-center gap-2">
+          Add Lecture
+        </button>
+        <button id="enrollStudentBtn"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition flex items-center gap-2">
+          Enroll Student
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+        <dt class="text-sm text-gray-500">Total Courses</dt>
+        <dd id="totalCourses" class="text-2xl font-bold mt-2">0</dd>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+        <dt class="text-sm text-gray-500">Total Students</dt>
+        <dd id="totalStudents" class="text-2xl font-bold mt-2">0</dd>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
+        <dt class="text-sm text-gray-500">Total Lectures</dt>
+        <dd id="totalLectures" class="text-2xl font-bold mt-2">0</dd>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow border-l-4 border-orange-500">
+        <dt class="text-sm text-gray-500">Active Levels</dt>
+        <dd id="activeLevels" class="text-2xl font-bold mt-2">0</dd>
+      </div>
+    </div>
+
+    <!-- Search / Filters -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6 flex flex-col sm:flex-row gap-4">
+      <input type="text" id="searchQuery" placeholder="Search courses..."
+        class="flex-1 border rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      <select id="levelFilter" class="border rounded-lg px-3 py-2">
+        <option value="">All Levels</option>
+      </select>
+      <select id="sortBy" class="border rounded-lg px-3 py-2">
+        <option value="title">Sort by Title</option>
+        <option value="student_count">Sort by Students</option>
+        <option value="lecture_count">Sort by Lectures</option>
+        <option value="cpa_level">Sort by Level</option>
+      </select>
+    </div>
+
+    <!-- Courses Grid -->
+    <div id="coursesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-12 hidden">
+      <h3 class="text-gray-700 font-medium">No courses found</h3>
+      <p class="text-sm text-gray-500">Get started by creating a new course</p>
+      <button id="emptyCreateBtn" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Create Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Create/Edit Course Modal -->
+<div id="createModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 mx-4">
+    <h2 id="modalTitle" class="text-lg font-bold mb-4">Create New Course</h2>
+    <form id="courseForm">
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input type="text" id="courseTitle" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Instructor</label>
+        <input type="text" id="courseInstructor" required
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">CPA Level</label>
+        <input type="number" id="courseLevel" required min="1"
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Fees</label>
+        <input type="number" step="0.01" id="courseFees" required min="0"
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea id="courseDescription" rows="3"
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+        <input type="file" id="courseThumbnail"
+          class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelBtn"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition">Cancel</button>
+        <button type="submit"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Lecture Modal -->
+<div id="lectureModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 mx-4">
+    <h2 class="text-lg font-bold mb-4">Add Lecture</h2>
+    <form id="lectureForm">
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Course</label>
+        <select id="lectureCourseSelect"
+          class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"></select>
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">YouTube Link</label>
+        <input type="url" id="lectureYoutube" required
+          class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelLectureBtn"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Enroll Student Modal -->
+<div id="enrollModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 mx-4">
+    <h2 class="text-lg font-bold mb-4">Enroll Student</h2>
+    <form id="enrollForm">
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Select Student</label>
+        <input type="text" id="studentSearch" placeholder="Search student..."
+          class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        <ul id="studentResults" class="border rounded mt-2 max-h-40 overflow-y-auto hidden"></ul>
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Select Course</label>
+        <select id="enrollCourseSelect"
+          class="w-full border rounded px-3 py-2 focus:ring-blue-500 focus:border-blue-500"></select>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelEnrollBtn"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Enroll</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Students Modal -->
+<div id="studentsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 mx-4">
+    <h2 id="studentsModalTitle" class="text-lg font-bold mb-4"></h2>
+    <div id="studentsList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+    <div class="flex justify-end mt-6">
+      <button id="closeStudentsBtn"
+        class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind Toggle Style -->
+<style>
+.toggle-control {
+  display: block;
+  position: relative;
+  padding-left: 100px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-control input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.toggle-control .control {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100px; height: 50px;
+  border-radius: 50%;
+  background-color: darkgray;
+  transition: background-color 0.15s ease-in;
+}
+.toggle-control .control:after {
+  content: "";
+  position: absolute;
+  left: 5px; top:5px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: white;
+  transition: left 0.15s ease-in;
+}
+.toggle-control input:checked ~ .control {
+  background-color: dodgerblue;
+}
+.toggle-control input:checked ~ .control:after {
+  left: 55px;
+}
+</style>
+
+<script>
+
+class CourseManager {
+  constructor() {
+      this.courses = [];
+      this.studentsCache = [];
+      this.currentCourse = null;
+      this.currentEditingId = null;
+
+      this.initElements();
+      this.attachListeners();
+      this.loadCourses();
+  }
+
+  initElements() {
+      this.coursesGrid = document.getElementById('coursesGrid');
+      this.emptyState = document.getElementById('emptyState');
+      this.totalCoursesEl = document.getElementById('totalCourses');
+      this.totalStudentsEl = document.getElementById('totalStudents');
+      this.totalLecturesEl = document.getElementById('totalLectures');
+      this.activeLevelsEl = document.getElementById('activeLevels');
+
+      this.searchQuery = document.getElementById('searchQuery');
+      this.levelFilter = document.getElementById('levelFilter');
+      this.sortBy = document.getElementById('sortBy');
+
+      this.createModal = document.getElementById('createModal');
+      this.studentsModal = document.getElementById('studentsModal');
+      this.modalTitle = document.getElementById('modalTitle');
+      this.studentsModalTitle = document.getElementById('studentsModalTitle');
+      this.studentsList = document.getElementById('studentsList');
+
+      this.courseForm = document.getElementById('courseForm');
+      this.courseTitle = document.getElementById('courseTitle');
+      this.courseInstructor = document.getElementById('courseInstructor');
+      this.courseLevel = document.getElementById('courseLevel');
+      this.courseFees = document.getElementById('courseFees');
+      this.courseDescription = document.getElementById('courseDescription');
+      this.courseThumbnail = document.getElementById('courseThumbnail');
+  }
+
+  attachListeners() {
+      document.getElementById('createCourseBtn').onclick = () => this.openCreateModal();
+      document.getElementById('emptyCreateBtn').onclick = () => this.openCreateModal();
+      document.getElementById('cancelBtn').onclick = () => this.closeCreateModal();
+
+      document.getElementById('enrollStudentBtn').onclick = () => this.openEnrollModal();
+      document.getElementById('cancelEnrollBtn').onclick = () => this.closeEnrollModal();
+      document.getElementById('enrollForm').onsubmit = e => this.enrollStudent(e);
+      document.getElementById('studentSearch').oninput = e => this.searchStudents(e.target.value);
+
+      document.getElementById('cancelLectureBtn').onclick = () => this.closeLectureModal();
+      document.getElementById('lectureForm').onsubmit = e => this.saveLecture(e);
+
+      document.getElementById('closeStudentsBtn').onclick = () => this.closeStudentsModal();
+
+      this.searchQuery.oninput = () => this.renderCourses();
+      this.levelFilter.onchange = () => this.renderCourses();
+      this.sortBy.onchange = () => this.renderCourses();
+
+      this.createModal.onclick = e => { if(e.target === this.createModal) this.closeCreateModal(); };
+      this.studentsModal.onclick = e => { if(e.target === this.studentsModal) this.closeStudentsModal(); };
+  }
+
+  async loadCourses() {
+      try {
+          const res = await fetch("/admin/courses");
+          this.courses = res.ok ? await res.json() : [];
+          this.updateStats();
+          this.updateLevelFilter();
+          this.renderCourses();
+          this.populateCourseSelects();
+      } catch(err) {
+          console.error(err);
+      }
+  }
+
+  updateStats() {
+      this.totalCoursesEl.textContent = this.courses.length;
+      this.totalStudentsEl.textContent = this.courses.reduce((sum,c)=>sum+c.student_count,0);
+      this.totalLecturesEl.textContent = this.courses.reduce((sum,c)=>sum+c.lecture_count,0);
+      this.activeLevelsEl.textContent = new Set(this.courses.map(c=>c.cpa_level)).size;
+  }
+
+  updateLevelFilter() {
+      const levels = [...new Set(this.courses.map(c=>c.cpa_level))].sort();
+      this.levelFilter.innerHTML = `<option value="">All Levels</option>`;
+      levels.forEach(l => this.levelFilter.innerHTML += `<option value="${l}">Level ${l}</option>`);
+  }
+
+  getFilteredCourses() {
+      let filtered = this.courses.filter(c => 
+          (!this.searchQuery.value || c.title.toLowerCase().includes(this.searchQuery.value.toLowerCase())) &&
+          (!this.levelFilter.value || c.cpa_level == this.levelFilter.value)
+      );
+      const sortField = this.sortBy.value;
+      return filtered.sort((a,b)=> (a[sortField]>b[sortField]?1:(a[sortField]<b[sortField]?-1:0)));
+  }
+
+  renderCourses() {
+      const filtered = this.getFilteredCourses();
+      if(filtered.length===0){
+          this.coursesGrid.classList.add('hidden');
+          this.emptyState.classList.remove('hidden');
+          return;
+      }
+      this.emptyState.classList.add('hidden');
+      this.coursesGrid.classList.remove('hidden');
+      this.coursesGrid.innerHTML = filtered.map(c => `
+          <div class="bg-white rounded-lg shadow hover:shadow-md overflow-hidden">
+              <img src="${c.thumbnail||'/static/images/course-placeholder.jpg'}" class="h-40 w-full object-cover">
+              <div class="p-4">
+                  <h3 class="font-semibold text-lg mb-1">${c.title}</h3>
+                  <p class="text-sm text-gray-600">Instructor: ${c.instructor}</p>
+                  <p class="text-sm text-gray-600">${c.student_count} students</p>
+                  <p class="text-sm text-gray-600">${c.lecture_count} lectures</p>
+                  <div class="flex justify-between items-center mt-3">
+                      <span class="text-blue-600 font-bold">UGX${c.fees}</span>
+                      <div class="flex gap-2">
+                          <button onclick="courseManager.openStudents(${c.id})"
+                              class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Students</button>
+                          <button onclick="courseManager.editCourse(${c.id})"
+                              class="px-3 py-1 bg-green-600 text-white rounded text-sm">Edit</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  openCreateModal() {
+      this.currentEditingId = null;
+      this.modalTitle.textContent = 'Create New Course';
+      this.courseForm.reset();
+      this.createModal.classList.remove('hidden');
+  }
+
+  closeCreateModal() {
+      this.createModal.classList.add('hidden');
+      this.courseForm.reset();
+      this.currentEditingId = null;
+  }
+
+  editCourse(courseId) {
+      const course = this.courses.find(c=>c.id===courseId);
+      if(course){
+          this.currentEditingId = courseId;
+          this.modalTitle.textContent = 'Edit Course';
+          this.courseTitle.value = course.title;
+          this.courseInstructor.value = course.instructor;
+          this.courseLevel.value = course.cpa_level;
+          this.courseFees.value = course.fees;
+          this.courseDescription.value = course.description||'';
+          this.createModal.classList.remove('hidden');
+      }
+  }
+
+  async submitCourse(e) {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('title', this.courseTitle.value);
+      formData.append('instructor', this.courseInstructor.value);
+      formData.append('cpa_level', this.courseLevel.value);
+      formData.append('fees', this.courseFees.value);
+      formData.append('description', this.courseDescription.value);
+      if(this.courseThumbnail.files[0]) formData.append('thumbnail', this.courseThumbnail.files[0]);
+
+      const url = this.currentEditingId ? `/admin/courses/${this.currentEditingId}/update` : '/admin/courses/create';
+      const method = this.currentEditingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url,{method, body:formData});
+      if(res.ok){ this.closeCreateModal(); this.loadCourses(); }
+  }
+
+  // --- Students ---
+  async openStudents(courseId){
+      this.currentCourse = this.courses.find(c=>c.id===courseId);
+      if(!this.currentCourse) return;
+      this.studentsModalTitle.textContent = `${this.currentCourse.title} - Students`;
+      const res = await fetch(`/admin/courses/${courseId}/students`);
+      this.studentsCache = res.ok ? await res.json() : [];
+      this.renderStudents();
+      this.studentsModal.classList.remove('hidden');
+  }
+
+  closeStudentsModal(){
+      this.studentsModal.classList.add('hidden');
+      this.studentsCache = [];
+  }
+
+  renderStudents(){
+      this.studentsList.innerHTML = this.studentsCache.map(s=>`
+          <div class="flex justify-between items-center border border-gray-200 p-3 rounded">
+              <span class="font-medium">${s.name}</span>
+              <label class="inline-flex items-center cursor-pointer">
+                  <input type="checkbox" ${s.active?'checked':''} 
+                         onchange="courseManager.toggleStudent(${s.id}, ${s.enrollment_id}, this.checked)"
+                         class="mr-2 h-4 w-4 text-blue-600 rounded">
+                  <span class="${s.active?'text-green-600':'text-red-600'}">${s.active?'Active':'Inactive'}</span>
+              </label>
+          </div>
+      `).join('');
+  }
+
+  async toggleStudent(studentId, enrollmentId, active){
+      try{
+          const res = await fetch(`/admin/courses/${this.currentCourse.id}/students/toggle`,{
+              method:'POST',
+              headers:{"Content-Type":"application/json"},
+              body:JSON.stringify({enrollment_id:enrollmentId, active})
+          });
+          if(!res.ok) document.querySelector(`input[onchange*="${studentId}"]`).checked = !active;
+      } catch(err){
+          console.error(err);
+          document.querySelector(`input[onchange*="${studentId}"]`).checked = !active;
+      }
+  }
+
+  // --- Lecture ---
+  openLectureModal(courseId){
+      document.getElementById('lectureModal').classList.remove('hidden');
+      if(courseId) document.getElementById('lectureCourseSelect').value = courseId;
+  }
+  closeLectureModal(){ document.getElementById('lectureModal').classList.add('hidden'); }
+
+  async saveLecture(e){
+      e.preventDefault();
+      const courseId = document.getElementById('lectureCourseSelect').value;
+      const ytLink = document.getElementById('lectureYoutube').value;
+      const res = await fetch(`/admin/courses/${courseId}/lectures/add`,{
+          method:'POST',
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({youtube_link:ytLink})
+      });
+      if(res.ok){ this.closeLectureModal(); this.loadCourses(); }
+  }
+
+  // --- Enrollment ---
+  openEnrollModal(){ document.getElementById('enrollModal').classList.remove('hidden'); }
+  closeEnrollModal(){ document.getElementById('enrollModal').classList.add('hidden'); }
+
+  async searchStudents(query){
+      if(!query){ document.getElementById('studentResults').classList.add('hidden'); return; }
+      if(!this.studentsCache.length){
+          const res = await fetch('/admin/students/all');
+          this.studentsCache = res.ok ? await res.json() : [];
+      }
+      const results = this.studentsCache.filter(s=>s.full_name.toLowerCase().includes(query.toLowerCase()));
+      const ul = document.getElementById('studentResults');
+      ul.innerHTML = results.map(s=>`<li onclick="courseManager.selectStudent(${s.id}, '${s.full_name}')"
+          class="px-3 py-2 hover:bg-gray-100 cursor-pointer">${s.full_name}</li>`).join('');
+      ul.classList.remove('hidden');
+  }
+
+  selectStudent(id,name){
+      document.getElementById('studentSearch').value = name;
+      document.getElementById('studentSearch').dataset.id = id;
+      document.getElementById('studentResults').classList.add('hidden');
+  }
+
+  async enrollStudent(e){
+      e.preventDefault();
+      const studentId = document.getElementById('studentSearch').dataset.id;
+      const courseId = document.getElementById('enrollCourseSelect').value;
+      if(!studentId) return alert("Select a student");
+      const res = await fetch(`/admin/courses/${courseId}/students/add`,{
+          method:'POST',
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({user_id:studentId})
+      });
+      if(res.ok){ this.closeEnrollModal(); this.loadCourses(); }
+  }
+
+  populateCourseSelects(){
+      const selects = [document.getElementById('lectureCourseSelect'), document.getElementById('enrollCourseSelect')];
+      selects.forEach(sel => sel.innerHTML = this.courses.map(c=>`<option value="${c.id}">${c.title}</option>`).join(''));
+  }
+}
+
+let courseManager;
+document.addEventListener("DOMContentLoaded",()=>courseManager=new CourseManager());
+document.addEventListener("DOMContentLoaded",()=> {
+    const manager = new CourseManager();
+    document.getElementById('courseForm').onsubmit = e => manager.submitCourse(e);
+    document.getElementById('addLectureBtn').onclick = () => manager.openLectureModal();
+});
+</script>
+{% endblock %}

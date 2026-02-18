@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - Capital College LMS{% endblock %}
+
+{% block page_title %}{{ course.title }}{% endblock %}
+{% block page_subtitle %}By {{ course.instructor }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Course Header -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ course.title }}</h1>
+                        <p class="text-lg text-gray-600 mb-4">Instructor: {{ course.instructor }}</p>
+                    </div>
+                    <span class="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                        CPA Level {{ course.cpa_level }}
+                    </span>
+                </div>
+                
+                {% if course.description %}
+                <div class="prose max-w-none mb-6">
+                    <p class="text-gray-700 leading-relaxed">{{ course.description }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            {{ lectures|length }} lectures
+                        </span>
+                        <span>•</span>
+                        <span>Enrolled on {{ course.enrolled_at[:10] if course.enrolled_at else 'Recently' }}</span>
+                    </div>
+                    
+                    {% if course.fees %}
+                    <div class="text-lg font-semibold text-blue-600">
+                        UGX{{ "%.2f"|format(course.fees) }}
+                    </div>
+                    {% else %}
+                    <div class="text-lg font-semibold text-green-600">
+                        Free
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lectures Section -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Course Lectures</h2>
+                    <p class="text-sm text-gray-600 mt-1">Start with lecture 1 and progress through the course</p>
+                </div>
+                
+                <div class="divide-y divide-gray-200">
+                    {% if lectures %}
+                        {% for lecture in lectures %}
+                        <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold mr-3">
+                                            Lecture {{ lecture.lecture_number }}
+                                        </span>
+                                        <span class="text-sm text-gray-500">
+                                            {{ lecture.created_at[:10] if lecture.created_at else '' }}
+                                        </span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ lecture.title }}</h3>
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <a href="{{ url_for('my_courses.view_lecture', lecture_id=lecture.id) }}" 
+                                           class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center group">
+                                            View Lecture
+                                            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div class="ml-4 flex-shrink-0">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-8 text-center">
+                            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">No lectures available yet</h3>
+                            <p class="text-gray-500">Lectures for this course will be added soon.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Course Progress -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Progress</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Lectures Completed</span>
+                            <span>0/{{ lectures|length }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-gray-200">
+                        <div class="text-center">
+                            <a href="{{ url_for('my_courses.my_courses') }}" 
+                               class="text-blue-500 hover:text-blue-600 font-semibold text-sm transition-colors duration-200 flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Back to My Courses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Info -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Information</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Instructor</span>
+                        <span class="text-sm font-medium text-gray-900">{{ course.instructor }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">CPA Level</span>
+                        <span class="text-sm font-medium text-gray-900">{{ course.cpa_level }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Total Lectures</span>
+                        <span class="text-sm font-medium text-gray-900">{{ lectures|length }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Enrollment Date</span>
+                        <span class="text-sm font-medium text-gray-900">{{ course.enrolled_at[:10] if course.enrolled_at else 'N/A' }}</span>
+                    </div>
+                    
+                    {% if course.fees %}
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-600">Course Fee</span>
+                        <span class="text-sm font-medium text-green-600">UGX{{ "%.2f"|format(course.fees) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block mobile_content %}
+<div class="p-4 pb-20">
+    <!-- Course Header -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4">
+        <h1 class="text-xl font-bold text-gray-900 mb-2">{{ course.title }}</h1>
+        <p class="text-gray-600 mb-3">By {{ course.instructor }}</p>
+        
+        <div class="flex items-center justify-between mb-3">
+            <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                Level {{ course.cpa_level }}
+            </span>
+            {% if course.fees %}
+            <span class="text-sm font-semibold text-blue-600">UGX{{ "%.2f"|format(course.fees) }}</span>
+            {% else %}
+            <span class="text-sm font-semibold text-green-600">Free</span>
+            {% endif %}
+        </div>
+        
+        {% if course.description %}
+        <p class="text-sm text-gray-700 mb-3">{{ course.description }}</p>
+        {% endif %}
+        
+        <div class="text-xs text-gray-500 flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            {{ lectures|length }} lectures • Enrolled {{ course.enrolled_at[:10] if course.enrolled_at else 'recently' }}
+        </div>
+    </div>
+
+    <!-- Lectures List -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Course Lectures</h2>
+        </div>
+        
+        <div class="divide-y divide-gray-200">
+            {% if lectures %}
+                {% for lecture in lectures %}
+                <div class="p-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-blue-600 text-xs font-semibold">{{ lecture.lecture_number }}</span>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-base font-semibold text-gray-900 mb-1">{{ lecture.title }}</h3>
+                            <p class="text-xs text-gray-500 mb-2">
+                                {{ lecture.created_at[:10] if lecture.created_at else '' }}
+                            </p>
+                            
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('my_courses.view_lecture', lecture_id=lecture.id) }}" 
+                                   class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 flex items-center">
+                                    View Lecture
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="p-6 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="text-gray-500 text-sm">No lectures available yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('my_courses.my_courses') }}" 
+           class="text-blue-500 hover:text-blue-600 font-semibold text-sm transition-colors duration-200 inline-flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Courses
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "authbase.html" %}
+
+
+
+{% block content %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-white">
+
+  <div class="w-full max-w-md p-8 space-y-6 border border-blue-200 rounded-xl shadow-lg">
+    
+    <!-- Logo -->
+    <div class="flex justify-center">
+      <img src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414" 
+           alt="Capital College Logo" class="w-24 h-24 rounded-full">
+    </div>
+
+    <!-- Heading -->
+    <h2 class="text-center text-2xl font-bold text-blue-700">Welcome Back!</h2>
+    <p class="text-center text-sm text-gray-500">Login to access your CPA courses</p>
+
+    <!-- Login Form -->
+    <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" name="email" placeholder="Enter your email" required
+               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required
+               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <button type="submit"
+              class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition duration-200">
+        Login
+      </button>
+    </form>
+
+    <!-- Links -->
+    <div class="flex justify-between text-sm text-blue-600 mt-4">
+      <a href="{{ url_for('auth.forgot_password') }}" class="hover:underline">Forgot Password?</a>
+      <a href="{{ url_for('auth.register') }}" class="hover:underline">Register</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
+{% endblock %}

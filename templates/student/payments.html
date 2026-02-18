@@ -1,0 +1,963 @@
+<!-- templates/student/payments.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Desktop Payment Dashboard -->
+<div class="hidden lg:block min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Payment Dashboard</h1>
+      <p class="text-gray-600 mt-2">Manage your invoices and view payment history</p>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50 hidden">
+      <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Column - Payment Summary & Form -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Payment Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Total Invoices</p>
+                <p class="text-2xl font-bold text-gray-900">UGX {{ "%.2f"|format(total_invoice_amount) }}</p>
+              </div>
+              <div class="p-3 bg-blue-100 rounded-lg">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Total Paid</p>
+                <p class="text-2xl font-bold text-gray-900">UGX {{ "%.2f"|format(total_paid) }}</p>
+              </div>
+              <div class="p-3 bg-green-100 rounded-lg">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Balance Due</p>
+                <p class="text-2xl font-bold text-gray-900">UGX {{ "%.2f"|format(overall_balance) }}</p>
+              </div>
+              <div class="p-3 bg-amber-100 rounded-lg">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unpaid Invoices -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Your Invoices</h2>
+            <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+              {{ unpaid_invoices|length }} unpaid
+            </span>
+          </div>
+          <div class="space-y-4">
+            {% for invoice in unpaid_invoices %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-200">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="font-semibold text-gray-900">{{ invoice.course_title }}</h3>
+                  <p class="text-sm text-gray-600">{{ invoice.description }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-gray-500">Due: {{ invoice.due_date[:10] }}</p>
+                  <p class="text-xs font-medium {% if invoice.status == 'paid' %}text-green-600{% else %}text-amber-600{% endif %}">
+                    {{ invoice.status|upper }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-600">Invoice #{{ invoice.invoice_number }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-bold text-gray-900">UGX {{ "%.2f"|format(invoice.amount) }}</p>
+                  <p class="text-sm text-gray-600">Balance: UGX {{ "%.2f"|format(invoice.balance) }}</p>
+                </div>
+              </div>
+              <div class="mt-3 flex space-x-2">
+                <button onclick="payInvoice({{ invoice.id }}, {{ invoice.balance }}, '{{ invoice.course_title }}')" 
+                        class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition duration-200">
+                  Pay Now
+                </button>
+                <button onclick="payPartialInvoice({{ invoice.id }}, {{ invoice.balance }}, '{{ invoice.course_title }}')"
+                        class="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-50 transition duration-200">
+                  Partial Payment
+                </button>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+              <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+              </svg>
+              <p class="mt-2">No unpaid invoices</p>
+              <p class="text-sm mt-1">All your invoices are paid up!</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Make a Payment</h2>
+          <form id="paymentForm" class="space-y-4">
+            <!-- Invoice Selection -->
+            <div id="invoiceSelectionSection">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Invoice (Optional)</label>
+              <select id="invoiceSelect" name="invoice_id"
+                      class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                
+                {% for invoice in unpaid_invoices %}
+                <option value="{{ invoice.id }}" data-balance="{{ invoice.balance }}">
+                  {{ invoice.invoice_number }} - {{ invoice.course_title }} (Balance: UGX {{ "%.2f"|format(invoice.balance) }})
+                </option>
+                {% endfor %}
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Select an invoice to link this payment</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="fullName" name="full_name" 
+                       value="{{ session.get('user_full_name', '') }}"
+                       placeholder="Enter your full name" required
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="email" name="email" 
+                       value="{{ session.get('user_email', '') }}"
+                       placeholder="Enter your email" required
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Amount (UGX)</label>
+              <input type="number" id="amount" name="amount" placeholder="Enter amount" min="100" required
+                     class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+              <div id="invoiceBalanceInfo" class="text-xs text-blue-600 mt-1 hidden">
+                Invoice balance: UGX <span id="invoiceBalanceAmount">0</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Minimum amount: UGX 100</p>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                    class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center">
+              <span id="btnText">Pay with PesaPal</span>
+              <div id="btnSpinner" class="hidden ml-2">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              </div>
+            </button>
+          </form>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+          <script>
+            document.getElementById('submitBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    Swal.fire({
+        title: 'Coming Soon!',
+        text: 'Online payment feature is under development',
+        icon: 'info',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#2563eb',
+        timer: 3000,
+        timerProgressBar: true
+    });
+});
+
+// Disable the button
+document.getElementById('submitBtn').disabled = true;
+document.getElementById('btnText').textContent = 'Coming Soon';
+          </script>
+
+          <!-- Payment Methods Info -->
+          <div class="mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm text-gray-700">
+            <p class="font-semibold mb-2">Supported Payment Methods:</p>
+            <ul class="list-disc list-inside space-y-1 text-xs">
+              <li>Mobile Money (MTN, Airtel)</li>
+              <li>Visa/MasterCard</li>
+              <li>Bank Transfer</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Payment History & Paid Invoices -->
+      <div class="space-y-6">
+        <!-- Recent Payments -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Recent Payments</h2>
+            <button onclick="refreshPayments()" class="text-blue-600 hover:text-blue-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+          </div>
+          <div id="paymentHistory" class="space-y-3 max-h-96 overflow-y-auto">
+            {% for payment in payment_history %}
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div class="flex-1">
+                <p class="font-medium text-gray-900">UGX {{ "%.2f"|format(payment.amount) }}</p>
+                <p class="text-xs text-gray-500">{{ payment.created_at[:10] }}</p>
+                {% if payment.invoice_id %}
+                <p class="text-xs text-blue-600">Linked to invoice</p>
+                {% endif %}
+              </div>
+              <span class="px-2 py-1 text-xs rounded-full 
+                {% if payment.status == 'completed' %}bg-green-100 text-green-800
+                {% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+                {{ payment.status|title }}
+              </span>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-gray-500">
+              <p>No payment history found</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Paid Invoices -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Paid Invoices</h2>
+          <div class="space-y-3 max-h-64 overflow-y-auto">
+            {% for invoice in paid_invoices %}
+            <div class="p-3 border border-green-200 rounded-lg bg-green-50">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-medium text-gray-900 text-sm">{{ invoice.course_title }}</p>
+                  <p class="text-xs text-gray-600">{{ invoice.invoice_number }}</p>
+                </div>
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                  Paid
+                </span>
+              </div>
+              <p class="text-sm font-semibold text-gray-900 mt-1">UGX {{ "%.2f"|format(invoice.amount) }}</p>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-gray-500">
+              <p class="text-sm">No paid invoices yet</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+          <div class="space-y-3">
+            <button onclick="loadPaymentSummary()" 
+                    class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+              <span class="text-gray-700">Refresh Summary</span>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+            <button onclick="downloadReceipt()" 
+                    class="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+              <span class="text-gray-700">Download Receipt</span>
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Show loading spinner
+  function showLoading() {
+    document.getElementById('loadingSpinner').classList.remove('hidden');
+  }
+
+  // Hide loading spinner
+  function hideLoading() {
+    document.getElementById('loadingSpinner').classList.add('hidden');
+  }
+
+  // Pay full invoice
+  function payInvoice(invoiceId, balance, courseTitle) {
+    document.getElementById('invoiceSelect').value = invoiceId;
+    document.getElementById('amount').value = balance;
+    document.getElementById('amount').dispatchEvent(new Event('input'));
+    
+    Swal.fire({
+      icon: 'info',
+      title: 'Invoice Selected',
+      text: `Full amount for ${courseTitle} has been filled. Click "Pay with PesaPal" to proceed.`,
+      confirmButtonColor: '#3b82f6'
+    });
+  }
+
+  // Pay partial invoice
+  function payPartialInvoice(invoiceId, balance, courseTitle) {
+    document.getElementById('invoiceSelect').value = invoiceId;
+    
+    Swal.fire({
+      title: 'Enter Payment Amount',
+      text: `Maximum: UGX ${balance.toFixed(2)}`,
+      input: 'number',
+      inputAttributes: {
+        min: '100',
+        max: balance,
+        step: '100'
+      },
+      inputValue: Math.min(balance, 10000),
+      showCancelButton: true,
+      confirmButtonText: 'Use This Amount',
+      confirmButtonColor: '#3b82f6',
+      preConfirm: (amount) => {
+        if (!amount || amount < 100) {
+          Swal.showValidationMessage('Minimum amount is UGX 100');
+        } else if (amount > balance) {
+          Swal.showValidationMessage(`Amount cannot exceed invoice balance of UGX ${balance.toFixed(2)}`);
+        }
+        return amount;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        document.getElementById('amount').value = result.value;
+        document.getElementById('amount').dispatchEvent(new Event('input'));
+      }
+    });
+  }
+
+  // Invoice selection handler
+  document.getElementById('invoiceSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const balance = selectedOption.getAttribute('data-balance');
+    const balanceInfo = document.getElementById('invoiceBalanceInfo');
+    const balanceAmount = document.getElementById('invoiceBalanceAmount');
+    
+    if (balance) {
+      balanceAmount.textContent = parseFloat(balance).toFixed(2);
+      balanceInfo.classList.remove('hidden');
+      
+      // Auto-fill amount with balance if empty
+      const amountField = document.getElementById('amount');
+      if (!amountField.value || amountField.value === '0') {
+        amountField.value = Math.min(parseFloat(balance), 100000);
+      }
+    } else {
+      balanceInfo.classList.add('hidden');
+    }
+  });
+
+  // Amount validation based on selected invoice
+  document.getElementById('amount').addEventListener('input', function() {
+    const selectedOption = document.getElementById('invoiceSelect').options[document.getElementById('invoiceSelect').selectedIndex];
+    const balance = selectedOption.getAttribute('data-balance');
+    const amount = parseFloat(this.value) || 0;
+    
+    if (balance && amount > parseFloat(balance)) {
+      this.setCustomValidity(`Amount cannot exceed invoice balance of UGX ${parseFloat(balance).toFixed(2)}`);
+    } else {
+      this.setCustomValidity('');
+    }
+  });
+
+  // Refresh payment summary
+  async function loadPaymentSummary() {
+    showLoading();
+    try {
+      const response = await fetch('/student/payments/summary');
+      const data = await response.json();
+      
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Refreshed',
+          text: 'Payment summary updated successfully',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error refreshing summary:', error);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Refresh payment history
+  async function refreshPayments() {
+    showLoading();
+    try {
+      const response = await fetch('/student/payments/history');
+      const data = await response.json();
+      
+      if (data.success) {
+        const historyContainer = document.getElementById('paymentHistory');
+        historyContainer.innerHTML = '';
+        
+        if (data.payments.length === 0) {
+          historyContainer.innerHTML = '<div class="text-center py-4 text-gray-500"><p>No payment history found</p></div>';
+          return;
+        }
+        
+        data.payments.slice(0, 10).forEach(payment => {
+          const paymentDate = new Date(payment.created_at).toLocaleDateString();
+          const statusClass = payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800';
+          
+          const paymentElement = document.createElement('div');
+          paymentElement.className = 'flex items-center justify-between p-3 border border-gray-200 rounded-lg';
+          paymentElement.innerHTML = `
+            <div class="flex-1">
+              <p class="font-medium text-gray-900">UGX ${parseFloat(payment.amount).toFixed(2)}</p>
+              <p class="text-xs text-gray-500">${paymentDate}</p>
+              ${payment.invoice_id ? '<p class="text-xs text-blue-600">Linked to invoice</p>' : ''}
+            </div>
+            <span class="px-2 py-1 text-xs rounded-full ${statusClass}">
+              ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+            </span>
+          `;
+          historyContainer.appendChild(paymentElement);
+        });
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated',
+          text: 'Payment history refreshed',
+          timer: 1000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing payments:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to refresh payment history'
+      });
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Download receipt (placeholder function)
+  function downloadReceipt() {
+    Swal.fire({
+      icon: 'info',
+      title: 'Feature Coming Soon',
+      text: 'Receipt download functionality will be available soon.',
+      confirmButtonColor: '#3b82f6'
+    });
+  }
+
+  // Payment form submission
+  document.getElementById("paymentForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const amount = document.getElementById("amount").value;
+    const fullName = document.getElementById("fullName").value;
+    const email = document.getElementById("email").value;
+    const invoiceId = document.getElementById("invoiceSelect").value;
+    const submitBtn = document.getElementById("submitBtn");
+    const btnText = document.getElementById("btnText");
+    const btnSpinner = document.getElementById("btnSpinner");
+
+    // Validate inputs
+    if (!fullName || !email || !amount) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Information",
+        text: "Please fill in all fields.",
+        confirmButtonColor: "#f59e0b"
+      });
+      return;
+    }
+
+    if (amount < 100) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Amount",
+        text: "Minimum payment amount is UGX 100.",
+        confirmButtonColor: "#f59e0b"
+      });
+      return;
+    }
+
+    try {
+      // Show loading state
+      submitBtn.disabled = true;
+      btnText.textContent = "Processing...";
+      btnSpinner.classList.remove("hidden");
+      showLoading();
+
+      const paymentData = {
+        amount: amount,
+        full_name: fullName,
+        email: email
+      };
+
+      // Add invoice_id if selected
+      if (invoiceId) {
+        paymentData.invoice_id = invoiceId;
+      }
+
+      const response = await fetch("/student/payments/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Redirecting to PesaPal",
+          text: "You will be redirected to complete your payment.",
+          confirmButtonColor: "#3b82f6",
+          showConfirmButton: false,
+          timer: 2000
+        }).then(() => {
+          window.location.href = data.redirect_url;
+        });
+      } else {
+        throw new Error(data.message || "Payment initiation failed");
+      }
+
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Failed",
+        text: error.message,
+        confirmButtonColor: "#ef4444"
+      });
+    } finally {
+      // Reset button
+      submitBtn.disabled = false;
+      btnText.textContent = "Pay with PesaPal";
+      btnSpinner.classList.add("hidden");
+      hideLoading();
+    }
+  });
+
+  // Auto-fill recommended amount based on balance
+  document.addEventListener('DOMContentLoaded', function() {
+    const balance = {{ overall_balance }};
+    if (balance > 0) {
+      document.getElementById('amount').value = Math.max(100, Math.min(balance, 100000));
+    }
+  });
+</script>
+
+<style>
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+{% endblock %}
+
+{% block mobile_content %}
+<!-- Mobile Payment Dashboard -->
+<div class="lg:hidden min-h-screen bg-gray-50 p-4">
+  <div class="space-y-4">
+    
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-lg p-4">
+      <h1 class="text-xl font-bold text-gray-900">Payment Dashboard</h1>
+      <p class="text-sm text-gray-600 mt-1">Manage your invoices and payments</p>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="mobileLoadingSpinner" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50 hidden">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Payment Summary Cards -->
+    <div class="grid grid-cols-1 gap-3">
+      <div class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-blue-500">
+        <p class="text-sm font-medium text-gray-600">Total Invoices</p>
+        <p class="text-xl font-bold text-gray-900">UGX {{ "%.2f"|format(total_invoice_amount) }}</p>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-green-500">
+        <p class="text-sm font-medium text-gray-600">Total Paid</p>
+        <p class="text-xl font-bold text-gray-900">UGX {{ "%.2f"|format(total_paid) }}</p>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl shadow-lg border-l-4 border-amber-500">
+        <p class="text-sm font-medium text-gray-600">Balance Due</p>
+        <p class="text-xl font-bold text-gray-900">UGX {{ "%.2f"|format(overall_balance) }}</p>
+      </div>
+    </div>
+
+    <!-- Unpaid Invoices -->
+    <div class="bg-white rounded-2xl shadow-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-bold text-gray-900">Unpaid Invoices</h2>
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+          {{ unpaid_invoices|length }}
+        </span>
+      </div>
+      <div class="space-y-3">
+        {% for invoice in unpaid_invoices %}
+        <div class="border border-gray-200 rounded-lg p-3">
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 text-sm">{{ invoice.course_title }}</h3>
+              <p class="text-xs text-gray-600">{{ invoice.invoice_number }}</p>
+            </div>
+            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">
+              Due: {{ invoice.due_date[:10] }}
+            </span>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <p class="text-sm text-gray-600">Balance:</p>
+            <p class="text-sm font-bold text-gray-900">UGX {{ "%.2f"|format(invoice.balance) }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="payInvoice({{ invoice.id }}, {{ invoice.balance }}, '{{ invoice.course_title }}')" 
+                    class="bg-blue-600 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-blue-700 transition duration-200">
+              Pay Full
+            </button>
+            <button onclick="payPartialInvoice({{ invoice.id }}, {{ invoice.balance }}, '{{ invoice.course_title }}')"
+                    class="border border-blue-600 text-blue-600 py-2 px-3 rounded-lg text-xs font-medium hover:bg-blue-50 transition duration-200">
+              Partial
+            </button>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center py-6 text-gray-500">
+          <p class="text-sm">No unpaid invoices</p>
+          <p class="text-xs mt-1">All invoices are paid up!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div class="bg-white rounded-2xl shadow-lg p-4">
+      <h2 class="text-lg font-bold text-gray-900 mb-3">Make a Payment</h2>
+      <form id="mobilePaymentForm" class="space-y-3">
+        <!-- Invoice Selection -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Select Invoice</label>
+          <select id="mobileInvoiceSelect" name="invoice_id"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
+            <option value="">General Payment</option>
+            {% for invoice in unpaid_invoices %}
+            <option value="{{ invoice.id }}" data-balance="{{ invoice.balance }}">
+              {{ invoice.invoice_number }} - UGX {{ "%.2f"|format(invoice.balance) }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+          <input type="text" id="mobileFullName" name="full_name" 
+                 value="{{ session.get('user_full_name', '') }}"
+                 placeholder="Enter your full name" required
+                 class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+          <input type="email" id="mobileEmail" name="email" 
+                 value="{{ session.get('user_email', '') }}"
+                 placeholder="Enter your email" required
+                 class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Amount (UGX)</label>
+          <input type="number" id="mobileAmount" name="amount" placeholder="Enter amount" min="100" required
+                 class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base">
+          <p class="text-xs text-gray-500 mt-1">Minimum: UGX 100</p>
+        </div>
+
+                  <button type="submit" id="mobileSubmitBtn"
+                          class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition duration-200 text-base flex items-center justify-center">
+                    <span id="mobileBtnText">Pay with PesaPal</span>
+                    <div id="mobileBtnSpinner" class="hidden ml-2">
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    </div>
+                  </button>
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                    <script>
+                      document.getElementById('mobileSubmitBtn').addEventListener('click', function(e) {
+              e.preventDefault();
+              
+              Swal.fire({
+                  title: 'Coming Soon!',
+                  text: 'Online payment feature is under development',
+                  icon: 'info',
+                  confirmButtonText: 'OK',
+                  confirmButtonColor: '#2563eb',
+                  timer: 3000,
+                  timerProgressBar: true
+              });
+          });
+
+          // Disable the button
+          document.getElementById('mobileSubmitBtn').disabled = true;
+          document.getElementById('btnText').textContent = 'Coming Soon';
+                    </script>
+      </form>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="bg-white rounded-2xl shadow-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-bold text-gray-900">Recent Payments</h2>
+        <button onclick="refreshMobilePayments()" class="text-blue-600 hover:text-blue-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+      <div id="mobilePaymentHistory" class="space-y-2">
+        {% for payment in payment_history %}
+        <div class="flex items-center justify-between p-2 border border-gray-200 rounded-lg">
+          <div class="flex-1">
+            <p class="font-medium text-gray-900 text-sm">UGX {{ "%.2f"|format(payment.amount) }}</p>
+            <p class="text-xs text-gray-500">{{ payment.created_at[:10] }}</p>
+          </div>
+          <span class="px-2 py-1 text-xs rounded-full 
+            {% if payment.status == 'completed' %}bg-green-100 text-green-800
+            {% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ payment.status|title }}
+          </span>
+        </div>
+        {% else %}
+        <div class="text-center py-3 text-gray-500 text-sm">
+          <p>No payment history found</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SweetAlert2 for Mobile -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Mobile loading functions
+  function showMobileLoading() {
+    document.getElementById('mobileLoadingSpinner').classList.remove('hidden');
+  }
+
+  function hideMobileLoading() {
+    document.getElementById('mobileLoadingSpinner').classList.add('hidden');
+  }
+
+  // Mobile invoice selection handler
+  document.getElementById('mobileInvoiceSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const balance = selectedOption.getAttribute('data-balance');
+    
+    if (balance) {
+      const amountField = document.getElementById('mobileAmount');
+      if (!amountField.value || amountField.value === '0') {
+        amountField.value = Math.min(parseFloat(balance), 100000);
+      }
+    }
+  });
+
+  // Mobile payment form submission
+  document.getElementById("mobilePaymentForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const amount = document.getElementById("mobileAmount").value;
+    const fullName = document.getElementById("mobileFullName").value;
+    const email = document.getElementById("mobileEmail").value;
+    const invoiceId = document.getElementById("mobileInvoiceSelect").value;
+    const submitBtn = document.getElementById("mobileSubmitBtn");
+    const btnText = document.getElementById("mobileBtnText");
+    const btnSpinner = document.getElementById("mobileBtnSpinner");
+
+    // Validate inputs
+    if (!fullName || !email || !amount) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Information",
+        text: "Please fill in all fields.",
+        confirmButtonColor: "#f59e0b"
+      });
+      return;
+    }
+
+    if (amount < 100) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Amount",
+        text: "Minimum payment amount is UGX 100.",
+        confirmButtonColor: "#f59e0b"
+      });
+      return;
+    }
+
+    try {
+      // Show loading state
+      submitBtn.disabled = true;
+      btnText.textContent = "Processing...";
+      btnSpinner.classList.remove("hidden");
+      showMobileLoading();
+
+      const paymentData = {
+        amount: amount,
+        full_name: fullName,
+        email: email
+      };
+
+      // Add invoice_id if selected
+      if (invoiceId) {
+        paymentData.invoice_id = invoiceId;
+      }
+
+      const response = await fetch("/student/payments/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Redirecting to PesaPal",
+          text: "You will be redirected to complete your payment.",
+          confirmButtonColor: "#3b82f6",
+          showConfirmButton: false,
+          timer: 2000
+        }).then(() => {
+          window.location.href = data.redirect_url;
+        });
+      } else {
+        throw new Error(data.message || "Payment initiation failed");
+      }
+
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment Failed",
+        text: error.message,
+        confirmButtonColor: "#ef4444"
+      });
+    } finally {
+      // Reset button
+      submitBtn.disabled = false;
+      btnText.textContent = "Pay with PesaPal";
+      btnSpinner.classList.add("hidden");
+      hideMobileLoading();
+    }
+  });
+
+  // Refresh mobile payments
+  async function refreshMobilePayments() {
+    showMobileLoading();
+    try {
+      const response = await fetch('/student/payments/history');
+      const data = await response.json();
+      
+      if (data.success) {
+        const historyContainer = document.getElementById('mobilePaymentHistory');
+        historyContainer.innerHTML = '';
+        
+        if (data.payments.length === 0) {
+          historyContainer.innerHTML = '<div class="text-center py-3 text-gray-500 text-sm"><p>No payment history found</p></div>';
+          return;
+        }
+        
+        data.payments.slice(0, 5).forEach(payment => {
+          const paymentDate = new Date(payment.created_at).toLocaleDateString();
+          const statusClass = payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800';
+          
+          const paymentElement = document.createElement('div');
+          paymentElement.className = 'flex items-center justify-between p-2 border border-gray-200 rounded-lg';
+          paymentElement.innerHTML = `
+            <div class="flex-1">
+              <p class="font-medium text-gray-900 text-sm">UGX ${parseFloat(payment.amount).toFixed(2)}</p>
+              <p class="text-xs text-gray-500">${paymentDate}</p>
+            </div>
+            <span class="px-2 py-1 text-xs rounded-full ${statusClass}">
+              ${payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+            </span>
+          `;
+          historyContainer.appendChild(paymentElement);
+        });
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated',
+          text: 'Payment history refreshed',
+          timer: 1000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing payments:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to refresh payment history'
+      });
+    } finally {
+      hideMobileLoading();
+    }
+  }
+
+  // Auto-fill recommended amount based on balance
+  document.addEventListener('DOMContentLoaded', function() {
+    const balance = {{ overall_balance }};
+    if (balance > 0) {
+      document.getElementById('mobileAmount').value = Math.max(100, Math.min(balance, 100000));
+    }
+  });
+</script>
+{% endblock %}

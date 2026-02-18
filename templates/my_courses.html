@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block title %}My Courses - Capital College LMS{% endblock %}
+
+{% block page_title %}My Courses{% endblock %}
+{% block page_subtitle %}Continue your learning journey{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Enrolled Courses Section -->
+    <div class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">My Enrolled Courses</h2>
+            <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                {{ enrolled_courses|length }} courses
+            </span>
+        </div>
+
+        {% if enrolled_courses %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for course in enrolled_courses %}
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <!-- Course Thumbnail -->
+                    <div class="h-48 bg-gradient-to-br from-blue-500 to-blue-600 relative overflow-hidden">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-16 h-16 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                                Enrolled
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Content -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{{ course.title }}</h3>
+                        <p class="text-sm text-gray-600 mb-1">By {{ course.instructor }}</p>
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                {{ course.lecture_count }} lectures
+                            </div>
+                        </div>
+                        
+                        <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
+                           class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center group">
+                            Review Lectures
+                            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State for Enrolled Courses -->
+            <div class="text-center py-12 bg-white rounded-xl shadow-lg border border-gray-100">
+                <svg class="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No enrolled courses yet</h3>
+                <p class="text-gray-500 mb-6">Request courses from the available courses below to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Courses Section -->
+    <div class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Available Courses for {{ cpa_level }}</h2>
+            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-semibold">
+                {{ available_courses|length }} available
+            </span>
+        </div>
+
+        {% if available_courses %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for course in available_courses %}
+                <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                    <!-- Course Thumbnail -->
+                    <div class="h-48 bg-gradient-to-br from-gray-400 to-gray-500 relative overflow-hidden">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-16 h-16 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Course Content -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{{ course.title }}</h3>
+                        <p class="text-sm text-gray-600 mb-1">By {{ course.instructor }}</p>
+                        
+                        {% if course.description %}
+                        <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ course.description }}</p>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            {% if course.fees %}
+                            <div class="text-sm font-semibold text-blue-600">
+                                UGX{{ "%.2f"|format(course.fees) }}
+                            </div>
+                            {% else %}
+                            <div class="text-sm font-semibold text-green-600">
+                                Free
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <button onclick="requestCourse({{ course.id }})" 
+                                class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center group request-course-btn">
+                            Request Enrollment
+                            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12 bg-white rounded-xl shadow-lg border border-gray-100">
+                <svg class="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No available courses</h3>
+                <p class="text-gray-500">There are no more courses available for your CPA level at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pending Requests Section -->
+    {% if user_requests %}
+    <div class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Pending Requests</h2>
+        
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for req in user_requests %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ req.courses.title }}</div>
+                                <div class="text-sm text-gray-500">By {{ req.courses.instructor }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ req.requested_at[:10] if req.requested_at else 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if req.status == 'pending' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                                {% elif req.status == 'approved' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Approved
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Declined
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if req.status == 'pending' %}
+                                <button onclick="cancelRequest({{ req.id }})" 
+                                        class="text-red-600 hover:text-red-900 font-medium text-sm">
+                                    Cancel
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function requestCourse(courseId) {
+    const button = document.querySelector(`button[onclick="requestCourse(${courseId})"]`);
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Requesting...
+    `;
+    button.disabled = true;
+    
+    fetch(`/my-courses/request-course/${courseId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFlashMessage(data.message, 'success');
+            // Reload page after a short delay to show updated state
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showFlashMessage(data.message, 'danger');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFlashMessage('An error occurred while processing your request', 'danger');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function cancelRequest(requestId) {
+    if (!confirm('Are you sure you want to cancel this request?')) {
+        return;
+    }
+    
+    fetch(`/my-courses/cancel-request/${requestId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFlashMessage(data.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showFlashMessage(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFlashMessage('An error occurred while cancelling the request', 'danger');
+    });
+}
+
+function showFlashMessage(message, type) {
+    // Create flash message element
+    const flashDiv = document.createElement('div');
+    flashDiv.className = `mb-3 p-4 rounded-lg ${
+        type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+        type === 'danger' ? 'bg-red-100 text-red-800 border border-red-300' :
+        'bg-blue-100 text-blue-800 border border-blue-300'
+    }`;
+    flashDiv.textContent = message;
+    
+    // Insert at the top of the content
+    const content = document.querySelector('.max-w-7xl');
+    content.insertBefore(flashDiv, content.firstChild);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        flashDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}
+
+{% block mobile_content %}
+<div class="p-4 pb-20">
+    <!-- Enrolled Courses Section -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900">My Enrolled Courses</h2>
+            <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold">
+                {{ enrolled_courses|length }}
+            </span>
+        </div>
+
+        {% if enrolled_courses %}
+            <div class="grid grid-cols-1 gap-4">
+                {% for course in enrolled_courses %}
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <!-- Course Thumbnail -->
+                    <div class="h-32 bg-gradient-to-br from-blue-500 to-blue-600 relative overflow-hidden">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+                        <div class="absolute top-2 right-2">
+                            <span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                                Enrolled
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Content -->
+                    <div class="p-4">
+                        <h3 class="text-base font-semibold text-gray-900 mb-1">{{ course.title }}</h3>
+                        <p class="text-xs text-gray-600 mb-2">By {{ course.instructor }}</p>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                {{ course.lecture_count }} lectures
+                            </div>
+                        </div>
+                        
+                        <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
+                           class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center">
+                            Review Lectures
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State for Enrolled Courses -->
+            <div class="text-center py-8 bg-white rounded-xl shadow-lg border border-gray-100">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No enrolled courses</h3>
+                <p class="text-gray-500 text-sm">Request courses below to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Courses Section -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900">Available Courses</h2>
+            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-semibold">
+                Level {{ cpa_level }}
+            </span>
+        </div>
+
+        {% if available_courses %}
+            <div class="grid grid-cols-1 gap-4">
+                {% for course in available_courses %}
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                    <!-- Course Thumbnail -->
+                    <div class="h-32 bg-gradient-to-br from-gray-400 to-gray-500 relative overflow-hidden">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Course Content -->
+                    <div class="p-4">
+                        <h3 class="text-base font-semibold text-gray-900 mb-1">{{ course.title }}</h3>
+                        <p class="text-xs text-gray-600 mb-2">By {{ course.instructor }}</p>
+                        
+                        <div class="flex items-center justify-between mb-3">
+                            {% if course.fees %}
+                            <div class="text-sm font-semibold text-blue-600">
+                                UGX{{ "%.2f"|format(course.fees) }}
+                            </div>
+                            {% else %}
+                            <div class="text-sm font-semibold text-green-600">
+                                Free
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <button onclick="requestCourseMobile({{ course.id }})" 
+                                class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-3 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center request-course-btn-mobile">
+                            Request Enrollment
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 bg-white rounded-xl shadow-lg border border-gray-100">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No available courses</h3>
+                <p class="text-gray-500 text-sm">No courses available for your level.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pending Requests Section -->
+    {% if user_requests %}
+    <div class="mb-8">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Pending Requests</h2>
+        
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="divide-y divide-gray-200">
+                {% for req in user_requests %}
+                <div class="p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-gray-900">{{ req.courses.title }}</h3>
+                            <p class="text-xs text-gray-500">By {{ req.courses.instructor }}</p>
+                        </div>
+                        <div class="ml-2">
+                            {% if req.status == 'pending' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                            {% elif req.status == 'approved' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Approved
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Declined
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>Requested: {{ req.requested_at[:10] if req.requested_at else 'N/A' }}</span>
+                        
+                        {% if req.status == 'pending' %}
+                        <button onclick="cancelRequestMobile({{ req.id }})" 
+                                class="text-red-600 hover:text-red-900 font-medium text-xs">
+                            Cancel
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function requestCourseMobile(courseId) {
+    const button = document.querySelector(`button[onclick="requestCourseMobile(${courseId})"]`);
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Requesting...
+    `;
+    button.disabled = true;
+    
+    fetch(`/my-courses/request-course/${courseId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFlashMessageMobile(data.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showFlashMessageMobile(data.message, 'danger');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFlashMessageMobile('An error occurred while processing your request', 'danger');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function cancelRequestMobile(requestId) {
+    if (!confirm('Are you sure you want to cancel this request?')) {
+        return;
+    }
+    
+    fetch(`/my-courses/cancel-request/${requestId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showFlashMessageMobile(data.message, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showFlashMessageMobile(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFlashMessageMobile('An error occurred while cancelling the request', 'danger');
+    });
+}
+
+function showFlashMessageMobile(message, type) {
+    // Create flash message element
+    const flashDiv = document.createElement('div');
+    flashDiv.className = `mx-4 mt-4 mb-3 p-4 rounded-lg ${
+        type === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+        type === 'danger' ? 'bg-red-100 text-red-800 border border-red-300' :
+        'bg-blue-100 text-blue-800 border border-blue-300'
+    }`;
+    flashDiv.textContent = message;
+    
+    // Insert at the top of the mobile content
+    const mobileContent = document.querySelector('[class*="pb-20"]');
+    mobileContent.insertBefore(flashDiv, mobileContent.firstChild);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        flashDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

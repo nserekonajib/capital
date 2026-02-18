@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Grant Student Access - CPA LMS{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Grant Student Access</h1>
+                <p class="text-gray-600">Grant students access to specific CPA courses based on their level</p>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                <div class="space-y-4">
+                    <!-- Student Email -->
+                    <div>
+                        <label for="student_email" class="block text-sm font-medium text-gray-700 mb-2">
+                            Student Email Address *
+                        </label>
+                        <input type="email" id="student_email" name="student_email" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="student@example.com"
+                               value="{{ request.args.get('student_email', '') }}">
+                    </div>
+
+                    <!-- CPA Level -->
+                    <div>
+                        <label for="cpa_level" class="block text-sm font-medium text-gray-700 mb-2">
+                            CPA Level *
+                        </label>
+                        <select id="cpa_level" name="cpa_level" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="updateCourseOptions()">
+                            <option value="">Select CPA Level</option>
+                            {% for level in levels %}
+                            <option value="{{ level }}">Level {{ level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Course Selection -->
+                    <div>
+                        <label for="course_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Course *
+                        </label>
+                        <select id="course_id" name="course_id" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a course</option>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}" 
+                                    data-level="{{ course.cpa_level }}"
+                                    {% if request.args.get('course_id') == course.id %}selected{% endif %}>
+                                {{ course.title }} (Level {{ course.cpa_level }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Validation Rules -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-semibold text-green-800 mb-2">Access Rules</h3>
+                        <ul class="text-green-700 text-sm space-y-1">
+                            <li>• Student must exist in the system</li>
+                            <li>• Student's CPA level must match the course level</li>
+                            <li>• Student cannot have duplicate access to the same course</li>
+                            <li>• Access is granted immediately upon confirmation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-4 pt-6 border-t">
+                    <a href="{{ url_for('courses.courses_list') }}" 
+                       class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Back to Courses
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                        Grant Access
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Recent Grants Section -->
+        <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Access Grants</h2>
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <p class="mt-4 text-gray-500">Access grant history will appear here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateCourseOptions() {
+    const selectedLevel = document.getElementById('cpa_level').value;
+    const courseSelect = document.getElementById('course_id');
+    const options = courseSelect.getElementsByTagName('option');
+    
+    // Show all options initially
+    for (let i = 0; i < options.length; i++) {
+        options[i].style.display = '';
+    }
+    
+    // Hide options that don't match the selected level
+    if (selectedLevel) {
+        for (let i = 1; i < options.length; i++) { // Skip first option (placeholder)
+            const optionLevel = options[i].getAttribute('data-level');
+            if (optionLevel !== selectedLevel) {
+                options[i].style.display = 'none';
+            }
+        }
+        
+        // Reset selection if current selection doesn't match level
+        const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+        if (selectedOption && selectedOption.getAttribute('data-level') !== selectedLevel) {
+            courseSelect.selectedIndex = 0;
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCourseOptions();
+    
+    // Pre-select level from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('course_id');
+    if (courseId) {
+        const courseSelect = document.getElementById('course_id');
+        for (let i = 0; i < courseSelect.options.length; i++) {
+            if (courseSelect.options[i].value === courseId) {
+                const courseLevel = courseSelect.options[i].getAttribute('data-level');
+                document.getElementById('cpa_level').value = courseLevel;
+                updateCourseOptions();
+                break;
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

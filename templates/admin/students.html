@@ -1,0 +1,246 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<div class="flex flex-col md:flex-row gap-6">
+
+  <!-- Registration Form -->
+  <div class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow">
+    <h2 class="text-xl font-bold text-blue-600 mb-4">Register Student</h2>
+    <form method="POST" id="studentForm">
+      <label class="block mb-2 text-gray-700">Full Name</label>
+      <input type="text" name="full_name" class="w-full mb-3 p-2 border rounded" required>
+
+      <label class="block mb-2 text-gray-700">CPA Level</label>
+      <select name="cpa_level" class="w-full mb-3 p-2 border rounded" required>
+        <option value="CPA1">CPA 1</option>
+        <option value="CPA2">CPA 2</option>
+        <option value="CPA3">CPA 3</option>
+        <option value="CPA4">CPA 4</option>
+      </select>
+
+      <label class="block mb-2 text-gray-700">Email</label>
+      <input type="email" name="email" class="w-full mb-3 p-2 border rounded" required>
+
+      <label class="block mb-2 text-gray-700">Phone Number</label>
+      <input type="text" name="phone_number" class="w-full mb-3 p-2 border rounded">
+
+      <label class="block mb-2 text-gray-700">Status</label>
+      <select name="status" class="w-full mb-3 p-2 border rounded">
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+
+      <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
+        Register
+      </button>
+    </form>
+  </div>
+
+  <!-- Students Table -->
+  <div class="w-full md:w-2/3 bg-white p-6 rounded-lg shadow">
+    <div class="flex justify-between mb-4">
+      <h2 class="text-xl font-bold text-blue-600">Students</h2>
+      <input type="text" id="searchInput" placeholder="Search by name or email" class="border p-2 rounded">
+    </div>
+    <table class="w-full table-auto border-collapse">
+      <thead>
+        <tr class="bg-gray-100 text-left">
+          <th class="p-2 border">Name</th>
+          <th class="p-2 border">CPA Level</th>
+          <th class="p-2 border">Email</th>
+          <th class="p-2 border">Phone</th>
+          <th class="p-2 border text-center">Status</th>
+          <th class="p-2 border text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentsTable">
+        {% for student in students %}
+          <tr class="hover:bg-gray-50">
+            <td class="p-2 border">{{ student.full_name }}</td>
+            <td class="p-2 border">{{ student.cpa_level }}</td>
+            <td class="p-2 border">{{ student.email }}</td>
+            <td class="p-2 border">{{ student.phone_number }}</td>
+            <td class="p-2 border text-center">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer status-toggle" 
+                       data-id="{{ student.id }}" {{ 'checked' if student.status=='active' else '' }}>
+                <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
+                  <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                    <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
+                  </svg>
+                  <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                    <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </label>
+            </td>
+            <td class="p-2 border text-center">
+              <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                      data-id="{{ student.id }}">Edit</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Edit Student Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h3 class="text-xl font-bold text-blue-600 mb-4">Edit Student</h3>
+    <form id="editForm">
+      <input type="hidden" id="editStudentId" name="id">
+      
+      <label class="block mb-2 text-gray-700">Full Name</label>
+      <input type="text" id="editFullName" name="full_name" class="w-full mb-3 p-2 border rounded" required>
+
+      <label class="block mb-2 text-gray-700">CPA Level</label>
+      <select id="editCpaLevel" name="cpa_level" class="w-full mb-3 p-2 border rounded" required>
+        <option value="CPA1">CPA 1</option>
+        <option value="CPA2">CPA 2</option>
+        <option value="CPA3">CPA 3</option>
+        <option value="CPA4">CPA 4</option>
+      </select>
+
+      <label class="block mb-2 text-gray-700">Email</label>
+      <input type="email" id="editEmail" name="email" class="w-full mb-3 p-2 border rounded" required>
+
+      <label class="block mb-2 text-gray-700">Phone Number</label>
+      <input type="text" id="editPhone" name="phone_number" class="w-full mb-3 p-2 border rounded">
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button type="button" id="cancelEdit" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+          Cancel
+        </button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Update
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const studentsTable = document.getElementById("studentsTable");
+  const searchInput = document.getElementById("searchInput");
+  const editModal = document.getElementById("editModal");
+  const editForm = document.getElementById("editForm");
+  const cancelEdit = document.getElementById("cancelEdit");
+
+  // Function to create table rows with toggle button
+  function renderStudents(data) {
+    studentsTable.innerHTML = "";
+    data.forEach(student => {
+      studentsTable.innerHTML += `
+        <tr class="hover:bg-gray-50">
+          <td class="p-2 border">${student.full_name}</td>
+          <td class="p-2 border">${student.cpa_level}</td>
+          <td class="p-2 border">${student.email}</td>
+          <td class="p-2 border">${student.phone_number}</td>
+          <td class="p-2 border text-center">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer status-toggle" 
+                     data-id="${student.id}" ${student.status === 'active' ? 'checked' : ''}>
+              <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
+                <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                  <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
+                </svg>
+                <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                  <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
+                </svg>
+              </div>
+            </label>
+          </td>
+          <td class="p-2 border text-center">
+            <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                    data-id="${student.id}">Edit</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    // Add click event to all toggle buttons
+    document.querySelectorAll('.status-toggle').forEach(checkbox => {
+      checkbox.addEventListener('change', async () => {
+        const studentId = checkbox.dataset.id;
+        const newStatus = checkbox.checked ? 'active' : 'inactive';
+
+        const res = await fetch(`/admin/students/toggle_status/${studentId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if(!data.success){
+          alert('Failed to update status');
+          checkbox.checked = !checkbox.checked; // Revert the toggle
+        }
+      });
+    });
+
+    // Add click event to all edit buttons
+    document.querySelectorAll('.edit-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const studentId = button.dataset.id;
+        const res = await fetch(`/admin/students/get/${studentId}`);
+        const student = await res.json();
+        
+        if(student) {
+          document.getElementById('editStudentId').value = student.id;
+          document.getElementById('editFullName').value = student.full_name;
+          document.getElementById('editCpaLevel').value = student.cpa_level;
+          document.getElementById('editEmail').value = student.email;
+          document.getElementById('editPhone').value = student.phone_number || '';
+          
+          editModal.classList.remove('hidden');
+        }
+      });
+    });
+  }
+
+  // Initial render
+  renderStudents({{ students|tojson }});
+
+  // Live search
+  searchInput.addEventListener('keyup', async () => {
+    const query = searchInput.value;
+    const res = await fetch(`/admin/students/search?q=${query}`);
+    const data = await res.json();
+    renderStudents(data);
+  });
+
+  // Edit form submission
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(editForm);
+    const studentData = Object.fromEntries(formData);
+    
+    const res = await fetch('/admin/students/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(studentData)
+    });
+    
+    const result = await res.json();
+    if(result.success) {
+      editModal.classList.add('hidden');
+      // Refresh the table
+      const query = searchInput.value;
+      const searchRes = await fetch(`/admin/students/search?q=${query}`);
+      const data = await searchRes.json();
+      renderStudents(data);
+    } else {
+      alert('Failed to update student');
+    }
+  });
+
+  // Cancel edit
+  cancelEdit.addEventListener('click', () => {
+    editModal.classList.add('hidden');
+  });
+</script>
+
+{% endblock %}

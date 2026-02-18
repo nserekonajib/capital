@@ -1,0 +1,380 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Import Users - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="bi bi-shield-lock text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold">Capital College Admin</h1>
+                        <p class="text-blue-200 text-sm">Bulk User Import</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('admin_dashboard.dashboard') }}" 
+                       class="bg-blue-700 px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Bulk Import Users</h1>
+            <p class="text-gray-600 mt-2">Upload Excel or CSV file to import multiple users at once</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'danger' %}bg-red-100 text-red-700{% elif category == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Upload Card -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <form id="uploadForm" class="space-y-6">
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Upload File (.xlsx or .csv)
+                    </label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                        <input type="file" name="user_file" accept=".xlsx,.csv" 
+                               class="hidden" id="fileInput" required>
+                        <label for="fileInput" class="cursor-pointer">
+                            <i class="bi bi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600">Click to upload or drag and drop</p>
+                            <p class="text-sm text-gray-500 mt-1">Excel (.xlsx) or CSV (.csv) files only (Max 10MB)</p>
+                        </label>
+                    </div>
+                    <p id="fileName" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="hidden">
+                    <div class="mb-2 flex justify-between text-sm text-gray-600">
+                        <span>Processing...</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-500" id="progressDetails">
+                        Reading file...
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn"
+                        class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed">
+                    Import Users
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Container -->
+        <div id="resultsContainer" class="hidden"></div>
+
+        <!-- Display import errors from session -->
+        {% if import_errors %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-yellow-800 mb-3">Previous Import Errors</h3>
+            <div class="space-y-2 max-h-60 overflow-y-auto">
+                {% for error in import_errors %}
+                <div class="flex items-start">
+                    <i class="bi bi-exclamation-triangle text-yellow-500 mr-2 mt-0.5"></i>
+                    <p class="text-sm text-yellow-700">{{ error }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Instructions -->
+        <div class="bg-blue-50 rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-blue-800 mb-3">File Format Requirements</h3>
+            <div class="space-y-3">
+                <div class="flex items-start">
+                    <div class="bg-blue-100 p-1 rounded mr-3 mt-1">
+                        <i class="bi bi-check-lg text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">Required Columns:</p>
+                        <p class="text-sm text-gray-600">Full Name, CPA Level, Email, Phone, Status</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-blue-100 p-1 rounded mr-3 mt-1">
+                        <i class="bi bi-check-lg text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">CPA Level Format:</p>
+                        <p class="text-sm text-gray-600">Must start with "CPA" (e.g., CPA1, CPA2, CPA3, CPA4)</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-blue-100 p-1 rounded mr-3 mt-1">
+                        <i class="bi bi-check-lg text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-800">Default Password:</p>
+                        <p class="text-sm text-gray-600">All imported users will have default password: <strong>123</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Data -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Sample Data Format</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 border border-gray-200 text-left text-sm font-medium text-gray-700">Full Name</th>
+                            <th class="px-4 py-2 border border-gray-200 text-left text-sm font-medium text-gray-700">CPA Level</th>
+                            <th class="px-4 py-2 border border-gray-200 text-left text-sm font-medium text-gray-700">Email</th>
+                            <th class="px-4 py-2 border border-gray-200 text-left text-sm font-medium text-gray-700">Phone</th>
+                            <th class="px-4 py-2 border border-gray-200 text-left text-sm font-medium text-gray-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">BANAWE NELSON</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">CPA4</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">nelsonbanawe@gmail.com</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">+256702512445</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">Active</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-4 py-2 border border-gray-200 text-sm">Babra Karungi</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">CPA4</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">Bkarungi@ug.ci.org</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">+256782533778</td>
+                            <td class="px-4 py-2 border border-gray-200 text-sm">Active</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressDetails = document.getElementById('progressDetails');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (!fileInput.files[0]) {
+                showResult('error', 'Please select a file first.');
+                return;
+            }
+            
+            // Show progress
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="animate-spin">⟳</i> Processing...';
+            progressContainer.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            
+            // Simulate progress updates
+            const progressStages = [
+                { percent: 10, text: 'Reading file...' },
+                { percent: 30, text: 'Validating data...' },
+                { percent: 50, text: 'Checking duplicates...' },
+                { percent: 70, text: 'Inserting users...' },
+                { percent: 90, text: 'Finalizing...' }
+            ];
+            
+            let currentStage = 0;
+            const progressInterval = setInterval(() => {
+                if (currentStage < progressStages.length) {
+                    const stage = progressStages[currentStage];
+                    progressBar.style.width = stage.percent + '%';
+                    progressText.textContent = stage.percent + '%';
+                    progressDetails.textContent = stage.text;
+                    currentStage++;
+                }
+            }, 800);
+            
+            try {
+                const formData = new FormData();
+                formData.append('user_file', fileInput.files[0]);
+                
+                const response = await fetch('/admin/bulk-import/process', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                progressDetails.textContent = 'Complete!';
+                
+                const result = await response.json();
+                
+                setTimeout(() => {
+                    showImportResult(result);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Import Users';
+                    progressContainer.classList.add('hidden');
+                }, 500);
+                
+            } catch (error) {
+                clearInterval(progressInterval);
+                showResult('error', 'Network error: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Import Users';
+                progressContainer.classList.add('hidden');
+            }
+        });
+        
+        function showImportResult(result) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.classList.remove('hidden');
+            
+            if (result.success) {
+                let html = `
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-4">
+                        <div class="flex items-center mb-3">
+                            <i class="bi bi-check-circle text-green-500 text-xl mr-2"></i>
+                            <h3 class="text-lg font-semibold text-green-800">Import Completed!</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-green-700"><strong>${result.success_count}</strong> users imported successfully</p>
+                            <p class="text-orange-600"><strong>${result.error_count}</strong> users failed to import</p>
+                            <p class="text-sm text-green-600">Default password for all users: <strong>123</strong></p>
+                        </div>
+                    </div>
+                `;
+                
+                if (result.error_count > 0 && result.errors.length > 0) {
+                    html += `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-yellow-800 mb-3">Import Errors</h3>
+                            <div class="space-y-2 max-h-60 overflow-y-auto">
+                                ${result.errors.map(error => `
+                                    <div class="flex items-start">
+                                        <i class="bi bi-exclamation-triangle text-yellow-500 mr-2 mt-0.5"></i>
+                                        <p class="text-sm text-yellow-700">${error}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                resultsContainer.innerHTML = html;
+            } else {
+                resultsContainer.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-6">
+                        <div class="flex items-center mb-3">
+                            <i class="bi bi-x-circle text-red-500 text-xl mr-2"></i>
+                            <h3 class="text-lg font-semibold text-red-800">Import Failed</h3>
+                        </div>
+                        <p class="text-red-700">${result.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function showResult(type, message) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.classList.remove('hidden');
+            
+            const bgColor = type === 'error' ? 'red' : 'green';
+            resultsContainer.innerHTML = `
+                <div class="bg-${bgColor}-50 border border-${bgColor}-200 rounded-xl p-6">
+                    <p class="text-${bgColor}-700">${message}</p>
+                </div>
+            `;
+        }
+        
+        // File input handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file selected';
+            document.getElementById('fileName').textContent = `Selected file: ${fileName}`;
+        });
+        
+        // Drag and drop functionality
+        const dropArea = document.querySelector('.border-dashed');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('border-blue-400', 'bg-blue-50');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('border-blue-400', 'bg-blue-50');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('fileInput').files = files;
+            document.getElementById('fileName').textContent = `Selected file: ${files[0].name}`;
+        }
+        
+        // Loading animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .animate-spin {
+                animation: spin 1s linear infinite;
+                display: inline-block;
+                margin-right: 8px;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+{% endblock %}

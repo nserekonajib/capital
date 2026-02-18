@@ -1,0 +1,1041 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lecture.title }} - {{ course.title }}{% endblock %}
+
+{% block page_title %}{{ lecture.title }}{% endblock %}
+{% block page_subtitle %}Lecture {{ lecture.lecture_number }} • {{ course.title }}{% endblock %}
+
+{% block content %}
+<!-- Include CS Player scripts -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="{{ url_for('static', filename='csPlayer.js') }}?v={{ time }}"></script>
+
+<style>
+    /* CS Player Custom Styles - FIXED VERSION */
+    .player-wrapper {
+        position: relative;
+        width: 100%;
+        background: #000;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+    
+    /* Container for responsive aspect ratio - FIXED */
+    .player-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    }
+
+    #player {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    /* CRITICAL FIXES - Target all nested player elements */
+    #player,
+    #player > div,
+    #player .csPlayer,
+    #player .csPlayer-container,
+    #player .csPlayer iframe,
+    #player .csPlayer video,
+    #player .csPlayer .csPlayer-video,
+    #player .csPlayer .csPlayer-video-container {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    /* Ensure the YouTube iframe fills the container */
+    #player iframe {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+    }
+
+    /* Target CS Player specific elements */
+    .csPlayer {
+        width: 100% !important;
+        height: 100% !important;
+        position: relative !important;
+    }
+
+    .csPlayer-container {
+        width: 100% !important;
+        height: 100% !important;
+        position: relative !important;
+    }
+
+    /* Custom theme variables */
+    .csPlayer {
+        --playerBg: #000000;
+        --playerColor: #3b82f6;
+        --playerBR: 0px;
+        --startLoaderColor: #3b82f6;
+        --startBtnSize: 70px;
+        --startBtnBg: #3b82f6;
+        --startBtnIconColor: #ffffff;
+        --playPauseIconColor: #3b82f6;
+        --forwardIconColor: #3b82f6;
+        --backwardIconColor: #3b82f6;
+        --sliderBg: #374151;
+        --sliderThumbSize: 16px;
+        --sliderThumbColor: #3b82f6;
+        --sliderSeekTrackColor: #3b82f6;
+        --sliderLoadedTrackColor: #6b7280;
+        --currentTimeTextColor: #3b82f6;
+        --durationTextColor: #3b82f6;
+        --settingsBtnColor: #3b82f6;
+        --fullscreenBtnColor: #3b82f6;
+        --settingsBg: #1f2937;
+        --settingsTextColor: #f9fafb;
+        --settingsInputIconBg: #374151;
+        --settingsInputIconColor: #3b82f6;
+    }
+
+    /* Fullscreen styles - IMPROVED */
+    .csPlayer:-webkit-full-screen {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        background: #000 !important;
+    }
+
+    .csPlayer:-moz-full-screen {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        background: #000 !important;
+    }
+
+    .csPlayer:-ms-fullscreen {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        background: #000 !important;
+    }
+
+    .csPlayer:fullscreen {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        background: #000 !important;
+    }
+
+    /* Fullscreen button */
+    .fullscreen-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        border: 2px solid #3b82f6;
+        color: #3b82f6;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .fullscreen-toggle:hover {
+        background: #3b82f6;
+        color: #ffffff;
+    }
+
+    .loading-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #3b82f6;
+        font-size: 1rem;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+
+    /* Player controls for lecture page */
+    .player-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 1rem;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .player-control-btn {
+        padding: 8px 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .player-control-btn:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    .player-control-btn:active {
+        transform: scale(0.98);
+    }
+
+    /* Mobile-specific styles - IMPROVED */
+    @media (max-width: 768px) {
+        .player-controls {
+            gap: 6px;
+            padding: 0.75rem;
+        }
+        
+        .player-control-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .fullscreen-toggle {
+            top: 10px;
+            right: 10px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Ensure mobile player fits */
+        #player-mobile,
+        #player-mobile > div,
+        #player-mobile .csPlayer,
+        #player-mobile .csPlayer-container,
+        #player-mobile .csPlayer iframe,
+        #player-mobile .csPlayer video {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+        }
+    }
+
+    /* Additional fixes for common CS Player issues */
+    .csPlayer .csPlayer-video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    .csPlayer .csPlayer-controls {
+        z-index: 100 !important;
+    }
+
+    /* Force remove any max-width constraints */
+    #player * {
+        max-width: none !important;
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Main Video Content -->
+        <div class="lg:col-span-3">
+            <!-- CS Player Section -->
+            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6">
+                {% if lecture.youtube_link %}
+                {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
+                <div class="player-wrapper">
+                    <div class="player-container">
+                        <button class="fullscreen-toggle" onclick="toggleFullscreen()" id="fullscreenBtn">
+                            ⛶ Enter Fullscreen
+                        </button>
+                        <div id="player"></div>
+                        <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                            Loading player...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Controls -->
+                <div class="player-controls p-4 bg-white border-t border-gray-200">
+                    <button class="player-control-btn" onclick="playVideo()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Play
+                    </button>
+                    <button class="player-control-btn" onclick="pauseVideo()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                        </svg>
+                        Pause
+                    </button>
+                    <button class="player-control-btn" onclick="seekBackward()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                        </svg>
+                        -10s
+                    </button>
+                    <button class="player-control-btn" onclick="seekForward()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
+                        </svg>
+                        +10s
+                    </button>
+                    <button class="player-control-btn" onclick="toggleFullscreen()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        </svg>
+                        Fullscreen
+                    </button>
+                </div>
+                {% else %}
+                <div class="w-full h-96 bg-gray-800 flex items-center justify-center">
+                    <div class="text-center text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-lg">Video content not available</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Lecture Details -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
+                
+                <div class="flex items-center space-x-4 mb-4">
+                    <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                        Lecture {{ lecture.lecture_number }}
+                    </span>
+                    <span class="text-gray-500">•</span>
+                    <span class="text-gray-600">{{ course.title }}</span>
+                </div>
+
+                {% if lecture.description %}
+                <div class="prose max-w-none mt-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">About this lecture</h3>
+                    <p class="text-gray-700 leading-relaxed">{{ lecture.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Navigation Buttons -->
+                <div class="flex items-center justify-between pt-6 mt-6 border-t border-gray-200">
+                    {% if current_index > 0 %}
+                    <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index - 1].id) }}" 
+                       class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Previous Lecture
+                    </a>
+                    {% else %}
+                    <div></div> <!-- Empty div for spacing -->
+                    {% endif %}
+
+                    <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
+                       class="text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-200 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
+                        </svg>
+                        Back to Course
+                    </a>
+
+                    {% if current_index < all_lectures|length - 1 %}
+                    <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index + 1].id) }}" 
+                       class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center">
+                        Next Lecture
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    {% else %}
+                    <div></div> <!-- Empty div for spacing -->
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Course Info -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Info</h3>
+                
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="font-semibold text-gray-900">{{ course.title }}</p>
+                        <p class="text-gray-600">By {{ course.instructor }}</p>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-gray-200">
+                        <p class="text-gray-600">CPA Level {{ course.cpa_level }}</p>
+                        <p class="text-gray-600">{{ all_lectures|length }} lectures total</p>
+                    </div>
+                    
+                    <div class="pt-2">
+                        <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
+                           class="text-blue-500 hover:text-blue-600 font-semibold transition-colors duration-200 flex items-center">
+                            View all lectures
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lecture List -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="font-semibold text-gray-900">Lecture List</h3>
+                </div>
+                
+                <div class="max-h-96 overflow-y-auto">
+                    {% for lec in all_lectures %}
+                    <a href="{{ url_for('my_courses.view_lecture', lecture_id=lec.id) }}" 
+                       class="block p-4 border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 {% if lec.id == lecture.id %}bg-blue-50 border-blue-200{% endif %}">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                {% if lec.id == lecture.id %}
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                {% else %}
+                                <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <span class="text-xs font-semibold text-gray-600">{{ lec.lecture_number }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 mb-1 {% if lec.id == lecture.id %}text-blue-600{% endif %}">
+                                    {{ lec.title }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    {{ lec.created_at[:10] if lec.created_at else '' }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CS Player Configuration
+    const playerId = 'player';
+    {% if lecture.youtube_link %}
+        {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
+        const currentVideoId = "{{ video_id }}";
+    {% else %}
+        const currentVideoId = null;
+    {% endif %}
+    let isFullscreen = false;
+    let youtubePlayer = null;
+
+    // Initialize when YouTube API is ready
+    function onYouTubeIframeAPIReady() {
+        {% if lecture.youtube_link %}
+        initializePlayer();
+        {% endif %}
+    }
+
+    async function initializePlayer() {
+        try {
+            showLoadingIndicator(true);
+    
+            await csPlayer.init(playerId, {
+                defaultId: currentVideoId,
+                theme: 'default',
+                thumbnail: true,
+                loop: false,
+                autoplay: false // ✅ prevent auto start
+            });
+    
+            // Get YouTube player instance
+            youtubePlayer = csPlayer.csPlayers[playerId].videoTag;
+    
+            // ✅ Ensure paused when ready
+            if (youtubePlayer && typeof youtubePlayer.pauseVideo === "function") {
+                youtubePlayer.pauseVideo();
+            } else {
+                csPlayer.pause(playerId);
+            }
+    
+            // Listen for fullscreen changes
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+            showLoadingIndicator(false);
+    
+        } catch (error) {
+            console.error('CS Player initialization failed:', error);
+            showLoadingIndicator(false);
+        }
+    }
+    
+
+    function showLoadingIndicator(show) {
+        const indicator = document.getElementById('loadingIndicator');
+        if (indicator) {
+            indicator.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    // Handle fullscreen changes
+    function handleFullscreenChange() {
+        isFullscreen = !!document.fullscreenElement;
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = isFullscreen ? '⛶ Exit Fullscreen' : '⛶ Enter Fullscreen';
+        }
+    }
+
+    // Toggle fullscreen function
+    function toggleFullscreen() {
+        const playerElement = document.querySelector('.csPlayer');
+        
+        if (!playerElement) {
+            console.error('Player element not found');
+            return;
+        }
+
+        try {
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (playerElement.requestFullscreen) {
+                    playerElement.requestFullscreen();
+                } else if (playerElement.mozRequestFullScreen) {
+                    playerElement.mozRequestFullScreen();
+                } else if (playerElement.webkitRequestFullscreen) {
+                    playerElement.webkitRequestFullscreen();
+                } else if (playerElement.msRequestFullscreen) {
+                    playerElement.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        } catch (error) {
+            console.error('Fullscreen failed:', error);
+        }
+    }
+
+    // Player control functions
+    async function playVideo() {
+        try {
+            await csPlayer.play(playerId);
+        } catch (error) {
+            console.error('Play failed:', error);
+        }
+    }
+
+    function pauseVideo() {
+        try {
+            csPlayer.pause(playerId);
+        } catch (error) {
+            console.error('Pause failed:', error);
+        }
+    }
+
+    // Seek functions
+    async function seekBackward() {
+        try {
+            if (!youtubePlayer || typeof youtubePlayer.seekTo !== 'function') {
+                throw new Error('YouTube player not properly initialized');
+            }
+            
+            const currentTime = await csPlayer.getCurrentTime(playerId);
+            const newTime = Math.max(0, currentTime - 10);
+            youtubePlayer.seekTo(newTime, true);
+        } catch (error) {
+            console.error('Seek failed:', error);
+        }
+    }
+
+    async function seekForward() {
+        try {
+            if (!youtubePlayer || typeof youtubePlayer.seekTo !== 'function') {
+                throw new Error('YouTube player not properly initialized');
+            }
+            
+            const currentTime = await csPlayer.getCurrentTime(playerId);
+            const duration = await csPlayer.getDuration(playerId);
+            const newTime = Math.min(duration, currentTime + 10);
+            youtubePlayer.seekTo(newTime, true);
+        } catch (error) {
+            console.error('Seek failed:', error);
+        }
+    }
+
+    // Fallback initialization
+    if (typeof YT !== 'undefined' && YT.loaded && currentVideoId) {
+        initializePlayer();
+    }
+
+    // Error handling for YouTube API
+    window.addEventListener('error', (e) => {
+        console.error('Script error:', e.message);
+    });
+</script>
+{% endblock %}
+
+{% block mobile_content %}
+<!-- Mobile content with responsive player -->
+<div class="p-4 pb-20">
+    <!-- Video Player -->
+    <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-4">
+        {% if lecture.youtube_link %}
+        <div class="player-wrapper">
+            <div class="player-container">
+                <button class="fullscreen-toggle" onclick="toggleFullscreenMobile()" id="fullscreenBtnMobile">
+                    ⛶ Enter Fullscreen
+                </button>
+                <div id="player-mobile"></div>
+                <div class="loading-indicator" id="loadingIndicatorMobile" style="display: none;">
+                    Loading player...
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls p-3 bg-white border-t border-gray-200">
+            <button class="player-control-btn" onclick="playVideoMobile()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                Play
+            </button>
+            <button class="player-control-btn" onclick="pauseVideoMobile()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                Pause
+            </button>
+            <button class="player-control-btn" onclick="seekBackwardMobile()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                </svg>
+                -10s
+            </button>
+            <button class="player-control-btn" onclick="seekForwardMobile()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
+                </svg>
+                +10s
+            </button>
+            <button class="player-control-btn" onclick="toggleFullscreenMobile()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+                Fullscreen
+            </button>
+        </div>
+        {% else %}
+        <div class="w-full h-64 bg-gray-800 flex items-center justify-center">
+            <div class="text-center">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-gray-400 text-sm">Video not available</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Lecture Details -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4">
+        <h1 class="text-xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
+        
+        <div class="flex items-center space-x-2 mb-3">
+            <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold">
+                Lecture {{ lecture.lecture_number }}
+            </span>
+            <span class="text-xs text-gray-500">•</span>
+            <span class="text-xs text-gray-600">{{ course.title }}</span>
+        </div>
+
+        {% if lecture.description %}
+        <div class="mt-3">
+            <h3 class="text-base font-semibold text-gray-900 mb-1">About this lecture</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">{{ lecture.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Buttons -->
+        <div class="flex items-center justify-between space-x-2 mt-4">
+            {% if current_index > 0 %}
+            <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index - 1].id) }}" 
+               class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-sm">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+            </a>
+            {% endif %}
+
+            {% if current_index < all_lectures|length - 1 %}
+            <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index + 1].id) }}" 
+               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-sm">
+                Next
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Course Info -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4">
+        <h3 class="font-semibold text-gray-900 mb-3">Course: {{ course.title }}</h3>
+        <p class="text-sm text-gray-600 mb-2">By {{ course.instructor }}</p>
+        <p class="text-sm text-gray-600">CPA Level {{ course.cpa_level }}</p>
+        
+        <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
+           class="mt-3 text-blue-500 hover:text-blue-600 font-semibold text-sm transition-colors duration-200 flex items-center">
+            View all lectures
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+    </div>
+</div>
+
+<style>
+    /* MOBILE-SPECIFIC FIXES - Apply same robust CSS as desktop */
+    #player-mobile,
+    #player-mobile > div,
+    #player-mobile .csPlayer,
+    #player-mobile .csPlayer-container,
+    #player-mobile .csPlayer iframe,
+    #player-mobile .csPlayer video,
+    #player-mobile .csPlayer .csPlayer-video,
+    #player-mobile .csPlayer .csPlayer-video-container {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    /* Ensure the YouTube iframe fills the container on mobile */
+    #player-mobile iframe {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+    }
+
+    /* Target CS Player specific elements on mobile */
+    #player-mobile .csPlayer {
+        width: 100% !important;
+        height: 100% !important;
+        position: relative !important;
+    }
+
+    #player-mobile .csPlayer-container {
+        width: 100% !important;
+        height: 100% !important;
+        position: relative !important;
+    }
+
+    /* Additional fixes for common CS Player issues on mobile */
+    #player-mobile .csPlayer .csPlayer-video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    #player-mobile .csPlayer .csPlayer-controls {
+        z-index: 100 !important;
+    }
+
+    /* Force remove any max-width constraints on mobile */
+    #player-mobile * {
+        max-width: none !important;
+    }
+
+    /* Mobile-specific fullscreen styles */
+    @media (max-width: 768px) {
+        .player-controls {
+            gap: 6px;
+            padding: 0.75rem;
+        }
+        
+        .player-control-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .fullscreen-toggle {
+            top: 10px;
+            right: 10px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Ensure mobile player container is properly sized */
+        .player-container {
+            padding-bottom: 56.25% !important; /* Maintain 16:9 aspect ratio */
+        }
+
+        /* Mobile fullscreen overrides */
+        #player-mobile .csPlayer:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            background: #000 !important;
+        }
+
+        #player-mobile .csPlayer:-moz-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            background: #000 !important;
+        }
+
+        #player-mobile .csPlayer:-ms-fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            background: #000 !important;
+        }
+
+        #player-mobile .csPlayer:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            background: #000 !important;
+        }
+    }
+</style>
+
+<script>
+    // Mobile-specific player functions - IMPROVED VERSION
+    const playerIdMobile = 'player-mobile';
+    let youtubePlayerMobile = null;
+    let isFullscreenMobile = false;
+
+    // Initialize mobile player when YouTube API is ready
+    function onYouTubeIframeAPIReady() {
+        {% if lecture.youtube_link %}
+        // Initialize both desktop and mobile players
+        initializePlayer();
+        initializePlayerMobile();
+        {% endif %}
+    }
+
+    async function initializePlayerMobile() {
+        try {
+            showLoadingIndicatorMobile(true);
+    
+            // Small delay to ensure DOM is ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+    
+            await csPlayer.init(playerIdMobile, {
+                defaultId: currentVideoId,
+                theme: 'default',
+                thumbnail: true,
+                loop: false,
+                autoplay: false // ✅ prevent autoplay
+            });
+    
+            // Get the YouTube player instance
+            youtubePlayerMobile = csPlayer.csPlayers[playerIdMobile].videoTag;
+    
+            // ✅ Ensure paused when ready
+            if (youtubePlayerMobile && typeof youtubePlayerMobile.pauseVideo === "function") {
+                youtubePlayerMobile.pauseVideo();
+            } else {
+                csPlayer.pause(playerIdMobile);
+            }
+    
+            // Force resize the mobile player
+            setTimeout(() => {
+                const mobilePlayerElement = document.getElementById(playerIdMobile);
+                if (mobilePlayerElement) {
+                    mobilePlayerElement.style.width = '100%';
+                    mobilePlayerElement.style.height = '100%';
+    
+                    // Force resize any nested elements
+                    const nestedPlayers = mobilePlayerElement.querySelectorAll('.csPlayer, .csPlayer-container, iframe, video');
+                    nestedPlayers.forEach(element => {
+                        element.style.width = '100%';
+                        element.style.height = '100%';
+                    });
+                }
+            }, 500);
+    
+            // Listen for fullscreen changes
+            document.addEventListener('fullscreenchange', handleFullscreenChangeMobile);
+    
+            showLoadingIndicatorMobile(false);
+    
+        } catch (error) {
+            console.error('CS Player mobile initialization failed:', error);
+            showLoadingIndicatorMobile(false);
+        }
+    }
+    
+
+    function showLoadingIndicatorMobile(show) {
+        const indicator = document.getElementById('loadingIndicatorMobile');
+        if (indicator) {
+            indicator.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    // Handle fullscreen changes for mobile - IMPROVED
+    function handleFullscreenChangeMobile() {
+        isFullscreenMobile = !!document.fullscreenElement;
+        const fullscreenBtn = document.getElementById('fullscreenBtnMobile');
+        
+        if (fullscreenBtn) {
+            fullscreenBtn.textContent = isFullscreenMobile ? '⛶ Exit Fullscreen' : '⛶ Enter Fullscreen';
+        }
+        
+        // Force resize after fullscreen change
+        setTimeout(() => {
+            const mobilePlayerElement = document.getElementById(playerIdMobile);
+            if (mobilePlayerElement) {
+                mobilePlayerElement.style.width = '100%';
+                mobilePlayerElement.style.height = '100%';
+            }
+        }, 100);
+    }
+
+    // Toggle fullscreen function for mobile - IMPROVED
+    function toggleFullscreenMobile() {
+        const playerWrapper = document.querySelector('#player-mobile').closest('.player-wrapper');
+        
+        if (!playerWrapper) {
+            console.error('Mobile player wrapper not found');
+            return;
+        }
+
+        try {
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (playerWrapper.requestFullscreen) {
+                    playerWrapper.requestFullscreen();
+                } else if (playerWrapper.mozRequestFullScreen) {
+                    playerWrapper.mozRequestFullScreen();
+                } else if (playerWrapper.webkitRequestFullscreen) {
+                    playerWrapper.webkitRequestFullscreen();
+                } else if (playerWrapper.msRequestFullscreen) {
+                    playerWrapper.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        } catch (error) {
+            console.error('Mobile fullscreen failed:', error);
+        }
+    }
+
+    // Mobile player control functions
+    async function playVideoMobile() {
+        try {
+            await csPlayer.play(playerIdMobile);
+        } catch (error) {
+            console.error('Mobile play failed:', error);
+        }
+    }
+
+    function pauseVideoMobile() {
+        try {
+            csPlayer.pause(playerIdMobile);
+        } catch (error) {
+            console.error('Mobile pause failed:', error);
+        }
+    }
+
+    // Mobile seek functions
+    async function seekBackwardMobile() {
+        try {
+            if (!youtubePlayerMobile || typeof youtubePlayerMobile.seekTo !== 'function') {
+                throw new Error('YouTube mobile player not properly initialized');
+            }
+            
+            const currentTime = await csPlayer.getCurrentTime(playerIdMobile);
+            const newTime = Math.max(0, currentTime - 10);
+            youtubePlayerMobile.seekTo(newTime, true);
+        } catch (error) {
+            console.error('Mobile seek failed:', error);
+        }
+    }
+
+    async function seekForwardMobile() {
+        try {
+            if (!youtubePlayerMobile || typeof youtubePlayerMobile.seekTo !== 'function') {
+                throw new Error('YouTube mobile player not properly initialized');
+            }
+            
+            const currentTime = await csPlayer.getCurrentTime(playerIdMobile);
+            const duration = await csPlayer.getDuration(playerIdMobile);
+            const newTime = Math.min(duration, currentTime + 10);
+            youtubePlayerMobile.seekTo(newTime, true);
+        } catch (error) {
+            console.error('Mobile seek failed:', error);
+        }
+    }
+
+    // Force resize on window resize for mobile
+    window.addEventListener('resize', function() {
+        const mobilePlayerElement = document.getElementById(playerIdMobile);
+        if (mobilePlayerElement) {
+            mobilePlayerElement.style.width = '100%';
+            mobilePlayerElement.style.height = '100%';
+        }
+    });
+
+    // Fallback initialization for mobile
+    if (typeof YT !== 'undefined' && YT.loaded && currentVideoId) {
+        setTimeout(initializePlayerMobile, 100);
+    }
+
+    // Mobile-specific error handling
+    window.addEventListener('error', (e) => {
+        console.error('Mobile script error:', e.message);
+    });
+</script>
+{% endblock %}

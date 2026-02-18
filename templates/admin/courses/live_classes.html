@@ -1,0 +1,920 @@
+<!-- templates/admin/courses/enhanced_live_classes.html -->
+{% extends "admin/base.html" %}
+{% block title %}Live Classes - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        Live Classes Management
+                    </h1>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Schedule and manage live Zoom classes with advanced search and filtering
+                    </p>
+                </div>
+                <div class="mt-5 flex lg:mt-0 lg:ml-4 space-x-3">
+                    <!-- Search Box -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               id="searchInput"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Search classes, courses, instructors...">
+                    </div>
+                    
+                    <button id="scheduleClassBtn" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Schedule Class
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Controls -->
+        <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div class="flex flex-wrap items-center space-x-4">
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="statusFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="past">Past</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Sort Options -->
+                    <div>
+                        <label for="sortBy" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                        <select id="sortBy" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
+                            <option value="scheduled_date">Date</option>
+                            <option value="class_title">Class Title</option>
+                            <option value="instructor">Instructor</option>
+                            <option value="duration_minutes">Duration</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Sort Order -->
+                    <div>
+                        <label for="sortOrder" class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+                        <select id="sortOrder" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg">
+                            <option value="desc">Newest First</option>
+                            <option value="asc">Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span id="resultsCount" class="text-sm text-gray-600">
+                        {{ live_classes|length }} classes found
+                    </span>
+                    <button id="refreshBtn" class="inline-flex items-center p-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Classes Table -->
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sortable" data-sort="class_title">
+                                Class Title
+                                <span class="sort-indicator"></span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sortable" data-sort="courses.title">
+                                Course
+                                <span class="sort-indicator"></span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sortable" data-sort="instructor">
+                                Instructor
+                                <span class="sort-indicator"></span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sortable" data-sort="scheduled_date">
+                                Date & Time
+                                <span class="sort-indicator"></span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sortable" data-sort="duration_minutes">
+                                Duration
+                                <span class="sort-indicator"></span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="liveClassesTable">
+                        {% for live_class in live_classes %}
+                        <tr class="hover:bg-gray-50" data-class-id="{{ live_class.id }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ live_class.class_title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ live_class.course_title or 'N/A' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ live_class.instructor }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ live_class.scheduled_date }} at {{ live_class.scheduled_time }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ live_class.duration_minutes }} mins</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-800' if live_class.is_active else 'bg-red-100 text-red-800' }}">
+                                    {{ 'Active' if live_class.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    {% if live_class.zoom_start_url %}
+                                    <a href="{{ live_class.zoom_start_url }}" target="_blank" 
+                                       class="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded text-sm flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                        Start
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <!-- Send Reminder Button -->
+                                    <button class="send-reminder-btn text-purple-600 hover:text-purple-900 bg-purple-100 px-3 py-1 rounded text-sm flex items-center"
+                                            data-class-id="{{ live_class.id }}"
+                                            data-class-title="{{ live_class.class_title }}">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        Remind
+                                    </button>
+                                    
+                                    <button class="edit-class-btn text-green-600 hover:text-green-900 bg-green-100 px-3 py-1 rounded text-sm flex items-center"
+                                            data-class-id="{{ live_class.id }}"
+                                            data-class-title="{{ live_class.class_title }}"
+                                            data-course-id="{{ live_class.course_id }}"
+                                            data-instructor="{{ live_class.instructor }}"
+                                            data-scheduled-date="{{ live_class.scheduled_date }}"
+                                            data-scheduled-time="{{ live_class.scheduled_time }}"
+                                            data-duration="{{ live_class.duration_minutes }}"
+                                            data-waiting-room="{{ 'true' if live_class.waiting_room_enabled else 'false' }}">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    
+                                    <button class="delete-class-btn text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded text-sm flex items-center"
+                                            data-class-id="{{ live_class.id }}">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500">
+                                    <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                    <p class="text-lg font-medium mb-2">No live classes scheduled</p>
+                                    <p class="text-sm mb-4">Get started by scheduling your first live class</p>
+                                    <button id="emptyScheduleBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                        Schedule First Class
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden p-8 text-center">
+                <div class="flex flex-col items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-blue-600 mb-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-gray-600">Loading classes...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="scheduleModal" class="fixed inset-0 overflow-y-auto z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" id="modalBackdrop"></div>
+            
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modalTitle">Schedule Live Class</h3>
+                        
+                        <form id="scheduleForm" class="space-y-4">
+                            <input type="hidden" id="editClassId" value="">
+                            
+                            <!-- Course Selection -->
+                            <div>
+                                <label for="course_id" class="block text-sm font-medium text-gray-700 mb-1">Course *</label>
+                                <select id="course_id" name="course_id" required
+                                        class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select a course</option>
+                                    <!-- Courses will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            
+                            <!-- Class Title -->
+                            <div>
+                                <label for="class_title" class="block text-sm font-medium text-gray-700 mb-1">Class Title *</label>
+                                <input type="text" id="class_title" name="class_title" required
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="Enter class title">
+                            </div>
+                            
+                            <!-- Instructor -->
+                            <div>
+                                <label for="instructor" class="block text-sm font-medium text-gray-700 mb-1">Instructor *</label>
+                                <input type="text" id="instructor" name="instructor" required
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="Enter instructor name">
+                            </div>
+                            
+                            <!-- Date and Time -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="scheduled_date" class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                                    <input type="date" id="scheduled_date" name="scheduled_date" required
+                                           class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="scheduled_time" class="block text-sm font-medium text-gray-700 mb-1">Time *</label>
+                                    <input type="time" id="scheduled_time" name="scheduled_time" required
+                                           class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                            </div>
+                            
+                            <!-- Duration -->
+                            <div>
+                                <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes) *</label>
+                                <input type="number" id="duration_minutes" name="duration_minutes" min="15" max="240" required
+                                       class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="60" value="60">
+                            </div>
+                            
+                            <!-- Waiting Room Toggle -->
+                            <div class="flex items-center justify-between">
+                                <label for="waiting_room_enabled" class="block text-sm font-medium text-gray-700">Enable Waiting Room</label>
+                                <label class="toggle-control">
+                                    <input type="checkbox" id="waiting_room_enabled" name="waiting_room_enabled" checked>
+                                    <span class="control"></span>
+                                </label>
+                            </div>
+                            
+                            <!-- Submit Buttons -->
+                            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                <button type="submit"
+                                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+                                        id="submitBtn">
+                                    Schedule Class
+                                </button>
+                                <button type="button" id="cancelBtn"
+                                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm transition-colors duration-200">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+class EnhancedLiveClassManager {
+    constructor() {
+        this.modal = document.getElementById('scheduleModal');
+        this.form = document.getElementById('scheduleForm');
+        this.courses = [];
+        this.isEditing = false;
+        this.currentSearch = '';
+        this.currentFilters = {
+            status: '',
+            sort: 'scheduled_date',
+            order: 'desc'
+        };
+        
+        this.init();
+    }
+
+    async init() {
+        await this.loadCourses();
+        this.attachEventListeners();
+        this.setupSearchAndFilters();
+    }
+
+    async loadCourses() {
+        try {
+            const response = await fetch('/api/courses/all');
+            const data = await response.json();
+            console.log('Courses loaded:', data);
+            this.courses = data || [];
+            this.populateCourseSelect();
+        } catch (error) {
+            console.error('Error loading courses:', error);
+            this.showNotification('Error loading courses', 'error');
+        }
+    }
+
+    populateCourseSelect() {
+        const courseSelect = document.getElementById('course_id');
+        courseSelect.innerHTML = '<option value="">Select a course</option>';
+        
+        this.courses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = course.title;
+            courseSelect.appendChild(option);
+        });
+    }
+
+    setupSearchAndFilters() {
+        // Search with debounce
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.currentSearch = e.target.value;
+                this.refreshTable();
+            }, 300);
+        });
+
+        // Filter changes
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            this.currentFilters.status = e.target.value;
+            this.refreshTable();
+        });
+
+        document.getElementById('sortBy').addEventListener('change', (e) => {
+            this.currentFilters.sort = e.target.value;
+            this.refreshTable();
+        });
+
+        document.getElementById('sortOrder').addEventListener('change', (e) => {
+            this.currentFilters.order = e.target.value;
+            this.refreshTable();
+        });
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            this.refreshTable();
+        });
+
+        // Sortable headers
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', () => {
+                const sortField = header.dataset.sort;
+                this.currentFilters.sort = sortField;
+                this.currentFilters.order = this.currentFilters.order === 'desc' ? 'asc' : 'desc';
+                this.refreshTable();
+            });
+        });
+    }
+
+    attachEventListeners() {
+        // Schedule button
+        document.getElementById('scheduleClassBtn').addEventListener('click', () => {
+            this.openCreateModal();
+        });
+
+        // Empty state button
+        document.getElementById('emptyScheduleBtn')?.addEventListener('click', () => {
+            this.openCreateModal();
+        });
+
+        // Edit buttons
+        this.attachRowEventListeners();
+
+        // Modal events
+        document.getElementById('modalBackdrop').addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        // Form submission
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitForm();
+        });
+    }
+
+    attachRowEventListeners() {
+        // Edit buttons
+        document.querySelectorAll('.edit-class-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.openEditModal(btn);
+            });
+        });
+
+        // Delete buttons
+        document.querySelectorAll('.delete-class-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.deleteLiveClass(btn.dataset.classId);
+            });
+        });
+
+        // Send Reminder buttons
+        document.querySelectorAll('.send-reminder-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.sendReminder(btn.dataset.classId, btn.dataset.classTitle);
+            });
+        });
+    }
+
+    openCreateModal() {
+        this.isEditing = false;
+        document.getElementById('modalTitle').textContent = 'Schedule Live Class';
+        document.getElementById('submitBtn').textContent = 'Schedule Class';
+        document.getElementById('editClassId').value = '';
+        this.form.reset();
+        document.getElementById('waiting_room_enabled').checked = true;
+        this.showModal();
+    }
+
+    openEditModal(button) {
+        this.isEditing = true;
+        document.getElementById('modalTitle').textContent = 'Edit Live Class';
+        document.getElementById('submitBtn').textContent = 'Update Class';
+        
+        // Populate form with existing data
+        document.getElementById('editClassId').value = button.dataset.classId;
+        document.getElementById('course_id').value = button.dataset.courseId;
+        document.getElementById('class_title').value = button.dataset.classTitle;
+        document.getElementById('instructor').value = button.dataset.instructor;
+        document.getElementById('scheduled_date').value = button.dataset.scheduledDate;
+        document.getElementById('scheduled_time').value = button.dataset.scheduledTime;
+        document.getElementById('duration_minutes').value = button.dataset.duration;
+        document.getElementById('waiting_room_enabled').checked = button.dataset.waitingRoom === 'true';
+        
+        this.showModal();
+    }
+
+    showModal() {
+        this.modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeModal() {
+        this.modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    async submitForm() {
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.textContent;
+        
+        try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            const formData = new FormData(this.form);
+            
+            const url = this.isEditing 
+                ? `/admin/live-classes/${document.getElementById('editClassId').value}/edit`
+                : '/admin/live-classes/create';
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                this.closeModal();
+                this.showNotification(
+                    this.isEditing ? 'Live class updated successfully!' : 'Live class scheduled successfully!', 
+                    'success'
+                );
+                // Refresh table after a short delay
+                setTimeout(() => {
+                    this.refreshTable();
+                }, 1500);
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save live class');
+            }
+        } catch (error) {
+            console.error('Error saving live class:', error);
+            this.showNotification(error.message || 'Error saving live class', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
+
+    async deleteLiveClass(classId) {
+        if (!confirm('Are you sure you want to delete this live class? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/live-classes/${classId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showNotification(result.message || 'Live class deleted successfully!', 'success');
+                // Refresh table to reflect changes
+                this.refreshTable();
+            } else {
+                throw new Error(result.error || 'Failed to delete live class');
+            }
+        } catch (error) {
+            console.error('Error deleting live class:', error);
+            this.showNotification(error.message || 'Error deleting live class', 'error');
+        }
+    }
+
+    async sendReminder(classId, className) {
+        const button = event.target.closest('.send-reminder-btn');
+        const originalText = button.innerHTML;
+        
+        if (!confirm(`Send reminder emails for "${className}" to all enrolled students?`)) {
+            return;
+        }
+
+        try {
+            // Show loading state
+            button.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+            `;
+            button.disabled = true;
+
+            const response = await fetch(`/admin/live-classes/${classId}/send-reminder`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                let message = result.message;
+                if (result.stats) {
+                    message += ` (${result.stats.successful}/${result.stats.total_students} sent successfully)`;
+                }
+                this.showNotification(message, 'success');
+            } else {
+                throw new Error(result.error || 'Failed to send reminders');
+            }
+        } catch (error) {
+            console.error('Error sending reminder:', error);
+            this.showNotification(error.message || 'Error sending reminders', 'error');
+        } finally {
+            // Restore button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+
+    async refreshTable() {
+        const tableBody = document.getElementById('liveClassesTable');
+        const loadingState = document.getElementById('loadingState');
+        const resultsCount = document.getElementById('resultsCount');
+
+        // Show loading
+        tableBody.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+
+        try {
+            // Build query string
+            const params = new URLSearchParams({
+                q: this.currentSearch,
+                status: this.currentFilters.status,
+                sort: this.currentFilters.sort,
+                order: this.currentFilters.order
+            });
+
+            const response = await fetch(`/api/live-classes/search?${params}`);
+            const classes = await response.json();
+
+            // Update table
+            tableBody.innerHTML = '';
+            if (classes.length > 0) {
+                classes.forEach(liveClass => {
+                    tableBody.innerHTML += this.generateClassRow(liveClass);
+                });
+                this.attachRowEventListeners();
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            No classes found matching your criteria.
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Update results count
+            resultsCount.textContent = `${classes.length} classes found`;
+
+        } catch (error) {
+            console.error('Error refreshing table:', error);
+            this.showNotification('Error loading classes', 'error');
+        } finally {
+            tableBody.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+        }
+    }
+
+    generateClassRow(liveClass) {
+        return `
+            <tr class="hover:bg-gray-50" data-class-id="${liveClass.id}">
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">${this.escapeHtml(liveClass.class_title)}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">${this.escapeHtml(liveClass.course_title || 'N/A')}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">${this.escapeHtml(liveClass.instructor)}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">${liveClass.scheduled_date} at ${liveClass.scheduled_time}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900">${liveClass.duration_minutes} mins</div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${liveClass.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${liveClass.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex space-x-2">
+                        ${liveClass.zoom_start_url ? `
+                            <a href="${liveClass.zoom_start_url}" target="_blank" 
+                               class="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded text-sm flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                Start
+                            </a>
+                        ` : ''}
+                        
+                        <button class="send-reminder-btn text-purple-600 hover:text-purple-900 bg-purple-100 px-3 py-1 rounded text-sm flex items-center"
+                                data-class-id="${liveClass.id}"
+                                data-class-title="${this.escapeHtml(liveClass.class_title)}">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Remind
+                        </button>
+                        
+                        <button class="edit-class-btn text-green-600 hover:text-green-900 bg-green-100 px-3 py-1 rounded text-sm flex items-center"
+                                data-class-id="${liveClass.id}"
+                                data-class-title="${this.escapeHtml(liveClass.class_title)}"
+                                data-course-id="${liveClass.course_id}"
+                                data-instructor="${this.escapeHtml(liveClass.instructor)}"
+                                data-scheduled-date="${liveClass.scheduled_date}"
+                                data-scheduled-time="${liveClass.scheduled_time}"
+                                data-duration="${liveClass.duration_minutes}"
+                                data-waiting-room="${liveClass.waiting_room_enabled ? 'true' : 'false'}">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit
+                        </button>
+                        
+                        <button class="delete-class-btn text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded text-sm flex items-center"
+                                data-class-id="${liveClass.id}">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    showNotification(message, type = 'info') {
+        // Remove existing notifications
+        document.querySelectorAll('.custom-notification').forEach(n => n.remove());
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `custom-notification fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <span class="flex-1">${message}</span>
+                <button class="ml-4 text-white hover:text-gray-200 notification-close">
+                    ×
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Add close event
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.remove();
+        });
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new EnhancedLiveClassManager();
+});
+</script>
+
+<style>
+.toggle-control {
+    display: block;
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-control input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.toggle-control .control {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 24px;
+    width: 50px;
+    border-radius: 12px;
+    background-color: #dc2626;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.toggle-control input:checked ~ .control {
+    background-color: #16a34a;
+}
+
+.toggle-control .control:after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: left 0.15s ease-in-out;
+}
+
+.toggle-control input:checked ~ .control:after {
+    left: 29px;
+}
+
+/* Modal animations */
+#scheduleModal {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#scheduleModal:not(.hidden) {
+    display: block;
+}
+
+/* Additional styles for enhanced functionality */
+.sortable:hover {
+    background-color: #f9fafb;
+}
+
+.sort-indicator {
+    margin-left: 4px;
+    opacity: 0.5;
+}
+
+.sortable:hover .sort-indicator {
+    opacity: 1;
+}
+
+/* Smooth transitions */
+#liveClassesTable tr {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Button hover effects */
+.send-reminder-btn:hover,
+.edit-class-btn:hover,
+.delete-class-btn:hover {
+    transform: translateY(-1px);
+}
+
+.send-reminder-btn:hover {
+    box-shadow: 0 2px 4px rgba(147, 51, 234, 0.2);
+}
+
+.edit-class-btn:hover {
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+.delete-class-btn:hover {
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filters-container > div {
+        margin-bottom: 1rem;
+    }
+    
+    .actions-container {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .actions-container button {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+</style>
+{% endblock %}

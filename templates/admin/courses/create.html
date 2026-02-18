@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="p-6 max-w-3xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4">Create Course</h2>
+
+  <form action="{{ url_for('courses.create_course') }}" method="POST" enctype="multipart/form-data" class="space-y-4 bg-white shadow-md rounded-lg p-6">
+    <div>
+      <label class="block text-sm font-medium">Course Title</label>
+      <input type="text" name="title" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Instructor</label>
+      <input type="text" name="instructor" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">CPA Level</label>
+      <input type="number" name="cpa_level" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Course Fees</label>
+      <input type="number" name="course_fees" step="0.01" required class="w-full border rounded p-2">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Description</label>
+      <textarea name="description" rows="4" class="w-full border rounded p-2"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Thumbnail</label>
+      <input type="file" name="thumbnail" accept="image/*" class="w-full">
+    </div>
+
+    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+      Create Course
+    </button>
+  </form>
+</div>
+{% endblock %}

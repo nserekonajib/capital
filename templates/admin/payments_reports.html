@@ -1,0 +1,270 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Payment Reports - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 text-gray-800">Payment Reports & Analytics</h1>
+        <div>
+            <a href="{{ url_for('admin_payments.admin_payments_dashboard') }}" 
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Timeframe Selector -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Report Timeframe</h5>
+                <div class="btn-group">
+                    <a href="?timeframe=week" 
+                       class="btn {% if timeframe == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Week
+                    </a>
+                    <a href="?timeframe=month" 
+                       class="btn {% if timeframe == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Month
+                    </a>
+                    <a href="?timeframe=year" 
+                       class="btn {% if timeframe == 'year' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Year
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Revenue
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                UGX {{ "%.2f"|format(report_data.total_revenue|default(0)) }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Transactions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ report_data.total_transactions|default(0) }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Avg. Transaction
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                UGX {{ "%.2f"|format((report_data.total_revenue|default(0) / report_data.total_transactions|default(1))|round(2)) }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Trend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="revenueChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Chart -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Transactions Trend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="transactionsChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status & Method Distribution -->
+    <div class="row">
+        <!-- Status Distribution -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Payment Status Distribution</h6>
+                </div>
+                <div class="card-body">
+                    {% for status, count in report_data.status_summary.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm font-weight-bold text-gray-700 text-capitalize">{{ status }}</span>
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-3" style="width: 150px; height: 10px;">
+                                <div class="progress-bar 
+                                    {% if status == 'completed' %}bg-success
+                                    {% elif status == 'pending' %}bg-warning
+                                    {% elif status == 'failed' %}bg-danger
+                                    {% else %}bg-info{% endif %}" 
+                                    style="width: {{ (count / report_data.total_transactions * 100)|default(0) }}%">
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-600" style="min-width: 30px;">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Method Distribution -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Payment Method Distribution</h6>
+                </div>
+                <div class="card-body">
+                    {% for method, count in report_data.method_summary.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-sm font-weight-bold text-gray-700">{{ method or 'Unknown' }}</span>
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-3" style="width: 150px; height: 10px;">
+                                <div class="progress-bar bg-primary" 
+                                    style="width: {{ (count / report_data.total_transactions * 100)|default(0) }}%">
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-600" style="min-width: 30px;">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reportData = {{ report_data|tojson }};
+    
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx && reportData.dates) {
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: reportData.dates,
+                datasets: [{
+                    label: 'Revenue (UGX)',
+                    data: reportData.amounts_data,
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'UGX ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Transactions Chart
+    const transactionsCtx = document.getElementById('transactionsChart');
+    if (transactionsCtx && reportData.dates) {
+        new Chart(transactionsCtx, {
+            type: 'bar',
+            data: {
+                labels: reportData.dates,
+                datasets: [{
+                    label: 'Transactions',
+                    data: reportData.counts_data,
+                    backgroundColor: '#1cc88a',
+                    borderColor: '#1cc88a',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
