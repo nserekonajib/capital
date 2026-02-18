@@ -1,0 +1,622 @@
+@import url("./icons/tabler-icons.min.css");
+
+:root {
+  /* CSS Custom Properties for theming */
+  --cs-player-bg: #000;
+  --cs-player-color: #e1e1e1;
+  --cs-player-border-radius: 5px;
+  --cs-player-loader-color: #e1e1e1;
+  
+  /* Start Button */
+  --cs-start-btn-size: 65px;
+  --cs-start-btn-bg: var(--cs-player-color);
+  --cs-start-btn-icon-color: var(--cs-player-bg);
+  
+  /* Control Icons */
+  --cs-play-pause-icon-color: var(--cs-player-color);
+  --cs-forward-icon-color: var(--cs-player-color);
+  --cs-backward-icon-color: var(--cs-player-color);
+  
+  /* Progress Slider */
+  --cs-slider-bg: #383838;
+  --cs-slider-thumb-size: 15px;
+  --cs-slider-thumb-color: var(--cs-player-color);
+  --cs-slider-seek-track-color: var(--cs-player-color);
+  --cs-slider-loaded-track-color: #878787;
+  
+  /* Time Display */
+  --cs-current-time-color: var(--cs-player-color);
+  --cs-duration-color: var(--cs-player-color);
+  
+  /* Control Buttons */
+  --cs-settings-btn-color: var(--cs-player-color);
+  --cs-fullscreen-btn-color: var(--cs-player-color);
+  
+  /* Settings Panel */
+  --cs-settings-bg: #181818;
+  --cs-settings-text-color: var(--cs-player-color);
+  --cs-settings-input-bg: #4b4b4b;
+  --cs-settings-input-color: var(--cs-player-color);
+  
+  /* Transitions */
+  --cs-transition-fast: 0.15s ease;
+  --cs-transition-normal: 0.3s ease;
+  --cs-transition-slow: 0.5s ease;
+  
+  /* Z-index layers */
+  --cs-z-base: 1;
+  --cs-z-controls: 3;
+  --cs-z-overlay: 5;
+  --cs-z-settings: 7;
+}
+
+/* Reset and Base Styles */
+.cs-player-reset {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.cs-player-reset * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Main Player Container */
+.cs-player {
+  background: var(--cs-player-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  user-select: none;
+  position: relative;
+  border-radius: var(--cs-player-border-radius);
+  min-width: 270px;
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+/* Theme Variants */
+.cs-player.theme-default {
+  /* Uses default CSS variables */
+}
+
+.cs-player.theme-youtube {
+  --cs-start-btn-bg: #fe0001;
+  --cs-slider-thumb-color: #fe0001;
+  --cs-slider-seek-track-color: #fe0001;
+  --cs-slider-loaded-track-color: #787672;
+  --cs-settings-bg: #212121;
+}
+
+.cs-player.theme-plyr {
+  --cs-player-bg: #000000;
+  --cs-player-color: #626a76;
+  --cs-player-border-radius: 10px;
+  --cs-player-loader-color: #ffffff;
+  --cs-start-btn-size: 60px;
+  --cs-start-btn-bg: #01b2ff;
+  --cs-start-btn-icon-color: #ffffff;
+  --cs-play-pause-icon-color: #ffffff;
+  --cs-forward-icon-color: #ffffff;
+  --cs-backward-icon-color: #ffffff;
+  --cs-slider-bg: rgba(255, 255, 255, 0.1);
+  --cs-slider-thumb-color: #01b2ff;
+  --cs-slider-seek-track-color: #01b2ff;
+  --cs-slider-loaded-track-color: #787672;
+  --cs-current-time-color: #ffffff;
+  --cs-duration-color: #ffffff;
+  --cs-settings-btn-color: #ffffff;
+  --cs-fullscreen-btn-color: #ffffff;
+  --cs-settings-bg: rgba(255, 255, 255, 0.95);
+  --cs-settings-text-color: #3d4049;
+  --cs-settings-input-bg: #d9dadc;
+  --cs-settings-input-color: #01b2ff;
+}
+
+/* Video Container */
+.cs-player__container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  position: relative;
+  border-radius: var(--cs-player-border-radius);
+}
+
+.cs-player__iframe {
+  width: 2400%;
+  height: 100%;
+  margin-left: -1150%;
+  border: none;
+  outline: none;
+  position: absolute;
+}
+
+/* Thumbnail Overlay */
+.cs-player__thumbnail {
+  width: 100%;
+  height: 100%;
+  background-color: var(--cs-player-bg);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: absolute;
+  z-index: var(--cs-z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.cs-player__thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.cs-player__play-button {
+  width: var(--cs-start-btn-size);
+  height: var(--cs-start-btn-size);
+  color: var(--cs-start-btn-icon-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cs-start-btn-bg);
+  font-size: calc(var(--cs-start-btn-size) / 2.5);
+  position: relative;
+  z-index: var(--cs-z-base);
+  transition: transform var(--cs-transition-fast);
+}
+
+.cs-player__play-button:hover {
+  transform: scale(1.05);
+}
+
+.cs-player__play-button:active {
+  transform: scale(0.95);
+}
+
+/* Clickable overlay areas */
+.cs-player__click-area {
+  width: 100%;
+  height: calc(50% - (var(--cs-start-btn-size) / 2));
+  background: transparent;
+  position: absolute;
+  pointer-events: auto;
+  z-index: var(--cs-z-base);
+}
+
+.cs-player__click-area--top {
+  top: 0;
+}
+
+.cs-player__click-area--bottom {
+  bottom: 0;
+}
+
+/* Loading Animation */
+.cs-player--loading {
+  color: transparent !important;
+  background: transparent !important;
+  border: 5px solid var(--cs-player-loader-color) !important;
+  border-bottom-color: transparent !important;
+  animation: cs-player-spin 1s linear infinite;
+}
+
+@keyframes cs-player-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Controls Container */
+.cs-player__controls {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: var(--cs-z-controls);
+  background: transparent;
+  border-radius: var(--cs-player-border-radius);
+  display: none;
+  align-items: flex-end;
+  transition: background-color var(--cs-transition-normal);
+}
+
+.cs-player__controls--visible {
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+}
+
+/* Main Controls (Center Play/Pause, etc.) */
+.cs-player__main-controls {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--cs-transition-normal);
+  display: flex;
+  align-items: center;
+  gap: 3.5rem;
+}
+
+.cs-player__controls--visible .cs-player__main-controls {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.cs-player__control-button {
+  font-size: 2rem;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--cs-player-color);
+  transition: all var(--cs-transition-fast);
+  cursor: pointer;
+}
+
+.cs-player__control-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cs-player__control-button:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.95);
+}
+
+.cs-player__control-button--backward {
+  color: var(--cs-backward-icon-color);
+}
+
+.cs-player__control-button--forward {
+  color: var(--cs-forward-icon-color);
+}
+
+.cs-player__control-button--play-pause {
+  color: var(--cs-play-pause-icon-color);
+  padding: 10px;
+  border: 2px solid var(--cs-play-pause-icon-color);
+}
+
+/* Bottom Controls Bar */
+.cs-player__bottom-controls {
+  width: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  transform: scale(0);
+  transition: transform var(--cs-transition-normal);
+}
+
+.cs-player__controls--visible .cs-player__bottom-controls {
+  transform: scale(1);
+}
+
+/* Time Display */
+.cs-player__time {
+  font-size: 0.9rem;
+  margin: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cs-player__time--current {
+  color: var(--cs-current-time-color);
+}
+
+.cs-player__time--duration {
+  color: var(--cs-duration-color);
+}
+
+/* Progress Bar */
+.cs-player__progress {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: calc(var(--cs-slider-thumb-size) / 3);
+  margin: 0 5px;
+  position: relative;
+  background: var(--cs-slider-bg);
+  border-radius: calc(var(--cs-slider-thumb-size) / 3);
+}
+
+.cs-player__loaded {
+  height: 100%;
+  position: absolute;
+  background: var(--cs-slider-loaded-track-color);
+  opacity: 0.5;
+  border-radius: calc(var(--cs-slider-thumb-size) / 3);
+  pointer-events: none;
+}
+
+.cs-player__slider {
+  width: 100%;
+  appearance: none;
+  position: absolute;
+  background: linear-gradient(
+    to right,
+    var(--cs-slider-seek-track-color) 0%,
+    transparent 0%
+  );
+  border-radius: calc(var(--cs-slider-thumb-size) / 3);
+  cursor: pointer;
+}
+
+.cs-player__slider:focus {
+  outline: none;
+}
+
+/* Webkit Slider Styles */
+.cs-player__slider::-webkit-slider-runnable-track {
+  background: transparent;
+  height: calc(var(--cs-slider-thumb-size) / 3);
+}
+
+.cs-player__slider::-webkit-slider-thumb {
+  appearance: none;
+  background-color: var(--cs-slider-thumb-color);
+  height: var(--cs-slider-thumb-size);
+  width: var(--cs-slider-thumb-size);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  z-index: var(--cs-z-base);
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-player__slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Firefox Slider Styles */
+.cs-player__slider::-moz-range-track {
+  background: transparent;
+  height: calc(var(--cs-slider-thumb-size) / 3);
+  border: none;
+}
+
+.cs-player__slider::-moz-range-thumb {
+  background-color: var(--cs-slider-thumb-color);
+  height: var(--cs-slider-thumb-size);
+  width: var(--cs-slider-thumb-size);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  z-index: var(--cs-z-base);
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-player__slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* Control Buttons */
+.cs-player__action-button {
+  font-size: 1.4rem;
+  margin-left: 6px;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--cs-player-color);
+  transition: all var(--cs-transition-fast);
+  cursor: pointer;
+}
+
+.cs-player__action-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cs-player__action-button:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cs-player__action-button--settings {
+  color: var(--cs-settings-btn-color);
+}
+
+.cs-player__action-button--fullscreen {
+  color: var(--cs-fullscreen-btn-color);
+}
+
+/* Settings Panel */
+.cs-player__settings {
+  width: min(200px, 90vw);
+  position: absolute;
+  bottom: 40px;
+  right: 10px;
+  padding: 8px 12px;
+  background: var(--cs-settings-bg);
+  border-radius: 8px;
+  display: none;
+  pointer-events: auto;
+  z-index: var(--cs-z-settings);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cs-player__settings--visible {
+  display: block;
+}
+
+.cs-player__settings-item {
+  width: 100%;
+  color: var(--cs-settings-text-color);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color var(--cs-transition-fast);
+  border-radius: 4px;
+}
+
+.cs-player__settings-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cs-player__settings-value {
+  font-weight: normal;
+  margin-left: auto;
+  padding-left: 15px;
+  opacity: 0.6;
+}
+
+.cs-player__settings-arrow {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-left: 8px;
+  transition: transform var(--cs-transition-fast);
+}
+
+.cs-player__settings-item--open .cs-player__settings-arrow {
+  transform: rotate(90deg);
+}
+
+.cs-player__settings-options {
+  max-height: 0;
+  transition: max-height var(--cs-transition-normal) ease-in-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-player__settings-options--open {
+  max-height: 400px;
+}
+
+.cs-player__settings-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--cs-settings-text-color);
+  margin: 4px 0;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity var(--cs-transition-fast);
+}
+
+.cs-player__settings-option:hover {
+  opacity: 1;
+}
+
+.cs-player__radio {
+  appearance: none;
+  background: var(--cs-settings-input-bg);
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 8px;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-player__radio:checked {
+  border: 4px solid var(--cs-settings-input-color);
+  background: var(--cs-settings-bg);
+}
+
+.cs-player__radio:focus {
+  outline: 2px solid var(--cs-settings-input-color);
+  outline-offset: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cs-player {
+    min-width: 250px;
+  }
+  
+  .cs-player__main-controls {
+    gap: 2rem;
+  }
+  
+  .cs-player__control-button {
+    font-size: 1.75rem;
+    padding: 6px;
+  }
+  
+  .cs-player__control-button--play-pause {
+    padding: 8px;
+  }
+  
+  .cs-player__settings {
+    right: 5px;
+    bottom: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cs-player__main-controls {
+    gap: 1.5rem;
+  }
+  
+  .cs-player__control-button {
+    font-size: 1.5rem;
+  }
+  
+  .cs-player__bottom-controls {
+    padding: 6px 8px;
+  }
+  
+  .cs-player__time {
+    font-size: 0.8rem;
+  }
+  
+  .cs-player__action-button {
+    font-size: 1.2rem;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .cs-player {
+    --cs-player-bg: #000000;
+    --cs-player-color: #ffffff;
+    --cs-slider-bg: #ffffff;
+    --cs-settings-bg: #000000;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .cs-player__control-button,
+  .cs-player__action-button,
+  .cs-player__play-button,
+  .cs-player__slider::-webkit-slider-thumb,
+  .cs-player__slider::-moz-range-thumb {
+    transition: none;
+  }
+  
+  .cs-player--loading {
+    animation-duration: 2s;
+  }
+  
+  .cs-player__settings-options {
+    transition: none;
+  }
+}
+
+/* Fullscreen Styles */
+.cs-player:fullscreen {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.cs-player:fullscreen .cs-player__container {
+  border-radius: 0;
+}
+
+
+.csPlayer-container { composes: cs-player__container; }
+.csPlayer-controls-box { composes: cs-player__controls; }
+.csPlayer-controls-open { composes: cs-player__controls--visible; }

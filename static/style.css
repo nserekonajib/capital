@@ -1,0 +1,119 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Body */
+body {
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Flash messages */
+.flash-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 100;
+    animation: fadeOut 0.5s ease forwards;
+}
+
+/* Colors for flash types */
+.flash-success { background-color: #4f46e5; } /* blue */
+.flash-danger { background-color: #ef4444; }  /* red */
+.flash-warning { background-color: #facc15; color: #000; } /* yellow */
+
+/* Fade out animation */
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; display: none; }
+}
+
+/* Login card */
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    border: 1px solid #3b82f6;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+/* Logo */
+.login-card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+/* Headings */
+.login-card h2 {
+    color: #1e40af;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.login-card p {
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+/* Input fields */
+.login-card input[type="email"],
+.login-card input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Button */
+.login-card button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3b82f6;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.login-card button:hover {
+    background-color: #2563eb;
+}
+
+/* Links */
+.login-card .links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.login-card .links a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.login-card .links a:hover {
+    text-decoration: underline;
+}
