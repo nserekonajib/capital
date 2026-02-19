@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port for Cloud Run
-EXPOSE 8080
+EXPOSE 3000
 
-# Run app using waitress (production-safe WSGI)
-CMD ["waitress-serve", "--listen=0.0.0.0:8080", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:3000", "app:app"]
+
