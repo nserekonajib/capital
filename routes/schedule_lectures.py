@@ -1,20 +1,140 @@
+import os
+import time
+import requests
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, session
 from functools import wraps
-from routes.admin_utils import get_admin_client
-from routes.admin_config import AdminConfig
-import requests
 from datetime import datetime, timedelta
-import json
+from routes.admin_utils import get_admin_client
 from routes.adminauth import admin_login_required
 from routes.zoom_utils import get_zoom_access_token, create_zoom_meeting
-from routes.email_manager import send_class_invite_html
-from routes.config import Config
+from routes.auth import login_required
+from routes.utils import supabase
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 schedule_bp = Blueprint('schedule', __name__)
-sender_email = Config.sender_email
-sender_password = Config.sender_password
-def update_elapsed_classes_status():
+
+# External Email API configuration
+EMAIL_API_BASE_URL = os.getenv("EMAIL_API_BASE_URL", "http://okg8sswc8s0wc4sk4s808k4w.195.200.15.127.sslip.io/")
+
+# In-memory storage for OTPs (in production, use Redis or database)
+otp_storage = {}
+
+def generate_otp(length=6):
+    """Generate a numeric OTP of specified length"""
+    import random
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+
+def send_email_via_api(to_email, subject, body):
+    """Send email using the external email API"""
+    try:
+        # Prepare the request data
+        data = {
+            "to": to_email,
+            "subject": subject,
+            "body": body
+        }
+        
+        # Make the API request
+        response = requests.post(
+            f"{EMAIL_API_BASE_URL}/send-email-simple",
+            json=data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('status') == 'success':
+                print(f"Email sent successfully via API to {to_email}")
+                return True, result
+            else:
+                return False, result.get('message', 'Unknown error')
+        else:
+            return False, f"API returned status code {response.status_code}: {response.text}"
+            
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection error to email API: {e}")
+        return False, "Could not connect to email service. Please check your internet connection."
+    except requests.exceptions.Timeout as e:
+        print(f"Timeout error from email API: {e}")
+        return False, "Email service timeout. Please try again."
+    except requests.exceptions.RequestException as e:
+        print(f"Request error to email API: {e}")
+        return False, f"Error sending email: {str(e)}"
+    except Exception as e:
+        print(f"Unexpected error sending email: {e}")
+        return False, str(e)
+
+def send_class_invite_email(recipient_email, student_name, class_link, subject, class_title="", instructor="", scheduled_date="", scheduled_time=""):
+    """Send class invitation email using external API"""
     
+    # Create a nicely formatted email body
+    body = f"""
+Hello {student_name},
+
+You have a live class reminder for: {subject}
+
+Class Details:
+---------------
+Title: {class_title}
+Instructor: {instructor}
+Date: {scheduled_date}
+Time: {scheduled_time}
+
+Join the class using this link:
+{class_link}
+
+This link will be active at the scheduled class time.
+
+If you have any questions, please contact support.
+
+---
+Capital College - Live Class Reminder
+"""
+    
+    success, result = send_email_via_api(recipient_email, subject, body)
+    
+    if success:
+        print(f"Class invitation sent successfully to {recipient_email}")
+        return True
+    else:
+        print(f"Failed to send class invitation to {recipient_email}: {result}")
+        return False
+
+def send_otp_email(recipient_email, otp, student_name="Student"):
+    """Send OTP verification email using external API"""
+    subject = "Your OTP Verification Code"
+    
+    # Create a nicely formatted email body
+    body = f"""
+Hello {student_name},
+
+You have requested to change your password. Please use the following OTP code to verify your identity:
+
+OTP Code: {otp}
+
+This code will expire in 10 minutes.
+
+If you did not request this, please ignore this email.
+
+---
+Capital College - Account Security
+"""
+    
+    success, result = send_email_via_api(recipient_email, subject, body)
+    
+    if success:
+        print(f"OTP email sent successfully to {recipient_email}")
+        return True
+    else:
+        print(f"Failed to send OTP email to {recipient_email}: {result}")
+        return False
+
+def update_elapsed_classes_status():
     """Update live class status - only deactivate when class duration is completely finished"""
     try:
         client = get_admin_client()
@@ -76,7 +196,6 @@ def update_elapsed_classes_status():
 def live_classes():
     """Display all live classes with automatic status updates"""
     try:
-      
         client = get_admin_client()
         
         # Update status of elapsed classes first
@@ -313,7 +432,7 @@ def get_upcoming_classes():
 @schedule_bp.route('/admin/live-classes/<int:class_id>/send-reminder', methods=['POST'])
 @admin_login_required
 def send_class_reminder(class_id):
-    """Send reminder emails to enrolled and active students for a live class"""
+    """Send reminder emails to enrolled and active students for a live class using external API"""
     try:
         client = get_admin_client()
         
@@ -375,9 +494,23 @@ def send_class_reminder(class_id):
             return jsonify({"success": False, "error": "No students with valid email addresses found"}), 404
         
         print(f"Preparing to send reminders to {len(valid_students)} students")
-     
         
-        # Send emails
+        # Format class date and time for email
+        scheduled_date = live_class['scheduled_date']
+        if isinstance(scheduled_date, str):
+            try:
+                scheduled_date = datetime.strptime(scheduled_date, '%Y-%m-%d').strftime('%B %d, %Y')
+            except:
+                scheduled_date = str(scheduled_date)
+        
+        scheduled_time = live_class['scheduled_time']
+        if isinstance(scheduled_time, str):
+            try:
+                scheduled_time = datetime.strptime(scheduled_time, '%H:%M:%S').strftime('%I:%M %p')
+            except:
+                scheduled_time = str(scheduled_time)
+        
+        # Send emails using external API
         successful_sends = 0
         failed_sends = []
         
@@ -387,18 +520,24 @@ def send_class_reminder(class_id):
                 
                 print(f"Sending reminder to: {student['email']}")
                 
-                send_class_invite_html(
-                    sender_email=sender_email,
-                    sender_password=sender_password,
+                # Use the new email sending function
+                success = send_class_invite_email(
                     recipient_email=student['email'],
                     student_name=student['name'],
                     class_link=live_class['zoom_join_url'],
-                    subject=subject
+                    subject=subject,
+                    class_title=live_class['class_title'],
+                    instructor=live_class.get('instructor', 'Instructor'),
+                    scheduled_date=scheduled_date,
+                    scheduled_time=scheduled_time
                 )
-                successful_sends += 1
+                
+                if success:
+                    successful_sends += 1
+                else:
+                    failed_sends.append(f"{student['email']}: Failed to send")
                 
                 # Small delay to avoid rate limiting
-                import time
                 time.sleep(0.5)
                 
             except Exception as e:
@@ -519,3 +658,296 @@ def search_live_classes():
     except Exception as e:
         print(f"Error searching live classes: {e}")
         return jsonify([])
+
+# -------------------- Profile/User OTP Routes --------------------
+@schedule_bp.route('/send-otp', methods=['POST'])
+@login_required
+def send_otp():
+    """Send OTP for password change verification"""
+    try:
+        data = request.get_json()
+        user_email = session.get('user_email')
+        user_name = session.get('user_full_name', 'User')
+        
+        if not user_email:
+            return jsonify({
+                'success': False,
+                'message': 'User not authenticated'
+            }), 401
+        
+        # Generate OTP
+        otp = generate_otp(6)
+        
+        # Store OTP with timestamp (valid for 10 minutes)
+        otp_storage[user_email] = {
+            'otp': otp,
+            'timestamp': time.time(),
+            'verified': False
+        }
+        
+        # Send OTP email using external API
+        if send_otp_email(user_email, otp, user_name):
+            return jsonify({
+                'success': True,
+                'message': 'OTP sent successfully to your email'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to send OTP. Please try again.'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error sending OTP: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Error sending OTP: {str(e)}'
+        }), 500
+
+@schedule_bp.route('/verify-otp', methods=['POST'])
+@login_required
+def verify_otp():
+    """Verify OTP for password change"""
+    try:
+        data = request.get_json()
+        user_otp = data.get('otp')
+        user_email = session.get('user_email')
+        
+        if not user_email:
+            return jsonify({
+                'success': False,
+                'message': 'User not authenticated'
+            }), 401
+        
+        # Check if OTP exists and is valid
+        stored_otp_data = otp_storage.get(user_email)
+        
+        if not stored_otp_data:
+            return jsonify({
+                'success': False,
+                'message': 'OTP not found. Please request a new OTP.'
+            }), 400
+        
+        # Check if OTP is expired (10 minutes)
+        if time.time() - stored_otp_data['timestamp'] > 600:
+            del otp_storage[user_email]
+            return jsonify({
+                'success': False,
+                'message': 'OTP has expired. Please request a new OTP.'
+            }), 400
+        
+        # Verify OTP
+        if stored_otp_data['otp'] != user_otp:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid OTP. Please try again.'
+            }), 400
+        
+        # Mark OTP as verified
+        otp_storage[user_email]['verified'] = True
+        
+        return jsonify({
+            'success': True,
+            'message': 'OTP verified successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error verifying OTP: {str(e)}'
+        }), 500
+
+@schedule_bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Change user password after OTP verification"""
+    try:
+        from werkzeug.security import generate_password_hash, check_password_hash
+        
+        data = request.get_json(silent=True) or request.form
+
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+        user_otp = data.get('otp')
+
+        user_email = session.get('user_email')
+        user_id = session.get('user_id')
+
+        # Check all required fields
+        if not all([current_password, new_password, confirm_password, user_otp]):
+            return jsonify({'success': False, 'message': 'All fields are required'}), 400
+
+        # Validate password match
+        if new_password != confirm_password:
+            return jsonify({'success': False, 'message': 'New passwords do not match'}), 400
+
+        # Validate password strength
+        if len(new_password) < 8:
+            return jsonify({'success': False, 'message': 'Password must be at least 8 characters long'}), 400
+
+        # Verify OTP
+        stored_otp_data = otp_storage.get(user_email)
+        
+        if not stored_otp_data:
+            return jsonify({'success': False, 'message': 'OTP not found. Please request a new one.'}), 400
+
+        # Check if OTP is expired
+        if time.time() - stored_otp_data['timestamp'] > 600:
+            del otp_storage[user_email]
+            return jsonify({'success': False, 'message': 'OTP has expired. Please request a new OTP.'}), 400
+
+        # Verify OTP code and verification status
+        if stored_otp_data['otp'] != user_otp or not stored_otp_data.get('verified'):
+            return jsonify({'success': False, 'message': 'Invalid or unverified OTP. Please verify OTP first.'}), 400
+
+        # Get current password hash
+        response = supabase.table("students").select("password_hash").eq("id", user_id).limit(1).execute()
+        if not response.data:
+            return jsonify({'success': False, 'message': 'Could not fetch current password'}), 400
+        
+        current_password_hash = response.data[0]['password_hash']
+
+        # Verify current password
+        if not check_password_hash(current_password_hash, current_password):
+            return jsonify({'success': False, 'message': 'Current password is incorrect'}), 400
+
+        # Prevent reusing the same password
+        if check_password_hash(current_password_hash, new_password):
+            return jsonify({'success': False, 'message': 'New password cannot be the same as current password'}), 400
+
+        # Update password
+        new_password_hash = generate_password_hash(new_password)
+        update_response = supabase.table("students").update({
+            "password_hash": new_password_hash,
+            "updated_at": "now()"
+        }).eq("id", user_id).execute()
+
+        if not update_response.data:
+            return jsonify({'success': False, 'message': 'Failed to update password'}), 500
+
+        # Clear OTP
+        otp_storage.pop(user_email, None)
+
+        return jsonify({'success': True, 'message': 'Password changed successfully'}), 200
+
+    except Exception as e:
+        print(f"Error in change-password route: {e}")
+        return jsonify({'success': False, 'message': f'Error changing password: {str(e)}'}), 500
+
+@schedule_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Step 1: User requests password reset via email"""
+    try:
+        data = request.get_json(silent=True) or request.form
+        user_email = data.get('email')
+
+        if not user_email:
+            return jsonify({'success': False, 'message': 'Email is required'}), 400
+
+        # Check if user exists in DB
+        response = supabase.table("students").select("id, full_name").eq("email", user_email).limit(1).execute()
+        if not response.data:
+            return jsonify({'success': False, 'message': 'No account found with this email'}), 404
+
+        user = response.data[0]
+        student_name = user.get("full_name", "Student")
+
+        # Generate OTP
+        otp = generate_otp(6)
+        otp_storage[user_email] = {
+            'otp': otp,
+            'timestamp': time.time(),
+            'verified': False
+        }
+
+        # Send OTP email using external API
+        if send_otp_email(user_email, otp, student_name):
+            return jsonify({'success': True, 'message': 'OTP sent to your email'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send OTP'}), 500
+
+    except Exception as e:
+        print(f"Error in forgot-password: {e}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@schedule_bp.route('/forgot-password/verify', methods=['POST'])
+def forgot_password_verify():
+    """Step 2: Verify OTP for forgot password"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid request format'}), 400
+
+        user_email = data.get('email')
+        user_otp = data.get('otp')
+
+        if not user_email or not user_otp:
+            return jsonify({'success': False, 'message': 'Email and OTP are required'}), 400
+
+        stored_otp_data = otp_storage.get(user_email)
+        if not stored_otp_data:
+            return jsonify({'success': False, 'message': 'No OTP found. Request again'}), 400
+
+        # Check expiration
+        if time.time() - stored_otp_data['timestamp'] > 600:
+            otp_storage.pop(user_email, None)
+            return jsonify({'success': False, 'message': 'OTP expired'}), 400
+
+        if stored_otp_data['otp'] != user_otp:
+            return jsonify({'success': False, 'message': 'Invalid OTP'}), 400
+
+        # Mark as verified
+        otp_storage[user_email]['verified'] = True
+        return jsonify({'success': True, 'message': 'OTP verified successfully'})
+
+    except Exception as e:
+        print(f"Error in forgot-password-verify: {e}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@schedule_bp.route('/forgot-password/reset', methods=['POST'])
+def forgot_password_reset():
+    """Reset password after OTP verification"""
+    try:
+        from werkzeug.security import generate_password_hash
+        
+        data = request.get_json(silent=True) or request.form
+
+        user_email = data.get('email')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        # Validate input
+        if not all([user_email, new_password, confirm_password]):
+            return jsonify({'success': False, 'message': 'All fields are required'}), 400
+
+        if new_password != confirm_password:
+            return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+
+        if len(new_password) < 8:
+            return jsonify({'success': False, 'message': 'Password must be at least 8 characters'}), 400
+
+        # OTP verification check
+        stored_otp_data = otp_storage.get(user_email)
+        if not stored_otp_data or not stored_otp_data.get('verified', False):
+            return jsonify({'success': False, 'message': 'OTP verification required'}), 400
+
+        # Update password in DB
+        new_password_hash = generate_password_hash(new_password)
+
+        response = supabase.table("students").update({
+            "password_hash": new_password_hash,
+            "updated_at": "now()"
+        }).eq("email", user_email).execute()
+
+        if not response.data:
+            return jsonify({'success': False, 'message': 'Failed to reset password'}), 500
+
+        # Clear OTP
+        otp_storage.pop(user_email, None)
+
+        return jsonify({'success': True, 'message': 'Password reset successfully'})
+
+    except Exception as e:
+        print(f"Error in forgot-password-reset: {e}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500

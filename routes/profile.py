@@ -1,25 +1,105 @@
+import os
+import time
+import hashlib
+import requests
 from flask import Blueprint, flash, redirect, render_template, request, jsonify, session, url_for
-from routes.email_manager import generate_otp, send_otp_email
 from werkzeug.security import generate_password_hash, check_password_hash
 from routes.utils import supabase
-import hashlib
-import time
 from routes.auth import login_required
-from routes.config import Config
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 profile_bp = Blueprint('profile', __name__)
 
+# External Email API configuration
+EMAIL_API_BASE_URL = os.getenv("EMAIL_API_BASE_URL", "http://okg8sswc8s0wc4sk4s808k4w.195.200.15.127.sslip.io/")
+
 # In-memory storage for OTPs (in production, use Redis or database)
 otp_storage = {}
-sender_email = Config.sender_email
-sender_password = Config.sender_password
+
+def generate_otp(length=6):
+    """Generate a numeric OTP of specified length"""
+    import random
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+
+def send_email_via_api(to_email, subject, body):
+    """Send email using the external email API"""
+    try:
+        # Prepare the request data
+        data = {
+            "to": to_email,
+            "subject": subject,
+            "body": body
+        }
+        
+        # Make the API request
+        response = requests.post(
+            f"{EMAIL_API_BASE_URL}/send-email-simple",
+            json=data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('status') == 'success':
+                print(f"Email sent successfully via API to {to_email}")
+                return True, result
+            else:
+                return False, result.get('message', 'Unknown error')
+        else:
+            return False, f"API returned status code {response.status_code}: {response.text}"
+            
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection error to email API: {e}")
+        return False, "Could not connect to email service. Please check your internet connection."
+    except requests.exceptions.Timeout as e:
+        print(f"Timeout error from email API: {e}")
+        return False, "Email service timeout. Please try again."
+    except requests.exceptions.RequestException as e:
+        print(f"Request error to email API: {e}")
+        return False, f"Error sending email: {str(e)}"
+    except Exception as e:
+        print(f"Unexpected error sending email: {e}")
+        return False, str(e)
+
+def send_otp_email(recipient_email, otp, student_name="Student"):
+    """Send OTP verification email using external API"""
+    subject = "Your OTP Verification Code"
+    
+    # Create a nicely formatted email body
+    body = f"""
+Hello {student_name},
+
+You have requested to change your password. Please use the following OTP code to verify your identity:
+
+OTP Code: {otp}
+
+This code will expire in 10 minutes.
+
+If you did not request this, please ignore this email.
+
+---
+© 2024 Your App Name. All rights reserved.
+"""
+    
+    success, result = send_email_via_api(recipient_email, subject, body)
+    
+    if success:
+        print(f"OTP email sent successfully to {recipient_email}")
+        return True
+    else:
+        print(f"Failed to send OTP email to {recipient_email}: {result}")
+        return False
 
 @profile_bp.route('/profile')
 @login_required
 def profile_page():
     """Render the profile page"""
     return render_template('profile.html')
-
 
 @profile_bp.route('/send-otp', methods=['POST'])
 @login_required
@@ -28,7 +108,7 @@ def send_otp():
     try:
         data = request.get_json()
         user_email = session.get('user_email')
-        user_name = session.get('user_full_name')
+        user_name = session.get('user_full_name', 'User')
         
         if not user_email:
             return jsonify({
@@ -46,18 +126,12 @@ def send_otp():
             'verified': False
         }
         
-        # Send OTP email
-        if send_otp_email(
-            sender_email=sender_email,
-            sender_password=sender_password,
-            recipient_email=user_email,
-            otp=otp,
-            student_name=user_name
-        ):
-              return jsonify({
-        'success': True,
-        'message': 'OTP sent successfully to your email'
-    })
+        # Send OTP email using external API
+        if send_otp_email(user_email, otp, user_name):
+            return jsonify({
+                'success': True,
+                'message': 'OTP sent successfully to your email'
+            })
         else:
             return jsonify({
                 'success': False,
@@ -65,6 +139,7 @@ def send_otp():
             }), 500
             
     except Exception as e:
+        print(f"Error sending OTP: {e}")
         return jsonify({
             'success': False,
             'message': f'Error sending OTP: {str(e)}'
@@ -124,7 +199,6 @@ def verify_otp():
         }), 500
 
 def get_current_user_password_hash(user_id):
-    
     """Get current user's password hash from database"""
     try:
         response = supabase.table("students").select("password_hash").eq("id", user_id).limit(1).execute()
@@ -148,7 +222,6 @@ def update_user_password(user_id, new_password_hash):
     except Exception as e:
         print(f"Error updating user password: {e}")
         return False
-    
 
 @profile_bp.route('/change-password', methods=['POST'])
 @login_required
@@ -230,15 +303,14 @@ def change_password():
         # Clear OTP
         otp_storage.pop(user_email, None)
 
-        print(f"✅ Password changed successfully for user {user_id}")
+        print(f" Password changed successfully for user {user_id}")
 
         return jsonify({'success': True, 'message': 'Password changed successfully'}), 200
 
     except Exception as e:
-        print(f"❌ Error in change-password route: {e}")
+        print(f" Error in change-password route: {e}")
         return jsonify({'success': False, 'message': f'Error changing password: {str(e)}'}), 500
-    
-    
+
 @profile_bp.route('/profile-info', methods=['GET'])
 @login_required
 def get_profile_info():
@@ -365,14 +437,11 @@ def check_session():
             'success': False,
             'message': f'Error checking session: {str(e)}'
         }), 500
-        
-        
-        
+
 @profile_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     """Step 1: User requests password reset via email"""
     try:
-        
         data = request.get_json(silent=True) or request.form
         user_email = data.get('email')
 
@@ -395,14 +464,14 @@ def forgot_password():
             'verified': False
         }
 
-        # Send OTP email
-        if send_otp_email(sender_email, sender_password, user_email, otp, student_name):
+        # Send OTP email using external API
+        if send_otp_email(user_email, otp, student_name):
             return jsonify({'success': True, 'message': 'OTP sent to your email'})
         else:
             return jsonify({'success': False, 'message': 'Failed to send OTP'}), 500
 
     except Exception as e:
-        print(f"❌ Error in forgot-password: {e}")
+        print(f" Error in forgot-password: {e}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 @profile_bp.route('/forgot-password/verify', methods=['POST'])
@@ -436,10 +505,8 @@ def forgot_password_verify():
         return jsonify({'success': True, 'message': 'OTP verified successfully'})
 
     except Exception as e:
-        print(f"❌ Error in forgot-password-verify: {e}")
+        print(f" Error in forgot-password-verify: {e}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
-
-
 
 @profile_bp.route('/forgot-password/reset', methods=['POST'])
 def forgot_password_reset():
@@ -481,14 +548,13 @@ def forgot_password_reset():
         # Clear OTP
         otp_storage.pop(user_email, None)
 
-        print(f"✅ Password reset successfully for {user_email}")
+        print(f" Password reset successfully for {user_email}")
         return jsonify({'success': True, 'message': 'Password reset successfully'})
 
     except Exception as e:
-        print(f"❌ Error in forgot-password-reset: {e}")
+        print(f" Error in forgot-password-reset: {e}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
-    
-    
+
 @profile_bp.route('/forgot-password/verify-page')
 def forgot_password_verify_page():
     """Render OTP verification page"""
@@ -497,8 +563,7 @@ def forgot_password_verify_page():
         flash("Missing email parameter", "error")
         return redirect(url_for("profile.forgot_password"))
 
-    return render_template("/verify_otp_forgot.html", email=email)
-
+    return render_template("verify_otp_forgot.html", email=email)
 
 @profile_bp.route('/forgot-password/reset-page')
 def forgot_password_reset_page():
