@@ -257,19 +257,47 @@ def toggle_enrollment_status(course_id):
         if enrollment_id is None or active is None:
             return jsonify({"success": False, "error": "Missing enrollment_id or active status"}), 400
 
-        # Update enrollment status
-        res = admin_supabase.from_("enrollments").update({"active": active}).eq("id", enrollment_id).execute()
-
-        if not res.data:
-            return jsonify({"success": False, "error": "Enrollment not found"}), 404
-
-        enrollment = res.data[0]
-
-        return jsonify({
-            "success": True,
-            "message": f"Enrollment status updated to {'active' if active else 'inactive'}",
-            "new_active": active
-        })
+        # If setting to inactive, DELETE the enrollment completely
+        if active is False:
+            # First, get student info for logging
+            student_info = admin_supabase.from_("enrollments")\
+                .select("user_id, courses!inner(title)")\
+                .eq("id", enrollment_id)\
+                .execute()
+            
+            # Delete the enrollment
+            res = admin_supabase.from_("enrollments").delete().eq("id", enrollment_id).execute()
+            
+            if not res.data:
+                return jsonify({"success": False, "error": "Enrollment not found"}), 404
+            
+            # Optional: Log the deletion
+            if student_info.data:
+                student = student_info.data[0]
+                course_title = student.get('courses', {}).get('title', 'Unknown')
+                print(f"Enrollment {enrollment_id} deleted - Student {student.get('user_id')} removed from course: {course_title}")
+            
+            return jsonify({
+                "success": True,
+                "message": "Enrollment deleted successfully",
+                "action": "deleted"
+            })
+        
+        # If setting to active, just update the status (for restoring/reactivating)
+        else:
+            res = admin_supabase.from_("enrollments").update({"active": active}).eq("id", enrollment_id).execute()
+            
+            if not res.data:
+                return jsonify({"success": False, "error": "Enrollment not found"}), 404
+            
+            enrollment = res.data[0]
+            
+            return jsonify({
+                "success": True,
+                "message": "Enrollment activated successfully",
+                "action": "activated",
+                "new_active": active
+            })
 
     except Exception as e:
         import traceback
@@ -283,7 +311,7 @@ def toggle_enrollment_status(course_id):
 
 
 # -------------------- 6. ADD STUDENT TO COURSE --------------------
-# -------------------- 6. ADD STUDENT TO COURSE --------------------
+
 @courses_bp.route("/admin/courses/<int:course_id>/students/add", methods=["POST"])
 @admin_login_required
 def manually_add_student(course_id):
@@ -319,25 +347,8 @@ def manually_add_student(course_id):
         print(f"DEBUG - Course data retrieved: {course}")
         print(f"DEBUG - Course fees: {course.get('fees')}")
         
-        # Normalize CPA levels
-        def normalize_cpa_level(level):
-            if level is None:
-                return None
-            level_str = str(level).upper().strip()
-            if level_str.startswith('CPA'):
-                level_str = level_str[3:]
-            import re
-            numbers = re.findall(r'\d+', level_str)
-            return numbers[0] if numbers else level_str
-        
-        student_level = normalize_cpa_level(student.get("cpa_level"))
-        course_level = normalize_cpa_level(course.get("cpa_level"))
-        
-        if student_level != course_level:
-            return jsonify({
-                "error": "CPA Level Restriction",
-                "message": f"Cannot enroll {student.get('full_name')} in {course.get('title')}. Student is at CPA Level {student.get('cpa_level')} but this course requires Level {course.get('cpa_level')}."
-            }), 400
+        # CPA Level check REMOVED - Now we can enroll any student regardless of their level
+        print(f"INFO - Enrolling student at CPA Level {student.get('cpa_level')} into course requiring Level {course.get('cpa_level')}")
         
         # Check if already enrolled
         existing = admin_supabase.from_("enrollments")\
@@ -382,6 +393,7 @@ def manually_add_student(course_id):
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
+    
 
 # -------------------- 7. FETCH ALL STUDENTS --------------------
 @courses_bp.route("/admin/students/all", methods=["GET"])
