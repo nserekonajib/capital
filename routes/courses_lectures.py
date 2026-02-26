@@ -245,66 +245,56 @@ def get_course_students(course_id):
         return jsonify({"error": str(e)}), 500
 
 # -------------------- 5. TOGGLE STUDENT ENROLLMENT STATUS --------------------
-# -------------------- 5. TOGGLE STUDENT ENROLLMENT STATUS --------------------
+## -------------------- 5. TOGGLE STUDENT ENROLLMENT STATUS --------------------
 @courses_bp.route("/admin/courses/<int:course_id>/students/toggle", methods=["POST"])
 @admin_login_required
 def toggle_enrollment_status(course_id):
     try:
         data = request.get_json()
+
         enrollment_id = data.get("enrollment_id")
         active = data.get("active")
 
         if enrollment_id is None or active is None:
-            return jsonify({"success": False, "error": "Missing enrollment_id or active status"}), 400
+            return jsonify({
+                "success": False,
+                "error": "Missing enrollment_id or active status"
+            }), 400
 
-        # If setting to inactive, DELETE the enrollment completely
-        if active is False:
-            # First, get student info for logging
-            student_info = admin_supabase.from_("enrollments")\
-                .select("user_id, courses!inner(title)")\
-                .eq("id", enrollment_id)\
-                .execute()
-            
-            # Delete the enrollment
-            res = admin_supabase.from_("enrollments").delete().eq("id", enrollment_id).execute()
-            
-            if not res.data:
-                return jsonify({"success": False, "error": "Enrollment not found"}), 404
-            
-            # Optional: Log the deletion
-            if student_info.data:
-                student = student_info.data[0]
-                course_title = student.get('courses', {}).get('title', 'Unknown')
-                print(f"Enrollment {enrollment_id} deleted - Student {student.get('user_id')} removed from course: {course_title}")
-            
+        # Optional: Ensure boolean type (safety)
+        active = bool(active)
+
+        # Update ONLY active status (no delete)
+        res = (
+            admin_supabase
+            .from_("enrollments")
+            .update({"active": active})
+            .eq("id", enrollment_id)
+            .eq("course_id", course_id)  # extra protection
+            .execute()
+        )
+
+        if not res.data:
             return jsonify({
-                "success": True,
-                "message": "Enrollment deleted successfully",
-                "action": "deleted"
-            })
-        
-        # If setting to active, just update the status (for restoring/reactivating)
-        else:
-            res = admin_supabase.from_("enrollments").update({"active": active}).eq("id", enrollment_id).execute()
-            
-            if not res.data:
-                return jsonify({"success": False, "error": "Enrollment not found"}), 404
-            
-            enrollment = res.data[0]
-            
-            return jsonify({
-                "success": True,
-                "message": "Enrollment activated successfully",
-                "action": "activated",
-                "new_active": active
-            })
+                "success": False,
+                "error": "Enrollment not found"
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "message": "Enrollment status updated successfully",
+            "new_active": active
+        })
 
     except Exception as e:
         import traceback
         print(f"Error toggling enrollment status: {e}")
         print(traceback.format_exc())
-        return jsonify({"success": False, "error": str(e)}), 500
 
+        return jsonify({
+            "success": False,
+            "error": "Internal server error"
+        }), 500
 
 
 
