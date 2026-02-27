@@ -24,13 +24,14 @@
         user-select: text;
     }
     
-    /* Simple container for YouTube iframe */
+    /* Video container with loading state */
     .video-container {
         position: relative;
         width: 100%;
         background: #000;
         border-radius: 8px;
         overflow: hidden;
+        min-height: 200px;
     }
     
     .video-container iframe {
@@ -38,6 +39,88 @@
         aspect-ratio: 16/9;
         display: block;
         border: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .video-container iframe.loaded {
+        opacity: 1;
+    }
+    
+    .video-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a0a;
+        color: #fff;
+        z-index: 10;
+        transition: opacity 0.3s ease;
+    }
+    
+    .video-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        border-top-color: #3b82f6;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        font-size: 0.9rem;
+        color: #9ca3af;
+    }
+    
+    /* Error state */
+    .video-error {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a1a;
+        color: #fff;
+        z-index: 20;
+    }
+    
+    .video-error.hidden {
+        display: none;
+    }
+    
+    .retry-button {
+        margin-top: 1rem;
+        padding: 0.5rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .retry-button:hover {
+        background: #2563eb;
     }
 </style>
 
@@ -45,13 +128,31 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <!-- Main Video Content -->
         <div class="lg:col-span-3">
-            <!-- Simple YouTube Embed -->
+            <!-- YouTube Embed with Loading State -->
             <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6" oncontextmenu="return false;">
                 {% if lecture.youtube_link %}
                 {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
-                <div class="video-container">
+                {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
+                
+                <div class="video-container" id="videoContainer">
+                    <div class="video-loading" id="videoLoading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading video...</div>
+                    </div>
+                    
+                    <div class="video-error hidden" id="videoError">
+                        <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="text-lg font-semibold mb-2">Failed to load video</div>
+                        <div class="text-sm text-gray-400 mb-4">Please check your connection and try again</div>
+                        <button class="retry-button" onclick="retryLoadVideo()">Retry</button>
+                    </div>
+                    
                     <iframe 
-                        src="https://www.youtube.com/embed/{{ video_id }}"
+                        id="youtubeIframe"
+                        data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1"
+                        src="about:blank"
                         title="{{ lecture.title }}"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -71,6 +172,7 @@
                 {% endif %}
             </div>
 
+            <!-- Rest of the content remains the same -->
             <!-- Lecture Details (text selectable) -->
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 lecture-details">
                 <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
@@ -127,7 +229,7 @@
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Sidebar (unchanged) -->
         <div class="lg:col-span-1">
             <!-- Course Info -->
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
@@ -204,40 +306,125 @@
         e.preventDefault();
         return false;
     });
+
+    // Video loading handler
+    document.addEventListener('DOMContentLoaded', function() {
+        loadVideo();
+    });
+    
+    function loadVideo() {
+        const iframe = document.getElementById('youtubeIframe');
+        if (!iframe) return;
+        
+        const loadingEl = document.getElementById('videoLoading');
+        const errorEl = document.getElementById('videoError');
+        const videoSrc = iframe.dataset.src;
+        
+        // Set timeout for video load
+        const timeoutId = setTimeout(function() {
+            if (iframe.src === 'about:blank' || !iframe.src) {
+                showError();
+            }
+        }, 10000); // 10 second timeout
+        
+        // Load the video
+        iframe.src = videoSrc;
+        
+        // Listen for iframe load event
+        iframe.onload = function() {
+            clearTimeout(timeoutId);
+            
+            // Check if YouTube API is available (optional, but helps verify)
+            setTimeout(function() {
+                if (iframe.src && iframe.src !== 'about:blank') {
+                    loadingEl.classList.add('hidden');
+                    iframe.classList.add('loaded');
+                }
+            }, 500);
+        };
+        
+        // Handle iframe error
+        iframe.onerror = function() {
+            clearTimeout(timeoutId);
+            showError();
+        };
+    }
+    
+    function showError() {
+        const loadingEl = document.getElementById('videoLoading');
+        const errorEl = document.getElementById('videoError');
+        const iframe = document.getElementById('youtubeIframe');
+        
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+        iframe.classList.remove('loaded');
+        iframe.src = 'about:blank';
+    }
+    
+    function retryLoadVideo() {
+        const loadingEl = document.getElementById('videoLoading');
+        const errorEl = document.getElementById('videoError');
+        const iframe = document.getElementById('youtubeIframe');
+        
+        loadingEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
+        iframe.src = 'about:blank';
+        
+        // Retry loading
+        setTimeout(function() {
+            loadVideo();
+        }, 500);
+    }
 </script>
 {% endblock %}
 
 {% block mobile_content %}
-<!-- Mobile content with simple YouTube embed -->
+<!-- Mobile content with improved video loading -->
 <div class="p-4 pb-20" oncontextmenu="return false;">
-    <!-- Video Player -->
-    <div class="lg:col-span-3">
-            <!-- Simple YouTube Embed -->
-            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6" oncontextmenu="return false;">
-                {% if lecture.youtube_link %}
-                {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
-                <div class="video-container">
-                    <iframe 
-                        src="https://www.youtube.com/embed/{{ video_id }}"
-                        title="{{ lecture.title }}"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                {% else %}
-                <div class="w-full aspect-video bg-gray-800 flex items-center justify-center" oncontextmenu="return false;">
-                    <div class="text-center text-gray-400">
-                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
-                        <p class="text-lg">Video content not available</p>
-                    </div>
-                </div>
-                {% endif %}
+    <!-- Video Player with Loading State -->
+    <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6" oncontextmenu="return false;">
+        {% if lecture.youtube_link %}
+        {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
+        {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
+        
+        <div class="video-container" id="mobileVideoContainer">
+            <div class="video-loading" id="mobileVideoLoading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading video...</div>
             </div>
+            
+            <div class="video-error hidden" id="mobileVideoError">
+                <svg class="w-12 h-12 text-red-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="text-base font-semibold mb-2">Failed to load video</div>
+                <button class="retry-button text-sm py-1 px-4" onclick="retryMobileVideo()">Retry</button>
+            </div>
+            
+            <iframe 
+                id="mobileYoutubeIframe"
+                data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1"
+                src="about:blank"
+                title="{{ lecture.title }}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
+        {% else %}
+        <div class="w-full aspect-video bg-gray-800 flex items-center justify-center" oncontextmenu="return false;">
+            <div class="text-center text-gray-400">
+                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-lg">Video content not available</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
+    <!-- Rest of mobile content remains the same -->
     <!-- Lecture Details -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4 lecture-details">
         <h1 class="text-xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
@@ -296,4 +483,71 @@
         </a>
     </div>
 </div>
+
+<script>
+    // Mobile video loading
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileIframe = document.getElementById('mobileYoutubeIframe');
+        if (mobileIframe) {
+            loadMobileVideo();
+        }
+    });
+    
+    function loadMobileVideo() {
+        const iframe = document.getElementById('mobileYoutubeIframe');
+        if (!iframe) return;
+        
+        const loadingEl = document.getElementById('mobileVideoLoading');
+        const errorEl = document.getElementById('mobileVideoError');
+        const videoSrc = iframe.dataset.src;
+        
+        const timeoutId = setTimeout(function() {
+            if (iframe.src === 'about:blank' || !iframe.src) {
+                showMobileError();
+            }
+        }, 10000);
+        
+        iframe.src = videoSrc;
+        
+        iframe.onload = function() {
+            clearTimeout(timeoutId);
+            setTimeout(function() {
+                if (iframe.src && iframe.src !== 'about:blank') {
+                    loadingEl.classList.add('hidden');
+                    iframe.classList.add('loaded');
+                }
+            }, 500);
+        };
+        
+        iframe.onerror = function() {
+            clearTimeout(timeoutId);
+            showMobileError();
+        };
+    }
+    
+    function showMobileError() {
+        const loadingEl = document.getElementById('mobileVideoLoading');
+        const errorEl = document.getElementById('mobileVideoError');
+        const iframe = document.getElementById('mobileYoutubeIframe');
+        
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+        iframe.classList.remove('loaded');
+        iframe.src = 'about:blank';
+    }
+    
+    function retryMobileVideo() {
+        const loadingEl = document.getElementById('mobileVideoLoading');
+        const errorEl = document.getElementById('mobileVideoError');
+        const iframe = document.getElementById('mobileYoutubeIframe');
+        
+        loadingEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
+        iframe.src = 'about:blank';
+        
+        setTimeout(function() {
+            loadMobileVideo();
+        }, 500);
+    }
+</script>
 {% endblock %}
