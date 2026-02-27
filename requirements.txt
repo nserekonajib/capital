@@ -14,4 +14,6 @@ waitress
 flask_cors
 python-dotenv
 pydub
+
 speechrecognition
+waitress
