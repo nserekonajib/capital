@@ -122,10 +122,13 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 
-if __name__ == '__main__':
-    # Set up logging
-    # logging.basicConfig(level=logging.INFO)
-    app.run(host = "0.0.0.0", debug=True, port=3000)
+from waitress import serve
+import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))  # Render provides PORT
+    serve(app, host="0.0.0.0", port=port)
+
 
 
 
