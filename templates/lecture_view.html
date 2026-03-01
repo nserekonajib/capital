@@ -10,7 +10,13 @@
 
 <style>
     /* Disable right click / text selection on entire page */
-   
+    * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
 
     /* Allow text selection only in lecture details */
     .lecture-details, .lecture-details * {
@@ -28,6 +34,8 @@
         box-shadow: 0 4px 24px rgba(0,0,0,0.18);
         margin-bottom: 1.5rem;
         background: #000;
+        position: relative;
+        min-height: 200px; /* Ensure minimum height on mobile */
     }
 
     /* Loading state */
@@ -43,10 +51,48 @@
         background: #1a1a1a;
         color: #fff;
         font-size: 14px;
+        z-index: 10;
     }
 
-    .cs-player-wrapper {
-        position: relative;
+    /* Mobile-specific fixes */
+    @media (max-width: 768px) {
+        .cs-player-wrapper {
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        /* Ensure iframe is clickable on mobile */
+        .cs-player-wrapper iframe {
+            pointer-events: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Fix for iOS iframe issues */
+        .cs-player-wrapper {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+    }
+
+    /* Fallback button for mobile if player fails */
+    .mobile-fallback {
+        display: none;
+        width: 100%;
+        padding: 1rem;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 1rem;
+        cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+        .mobile-fallback.show {
+            display: block;
+        }
     }
 </style>
 
@@ -70,13 +116,23 @@
             {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
             {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
 
-            <div class="cs-player-wrapper" oncontextmenu="return false;">
+            <div class="cs-player-wrapper" oncontextmenu="return false;" id="playerWrapper">
                 <div id="csPlayerDiv"></div>
                 <div id="playerLoading" class="player-loading">Loading player...</div>
             </div>
+            
+            <!-- Mobile fallback button -->
+            <button id="mobileFallbackBtn" class="mobile-fallback" onclick="window.open('https://www.youtube.com/watch?v={{ video_id }}', '_blank')">
+                Open in YouTube App
+            </button>
 
-            <!-- Load scripts in correct order -->
+            <!-- Load scripts in correct order with mobile optimizations -->
             <script>
+                // Detect mobile device
+                function isMobile() {
+                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                }
+
                 // Create a promise-based loader for YouTube API
                 window.YTReady = new Promise(function(resolve) {
                     if (window.YT && window.YT.Player) {
@@ -105,20 +161,39 @@
                 (function() {
                     var videoId = "{{ video_id }}";
                     var initAttempts = 0;
-                    var maxAttempts = 10;
+                    var maxAttempts = 15; // Increased for mobile
+                    var mobileDevice = isMobile();
                     
                     function hideLoading() {
                         var loader = document.getElementById('playerLoading');
-                        if (loader) loader.style.display = 'none';
+                        if (loader) {
+                            loader.style.opacity = '0';
+                            setTimeout(function() {
+                                loader.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                    
+                    function showFallback() {
+                        var fallbackBtn = document.getElementById('mobileFallbackBtn');
+                        if (fallbackBtn) {
+                            fallbackBtn.classList.add('show');
+                        }
+                        hideLoading();
                     }
                     
                     function initPlayer() {
-                        if (window.csPlayerInitialized) return;
+                        if (window.csPlayerInitialized) {
+                            hideLoading();
+                            return;
+                        }
                         
                         if (typeof csPlayer === 'undefined') {
                             if (initAttempts < maxAttempts) {
                                 initAttempts++;
-                                setTimeout(initPlayer, 500);
+                                setTimeout(initPlayer, mobileDevice ? 800 : 500); // Longer delay on mobile
+                            } else if (mobileDevice) {
+                                showFallback();
                             }
                             return;
                         }
@@ -132,21 +207,50 @@
                                     container.innerHTML = '';
                                 }
                                 
-                                csPlayer.init("csPlayerDiv", {
+                                // Mobile-specific options
+                                var options = {
                                     defaultId: videoId,
                                     thumbnail: true,
                                     theme: "default",
                                     loop: false,
-                                });
+                                };
+                                
+                                // Add mobile-specific settings
+                                if (mobileDevice) {
+                                    options.playsinline = 1; // Important for iOS
+                                    options.rel = 0;
+                                    options.showinfo = 0;
+                                }
+                                
+                                csPlayer.init("csPlayerDiv", options);
                                 
                                 window.csPlayerInitialized = true;
                                 hideLoading();
-                                console.log("Player initialized successfully");
+                                
+                                // Add touch event listener for mobile
+                                if (mobileDevice) {
+                                    setTimeout(function() {
+                                        var iframe = document.querySelector('#csPlayerDiv iframe');
+                                        if (iframe) {
+                                            iframe.style.pointerEvents = 'auto';
+                                            
+                                            // Force a repaint on mobile
+                                            iframe.style.opacity = '0.99';
+                                            setTimeout(function() {
+                                                iframe.style.opacity = '1';
+                                            }, 50);
+                                        }
+                                    }, 1000);
+                                }
+                                
+                                console.log("Player initialized successfully on " + (mobileDevice ? "mobile" : "desktop"));
                             } catch (e) {
                                 console.error("Failed to initialize player:", e);
                                 if (initAttempts < maxAttempts) {
                                     initAttempts++;
-                                    setTimeout(initPlayer, 500);
+                                    setTimeout(initPlayer, mobileDevice ? 800 : 500);
+                                } else if (mobileDevice) {
+                                    showFallback();
                                 }
                             }
                         });
@@ -157,6 +261,30 @@
                         document.addEventListener('DOMContentLoaded', initPlayer);
                     } else {
                         initPlayer();
+                    }
+                    
+                    // Additional mobile-specific fixes
+                    if (mobileDevice) {
+                        // Fix for iOS iframe issues
+                        document.addEventListener('touchstart', function() {}, {passive: true});
+                        
+                        // Ensure player wrapper gets proper height
+                        var wrapper = document.getElementById('playerWrapper');
+                        if (wrapper) {
+                            wrapper.style.minHeight = window.innerWidth < 768 ? '240px' : '360px';
+                        }
+                        
+                        // Handle orientation change
+                        window.addEventListener('orientationchange', function() {
+                            setTimeout(function() {
+                                var iframe = document.querySelector('#csPlayerDiv iframe');
+                                if (iframe) {
+                                    // Trigger resize event for YouTube player
+                                    iframe.style.width = '100%';
+                                    iframe.style.height = '100%';
+                                }
+                            }, 200);
+                        });
                     }
                 })();
 
@@ -188,6 +316,7 @@
             </script>
             {% endif %}
 
+            <!-- Rest of your template remains exactly the same -->
             <!-- Lecture Details -->
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 lecture-details">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
@@ -368,4 +497,3 @@
 
 <!-- Completely empty mobile_content block -->
 {% block mobile_content %}{% endblock %}
-
