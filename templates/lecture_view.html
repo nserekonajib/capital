@@ -49,14 +49,13 @@
         border: none;
         opacity: 0;
         transition: opacity 0.3s ease;
-        pointer-events: auto;
     }
     
     .video-wrapper iframe.loaded {
         opacity: 1;
     }
     
-    /* Protection overlay - prevents right-click on video */
+    /* Targeted protection overlays - only cover YouTube links, not controls */
     .protection-overlay {
         position: absolute;
         top: 0;
@@ -65,13 +64,61 @@
         bottom: 0;
         background: transparent;
         z-index: 5;
-        pointer-events: none;
+        pointer-events: none; /* Allow clicks to pass through by default */
     }
     
-    /* Only block right-click, allow clicks to pass through to iframe */
-    .protection-overlay.blocking {
-        pointer-events: auto;
+    /* Only block specific areas where YouTube puts its links */
+    .block-youtube-logo {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 120px;
+        height: 40px;
         background: transparent;
+        z-index: 20;
+        pointer-events: auto;
+        cursor: default;
+    }
+    
+    .block-share-button {
+        position: absolute;
+        top: 10px;
+        right: 60px;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        z-index: 20;
+        pointer-events: auto;
+        cursor: default;
+    }
+    
+    .block-watch-later {
+        position: absolute;
+        top: 10px;
+        right: 110px;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        z-index: 20;
+        pointer-events: auto;
+        cursor: default;
+    }
+    
+    .block-title-link {
+        position: absolute;
+        top: 10px;
+        left: 140px;
+        width: calc(100% - 300px);
+        height: 40px;
+        background: transparent;
+        z-index: 20;
+        pointer-events: auto;
+        cursor: default;
+    }
+    
+    /* Allow all other controls to work normally */
+    .allow-controls {
+        pointer-events: none; /* This area lets clicks pass through */
     }
     
     /* Loading state */
@@ -128,7 +175,7 @@
         justify-content: center;
         background: #1a1a1a;
         color: #fff;
-        z-index: 20;
+        z-index: 30;
     }
     
     .video-error.hidden {
@@ -149,13 +196,6 @@
     
     .retry-button:hover {
         background: #2563eb;
-    }
-    
-    /* Disable YouTube controls that lead to youtube.com */
-    .ytp-youtube-button,
-    .ytp-watermark,
-    a.ytp-title-link {
-        display: none !important;
     }
     
     /* Lecture navigation */
@@ -192,6 +232,41 @@
         border-left: 3px solid #3b82f6;
     }
     
+    /* Hide specific YouTube elements while keeping controls */
+    .ytp-youtube-button,
+    .ytp-watermark,
+    .ytp-share-button,
+    .ytp-watch-later-button,
+    .ytp-title-link,
+    a.ytp-title-link,
+    .ytp-title-channel,
+    .ytp-title-text {
+        display: none !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* Keep all control elements visible */
+    .ytp-play-button,
+    .ytp-volume-panel,
+    .ytp-time-display,
+    .ytp-progress-bar,
+    .ytp-progress-bar-container,
+    .ytp-chrome-controls,
+    .ytp-right-controls,
+    .ytp-fullscreen-button,
+    .ytp-settings-button,
+    .ytp-mute-button,
+    .ytp-progress-bar,
+    .ytp-play-progress,
+    .ytp-load-progress {
+        display: block !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
     /* Mobile optimizations */
     @media (max-width: 1024px) {
         .nav-button {
@@ -202,6 +277,24 @@
         .video-container {
             border-radius: 0.5rem;
         }
+        
+        .block-share-button {
+            right: 50px;
+            width: 35px;
+            height: 35px;
+        }
+        
+        .block-watch-later {
+            right: 90px;
+            width: 35px;
+            height: 35px;
+        }
+        
+        .block-title-link {
+            left: 120px;
+            width: calc(100% - 250px);
+            height: 35px;
+        }
     }
 </style>
 
@@ -209,8 +302,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
         <!-- Main Video Content -->
         <div class="lg:col-span-3">
-            <!-- Video Player with Protection -->
-            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-4 lg:mb-6" 
+            <!-- Video Player with Targeted Protection -->
+            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-4 lg:mb-6 relative" 
                  oncontextmenu="return false;" 
                  ondragstart="return false" 
                  onselectstart="return false">
@@ -236,18 +329,21 @@
                         <button class="retry-button text-sm py-2 px-4 lg:py-2 lg:px-6" onclick="retryLoadVideo()">Retry</button>
                     </div>
                     
-                    <!-- Video Wrapper with Protection Overlay -->
+                    <!-- Video Wrapper with Targeted Protection -->
                     <div class="video-wrapper">
-                        <!-- Protection overlay to block right-click and YouTube links -->
-                        <div class="protection-overlay" id="protectionOverlay" 
-                             oncontextmenu="return false;"
-                             onmousedown="return false;"
-                             onmouseup="return false;"></div>
+                        <!-- Main overlay that allows clicks through -->
+                        <div class="protection-overlay" id="mainProtection"></div>
                         
-                        <!-- YouTube Embed with disabled features -->
+                        <!-- Targeted blocks for YouTube links only -->
+                        <div class="block-youtube-logo" onclick="return false;" oncontextmenu="return false;"></div>
+                        <div class="block-share-button" onclick="return false;" oncontextmenu="return false;"></div>
+                        <div class="block-watch-later" onclick="return false;" oncontextmenu="return false;"></div>
+                        <div class="block-title-link" onclick="return false;" oncontextmenu="return false;"></div>
+                        
+                        <!-- YouTube Embed - Controls enabled, branding disabled -->
                         <iframe 
                             id="youtubeIframe"
-                            data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&controls=1&fs=1&disablekb=0&playsinline=1&cc_load_policy=0&color=red&loop=0"
+                            data-src="https://www.youtube-nocookie.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&controls=1&fs=1&playsinline=1&cc_load_policy=0&color=red&loop=0&showinfo=0"
                             src="about:blank"
                             title="{{ lecture.title }}"
                             frameborder="0"
@@ -429,15 +525,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadVideo();
         
-        // Additional protection for YouTube iframe
-        setInterval(function() {
-            // Try to block YouTube links and watermark
-            const iframe = document.getElementById('youtubeIframe');
-            if (iframe && iframe.contentWindow) {
-                // This attempts to block clicks on YouTube elements
-                // Note: This is limited due to cross-origin restrictions
-            }
-        }, 1000);
+        // Continuously hide YouTube branding elements
+        setInterval(hideYouTubeBranding, 500);
     });
     
     function loadVideo() {
@@ -468,21 +557,11 @@
                     loadingEl.classList.add('hidden');
                     iframe.classList.add('loaded');
                     
-                    // Try to inject CSS to hide YouTube elements (if possible)
+                    // Try to hide YouTube branding in iframe (may be limited by CORS)
                     try {
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                        if (iframeDoc) {
-                            const style = iframeDoc.createElement('style');
-                            style.textContent = `
-                                .ytp-youtube-button, .ytp-watermark, .ytp-title-link {
-                                    display: none !important;
-                                }
-                            `;
-                            iframeDoc.head.appendChild(style);
-                        }
+                        hideYouTubeBranding();
                     } catch (e) {
                         // Cross-origin restrictions - ignore
-                        console.log('Cannot modify iframe styles due to cross-origin policy');
                     }
                 }
             }, 500);
@@ -520,29 +599,93 @@
             loadVideo();
         }, 500);
     }
-
-    // Enhanced protection against right-click on iframe
-    function enhanceProtection() {
-        const protectionOverlay = document.getElementById('protectionOverlay');
-        if (protectionOverlay) {
-            protectionOverlay.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
+    
+    // Function to hide YouTube branding elements
+    function hideYouTubeBranding() {
+        // This attempts to hide YouTube elements via CSS injection
+        // Note: Full iframe manipulation is limited by CORS
+        
+        // We can add a style tag to the iframe if accessible
+        const iframe = document.getElementById('youtubeIframe');
+        if (iframe && iframe.contentDocument) {
+            try {
+                const style = iframe.contentDocument.createElement('style');
+                style.textContent = `
+                    .ytp-youtube-button,
+                    .ytp-watermark,
+                    .ytp-share-button,
+                    .ytp-watch-later-button,
+                    .ytp-title-link,
+                    .ytp-title-channel,
+                    .ytp-title-text {
+                        display: none !important;
+                        opacity: 0 !important;
+                        pointer-events: none !important;
+                    }
+                    
+                    /* Keep all control elements */
+                    .ytp-play-button,
+                    .ytp-volume-panel,
+                    .ytp-time-display,
+                    .ytp-progress-bar,
+                    .ytp-fullscreen-button,
+                    .ytp-settings-button {
+                        display: block !important;
+                        pointer-events: auto !important;
+                    }
+                `;
+                iframe.contentDocument.head.appendChild(style);
+            } catch (e) {
+                // Cross-origin restrictions - ignore, our overlay blocks will handle it
+            }
         }
     }
-
-    // Call enhance protection after video loads
-    setTimeout(enhanceProtection, 1000);
 </script>
 
-<!-- Additional CSS injection attempt for YouTube iframe (works when same origin) -->
+<!-- Global styles to hide YouTube elements -->
 <style>
-    /* These only work if we can access iframe content, but kept for reference */
+    /* Hide YouTube links and branding but keep controls */
     .ytp-youtube-button,
     .ytp-watermark,
-    .ytp-title-link {
+    .ytp-share-button,
+    .ytp-watch-later-button,
+    .ytp-title-link,
+    a.ytp-title-link,
+    .ytp-title-channel,
+    .ytp-title-text,
+    button[aria-label*="Watch later"],
+    button[aria-label*="Share"],
+    a[href*="youtube.com"] {
         display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* Ensure all control elements remain visible and clickable */
+    .ytp-play-button,
+    .ytp-volume-panel,
+    .ytp-time-display,
+    .ytp-progress-bar,
+    .ytp-progress-bar-container,
+    .ytp-chrome-controls,
+    .ytp-right-controls,
+    .ytp-fullscreen-button,
+    .ytp-settings-button,
+    .ytp-mute-button,
+    .ytp-progress-bar,
+    .ytp-play-progress,
+    .ytp-load-progress,
+    button[aria-label*="Play"],
+    button[aria-label*="Pause"],
+    button[aria-label*="Volume"],
+    button[aria-label*="fullscreen"],
+    button[aria-label*="Fullscreen"],
+    button[aria-label*="Settings"] {
+        display: block !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 </style>
 {% endblock %}
