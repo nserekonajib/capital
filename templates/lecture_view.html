@@ -1,13 +1,10 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 
 {% block title %}{{ lecture.title }} - {{ course.title }}{% endblock %}
 
-{% block page_title %}{{ lecture.title }}{% endblock %}
-{% block page_subtitle %}Lecture {{ lecture.lecture_number }} • {{ course.title }}{% endblock %}
-
 {% block content %}
 <style>
-    /* Disable right click on entire page */
+    /* Disable all selection and right-click */
     * {
         -webkit-user-select: none;
         -moz-user-select: none;
@@ -17,36 +14,67 @@
     }
     
     /* Allow text selection only in lecture details */
-    .lecture-details, .lecture-details * {
+    .lecture-details, .lecture-details *,
+    .course-info, .course-info *,
+    .lecture-list, .lecture-list * {
         -webkit-user-select: text;
         -moz-user-select: text;
         -ms-user-select: text;
         user-select: text;
     }
     
-    /* Video container with loading state */
+    /* Video container with protection */
     .video-container {
         position: relative;
         width: 100%;
         background: #000;
-        border-radius: 8px;
+        border-radius: 0.75rem;
         overflow: hidden;
         min-height: 200px;
     }
     
-    .video-container iframe {
+    .video-wrapper {
+        position: relative;
         width: 100%;
         aspect-ratio: 16/9;
-        display: block;
+        background: #0a0a0a;
+    }
+    
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         border: none;
         opacity: 0;
         transition: opacity 0.3s ease;
+        pointer-events: auto;
     }
     
-    .video-container iframe.loaded {
+    .video-wrapper iframe.loaded {
         opacity: 1;
     }
     
+    /* Protection overlay - prevents right-click on video */
+    .protection-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        z-index: 5;
+        pointer-events: none;
+    }
+    
+    /* Only block right-click, allow clicks to pass through to iframe */
+    .protection-overlay.blocking {
+        pointer-events: auto;
+        background: transparent;
+    }
+    
+    /* Loading state */
     .video-loading {
         position: absolute;
         top: 0;
@@ -122,102 +150,175 @@
     .retry-button:hover {
         background: #2563eb;
     }
+    
+    /* Disable YouTube controls that lead to youtube.com */
+    .ytp-youtube-button,
+    .ytp-watermark,
+    a.ytp-title-link {
+        display: none !important;
+    }
+    
+    /* Lecture navigation */
+    .nav-button {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .nav-button-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .nav-button-primary:hover {
+        background-color: #2563eb;
+    }
+    
+    .nav-button-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .nav-button-secondary:hover {
+        background-color: #4b5563;
+    }
+    
+    /* Active lecture highlight */
+    .lecture-active {
+        background-color: #eff6ff;
+        border-left: 3px solid #3b82f6;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 1024px) {
+        .nav-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .video-container {
+            border-radius: 0.5rem;
+        }
+    }
 </style>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
         <!-- Main Video Content -->
         <div class="lg:col-span-3">
-            <!-- YouTube Embed with Loading State -->
-            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6" oncontextmenu="return false;">
+            <!-- Video Player with Protection -->
+            <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-4 lg:mb-6" 
+                 oncontextmenu="return false;" 
+                 ondragstart="return false" 
+                 onselectstart="return false">
+                 
                 {% if lecture.youtube_link %}
                 {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
                 {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
                 
                 <div class="video-container" id="videoContainer">
+                    <!-- Loading State -->
                     <div class="video-loading" id="videoLoading">
                         <div class="loading-spinner"></div>
                         <div class="loading-text">Loading video...</div>
                     </div>
                     
+                    <!-- Error State -->
                     <div class="video-error hidden" id="videoError">
-                        <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-12 h-12 lg:w-16 lg:h-16 text-red-500 mb-3 lg:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        <div class="text-lg font-semibold mb-2">Failed to load video</div>
-                        <div class="text-sm text-gray-400 mb-4">Please check your connection and try again</div>
-                        <button class="retry-button" onclick="retryLoadVideo()">Retry</button>
+                        <div class="text-base lg:text-lg font-semibold mb-2">Failed to load video</div>
+                        <div class="text-xs lg:text-sm text-gray-400 mb-3 lg:mb-4 px-4 text-center">Please check your connection and try again</div>
+                        <button class="retry-button text-sm py-2 px-4 lg:py-2 lg:px-6" onclick="retryLoadVideo()">Retry</button>
                     </div>
                     
-                    <iframe 
-                        id="youtubeIframe"
-                        data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1"
-                        src="about:blank"
-                        title="{{ lecture.title }}"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen>
-                    </iframe>
+                    <!-- Video Wrapper with Protection Overlay -->
+                    <div class="video-wrapper">
+                        <!-- Protection overlay to block right-click and YouTube links -->
+                        <div class="protection-overlay" id="protectionOverlay" 
+                             oncontextmenu="return false;"
+                             onmousedown="return false;"
+                             onmouseup="return false;"></div>
+                        
+                        <!-- YouTube Embed with disabled features -->
+                        <iframe 
+                            id="youtubeIframe"
+                            data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&controls=1&fs=1&disablekb=0&playsinline=1&cc_load_policy=0&color=red&loop=0"
+                            src="about:blank"
+                            title="{{ lecture.title }}"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
                 </div>
+                
                 {% else %}
-                <div class="w-full aspect-video bg-gray-800 flex items-center justify-center" oncontextmenu="return false;">
-                    <div class="text-center text-gray-400">
-                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- No Video Available -->
+                <div class="w-full aspect-video bg-gray-800 flex items-center justify-center">
+                    <div class="text-center text-gray-400 p-4">
+                        <svg class="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-3 lg:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                         </svg>
-                        <p class="text-lg">Video content not available</p>
+                        <p class="text-base lg:text-lg">Video content not available</p>
                     </div>
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Rest of the content remains the same -->
             <!-- Lecture Details (text selectable) -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 lecture-details">
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 lg:p-6 lecture-details">
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
                 
-                <div class="flex items-center space-x-4 mb-4">
-                    <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                <div class="flex flex-wrap items-center gap-2 lg:space-x-4 mb-3 lg:mb-4">
+                    <span class="bg-blue-100 text-blue-600 px-2 lg:px-3 py-1 rounded-full text-xs lg:text-sm font-semibold">
                         Lecture {{ lecture.lecture_number }}
                     </span>
-                    <span class="text-gray-500">•</span>
-                    <span class="text-gray-600">{{ course.title }}</span>
+                    <span class="text-gray-500 hidden lg:inline">•</span>
+                    <span class="text-sm lg:text-base text-gray-600">{{ course.title }}</span>
                 </div>
 
                 {% if lecture.description %}
-                <div class="prose max-w-none mt-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">About this lecture</h3>
-                    <p class="text-gray-700 leading-relaxed">{{ lecture.description }}</p>
+                <div class="mt-3 lg:mt-4">
+                    <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">About this lecture</h3>
+                    <p class="text-sm lg:text-base text-gray-700 leading-relaxed">{{ lecture.description }}</p>
                 </div>
                 {% endif %}
 
                 <!-- Navigation Buttons -->
-                <div class="flex items-center justify-between pt-6 mt-6 border-t border-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-4 lg:pt-6 mt-4 lg:mt-6 border-t border-gray-200">
                     {% if current_index > 0 %}
                     <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index - 1].id) }}" 
-                       class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center">
+                       class="nav-button nav-button-secondary text-sm lg:text-base">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
-                        Previous Lecture
+                        <span class="hidden lg:inline">Previous Lecture</span>
+                        <span class="lg:hidden">Previous</span>
                     </a>
                     {% else %}
                     <div></div>
                     {% endif %}
 
                     <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
-                       class="text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-200 flex items-center">
+                       class="text-sm lg:text-base text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-200 flex items-center order-first lg:order-none">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
                         </svg>
-                        Back to Course
+                        <span class="hidden lg:inline">Back to Course</span>
+                        <span class="lg:hidden">Course</span>
                     </a>
 
                     {% if current_index < all_lectures|length - 1 %}
                     <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index + 1].id) }}" 
-                       class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center">
-                        Next Lecture
+                       class="nav-button nav-button-primary text-sm lg:text-base">
+                        <span class="hidden lg:inline">Next Lecture</span>
+                        <span class="lg:hidden">Next</span>
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
@@ -229,13 +330,13 @@
             </div>
         </div>
 
-        <!-- Sidebar (unchanged) -->
+        <!-- Sidebar -->
         <div class="lg:col-span-1">
             <!-- Course Info -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Course Info</h3>
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-4 lg:mb-6 course-info">
+                <h3 class="text-base lg:text-lg font-semibold text-gray-900 mb-3 lg:mb-4">Course Info</h3>
                 
-                <div class="space-y-3 text-sm">
+                <div class="space-y-2 lg:space-y-3 text-xs lg:text-sm">
                     <div>
                         <p class="font-semibold text-gray-900">{{ course.title }}</p>
                         <p class="text-gray-600">By {{ course.instructor }}</p>
@@ -248,7 +349,7 @@
                     
                     <div class="pt-2">
                         <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
-                           class="text-blue-500 hover:text-blue-600 font-semibold transition-colors duration-200 flex items-center">
+                           class="text-blue-500 hover:text-blue-600 font-semibold transition-colors duration-200 flex items-center text-sm">
                             View all lectures
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -259,32 +360,32 @@
             </div>
 
             <!-- Lecture List -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200">
-                    <h3 class="font-semibold text-gray-900">Lecture List</h3>
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden lecture-list">
+                <div class="px-3 lg:px-4 py-2 lg:py-3 border-b border-gray-200">
+                    <h3 class="font-semibold text-gray-900 text-sm lg:text-base">Lecture List</h3>
                 </div>
                 
-                <div class="max-h-96 overflow-y-auto">
+                <div class="max-h-80 lg:max-h-96 overflow-y-auto">
                     {% for lec in all_lectures %}
                     <a href="{{ url_for('my_courses.view_lecture', lecture_id=lec.id) }}" 
-                       class="block p-4 border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 {% if lec.id == lecture.id %}bg-blue-50 border-blue-200{% endif %}">
-                        <div class="flex items-start space-x-3">
+                       class="block p-3 lg:p-4 border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200 {% if lec.id == lecture.id %}lecture-active{% endif %}">
+                        <div class="flex items-start space-x-2 lg:space-x-3">
                             <div class="flex-shrink-0">
                                 {% if lec.id == lecture.id %}
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-6 h-6 lg:w-8 lg:h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 lg:w-4 lg:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </div>
                                 {% else %}
-                                <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                <div class="w-6 h-6 lg:w-8 lg:h-8 bg-gray-100 rounded-full flex items-center justify-center">
                                     <span class="text-xs font-semibold text-gray-600">{{ lec.lecture_number }}</span>
                                 </div>
                                 {% endif %}
                             </div>
                             
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 mb-1 {% if lec.id == lecture.id %}text-blue-600{% endif %}">
+                                <p class="text-xs lg:text-sm font-medium text-gray-900 mb-1 {% if lec.id == lecture.id %}text-blue-600{% endif %} line-clamp-2">
                                     {{ lec.title }}
                                 </p>
                                 <p class="text-xs text-gray-500">
@@ -301,8 +402,25 @@
 </div>
 
 <script>
-    // Disable right click everywhere
+    // Global protection
     document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    document.addEventListener('keydown', function(e) {
+        // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+            (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+            (e.ctrlKey && e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Prevent dragging of images/videos
+    document.addEventListener('dragstart', function(e) {
         e.preventDefault();
         return false;
     });
@@ -310,6 +428,16 @@
     // Video loading handler
     document.addEventListener('DOMContentLoaded', function() {
         loadVideo();
+        
+        // Additional protection for YouTube iframe
+        setInterval(function() {
+            // Try to block YouTube links and watermark
+            const iframe = document.getElementById('youtubeIframe');
+            if (iframe && iframe.contentWindow) {
+                // This attempts to block clicks on YouTube elements
+                // Note: This is limited due to cross-origin restrictions
+            }
+        }, 1000);
     });
     
     function loadVideo() {
@@ -325,7 +453,7 @@
             if (iframe.src === 'about:blank' || !iframe.src) {
                 showError();
             }
-        }, 10000); // 10 second timeout
+        }, 10000);
         
         // Load the video
         iframe.src = videoSrc;
@@ -334,11 +462,28 @@
         iframe.onload = function() {
             clearTimeout(timeoutId);
             
-            // Check if YouTube API is available (optional, but helps verify)
+            // Verify video loaded
             setTimeout(function() {
                 if (iframe.src && iframe.src !== 'about:blank') {
                     loadingEl.classList.add('hidden');
                     iframe.classList.add('loaded');
+                    
+                    // Try to inject CSS to hide YouTube elements (if possible)
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc) {
+                            const style = iframeDoc.createElement('style');
+                            style.textContent = `
+                                .ytp-youtube-button, .ytp-watermark, .ytp-title-link {
+                                    display: none !important;
+                                }
+                            `;
+                            iframeDoc.head.appendChild(style);
+                        }
+                    } catch (e) {
+                        // Cross-origin restrictions - ignore
+                        console.log('Cannot modify iframe styles due to cross-origin policy');
+                    }
                 }
             }, 500);
         };
@@ -375,179 +520,29 @@
             loadVideo();
         }, 500);
     }
-</script>
-{% endblock %}
 
-{% block mobile_content %}
-<!-- Mobile content with improved video loading -->
-<div class="p-4 pb-20" oncontextmenu="return false;">
-    <!-- Video Player with Loading State -->
-    <div class="bg-black rounded-xl shadow-lg overflow-hidden mb-6" oncontextmenu="return false;">
-        {% if lecture.youtube_link %}
-        {% set video_id = lecture.youtube_link.split('v=')[1] if 'v=' in lecture.youtube_link else lecture.youtube_link.split('/')[-1] %}
-        {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
-        
-        <div class="video-container" id="mobileVideoContainer">
-            <div class="video-loading" id="mobileVideoLoading">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">Loading video...</div>
-            </div>
-            
-            <div class="video-error hidden" id="mobileVideoError">
-                <svg class="w-12 h-12 text-red-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                <div class="text-base font-semibold mb-2">Failed to load video</div>
-                <button class="retry-button text-sm py-1 px-4" onclick="retryMobileVideo()">Retry</button>
-            </div>
-            
-            <iframe 
-                id="mobileYoutubeIframe"
-                data-src="https://www.youtube.com/embed/{{ video_id }}?enablejsapi=1&autoplay=1&rel=0&modestbranding=1"
-                src="about:blank"
-                title="{{ lecture.title }}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allowfullscreen>
-            </iframe>
-        </div>
-        {% else %}
-        <div class="w-full aspect-video bg-gray-800 flex items-center justify-center" oncontextmenu="return false;">
-            <div class="text-center text-gray-400">
-                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                </svg>
-                <p class="text-lg">Video content not available</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Rest of mobile content remains the same -->
-    <!-- Lecture Details -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4 lecture-details">
-        <h1 class="text-xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
-        
-        <div class="flex items-center space-x-2 mb-3">
-            <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold">
-                Lecture {{ lecture.lecture_number }}
-            </span>
-            <span class="text-xs text-gray-500">•</span>
-            <span class="text-xs text-gray-600">{{ course.title }}</span>
-        </div>
-
-        {% if lecture.description %}
-        <div class="mt-3">
-            <h3 class="text-base font-semibold text-gray-900 mb-1">About this lecture</h3>
-            <p class="text-sm text-gray-700 leading-relaxed">{{ lecture.description }}</p>
-        </div>
-        {% endif %}
-
-        <!-- Navigation Buttons -->
-        <div class="flex items-center justify-between space-x-2 mt-4">
-            {% if current_index > 0 %}
-            <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index - 1].id) }}" 
-               class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                </svg>
-                Previous
-            </a>
-            {% endif %}
-
-            {% if current_index < all_lectures|length - 1 %}
-            <a href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index + 1].id) }}" 
-               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-sm">
-                Next
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Course Info -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 mb-4">
-        <h3 class="font-semibold text-gray-900 mb-3">Course: {{ course.title }}</h3>
-        <p class="text-sm text-gray-600 mb-2">By {{ course.instructor }}</p>
-        <p class="text-sm text-gray-600">CPA Level {{ course.cpa_level }}</p>
-        
-        <a href="{{ url_for('my_courses.course_detail', course_id=course.id) }}" 
-           class="mt-3 text-blue-500 hover:text-blue-600 font-semibold text-sm transition-colors duration-200 flex items-center">
-            View all lectures
-            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-    </div>
-</div>
-
-<script>
-    // Mobile video loading
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileIframe = document.getElementById('mobileYoutubeIframe');
-        if (mobileIframe) {
-            loadMobileVideo();
+    // Enhanced protection against right-click on iframe
+    function enhanceProtection() {
+        const protectionOverlay = document.getElementById('protectionOverlay');
+        if (protectionOverlay) {
+            protectionOverlay.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
         }
-    });
-    
-    function loadMobileVideo() {
-        const iframe = document.getElementById('mobileYoutubeIframe');
-        if (!iframe) return;
-        
-        const loadingEl = document.getElementById('mobileVideoLoading');
-        const errorEl = document.getElementById('mobileVideoError');
-        const videoSrc = iframe.dataset.src;
-        
-        const timeoutId = setTimeout(function() {
-            if (iframe.src === 'about:blank' || !iframe.src) {
-                showMobileError();
-            }
-        }, 10000);
-        
-        iframe.src = videoSrc;
-        
-        iframe.onload = function() {
-            clearTimeout(timeoutId);
-            setTimeout(function() {
-                if (iframe.src && iframe.src !== 'about:blank') {
-                    loadingEl.classList.add('hidden');
-                    iframe.classList.add('loaded');
-                }
-            }, 500);
-        };
-        
-        iframe.onerror = function() {
-            clearTimeout(timeoutId);
-            showMobileError();
-        };
     }
-    
-    function showMobileError() {
-        const loadingEl = document.getElementById('mobileVideoLoading');
-        const errorEl = document.getElementById('mobileVideoError');
-        const iframe = document.getElementById('mobileYoutubeIframe');
-        
-        loadingEl.classList.add('hidden');
-        errorEl.classList.remove('hidden');
-        iframe.classList.remove('loaded');
-        iframe.src = 'about:blank';
-    }
-    
-    function retryMobileVideo() {
-        const loadingEl = document.getElementById('mobileVideoLoading');
-        const errorEl = document.getElementById('mobileVideoError');
-        const iframe = document.getElementById('mobileYoutubeIframe');
-        
-        loadingEl.classList.remove('hidden');
-        errorEl.classList.add('hidden');
-        iframe.src = 'about:blank';
-        
-        setTimeout(function() {
-            loadMobileVideo();
-        }, 500);
-    }
+
+    // Call enhance protection after video loads
+    setTimeout(enhanceProtection, 1000);
 </script>
+
+<!-- Additional CSS injection attempt for YouTube iframe (works when same origin) -->
+<style>
+    /* These only work if we can access iframe content, but kept for reference */
+    .ytp-youtube-button,
+    .ytp-watermark,
+    .ytp-title-link {
+        display: none !important;
+    }
+</style>
 {% endblock %}

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>{% block title %}Capital College LMS{% endblock %}</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#0f172a">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        a {
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: none;
+        }
+         
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .mobile-nav-active {
+            color: #3b82f6;
+        }
+        
+        .sidebar-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Unified navigation styling */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .nav-link:hover {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+        
+        .nav-link:hover svg {
+            color: #2563eb;
+        }
+        
+        .nav-link-active {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+        
+        .nav-link-active svg {
+            color: #2563eb;
+        }
+        
+        /* Mobile bottom navigation */
+        .mobile-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            padding: 0.5rem 0;
+        }
+        
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <button id="installBtn" style="display:none;">Install App</button>
+    
+    <!-- Unified Layout -->
+    <div class="flex flex-col min-h-screen lg:flex-row">
+        <!-- Sidebar Navigation - Hidden on mobile, visible on desktop -->
+        <aside class="hidden lg:flex lg:w-64 bg-white shadow-lg flex-col fixed inset-y-0 left-0 z-40">
+            <!-- Logo Section -->
+            <div class="flex items-center space-x-3 px-6 py-4 border-b border-gray-200">
+                <img src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414"
+                     alt="Capital College Logo"
+                     class="h-10 w-10 rounded-full">
+                <div>
+                    <h1 class="text-lg font-bold text-blue-600">Capital College</h1>
+                    <p class="text-xs text-gray-500">LMS Platform</p>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation Links -->
+            <nav class="flex-1 px-4 py-6 space-y-2 sidebar-scroll overflow-y-auto">
+                <a href="{{ url_for('dashboards.dashboards') }}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+
+                <a href="{{url_for('my_courses.my_courses')}}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span class="font-medium">My Courses</span>
+                </a>
+
+                <a href="{{ url_for('my_courses.live_classes') }}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="font-medium">Live Classes</span>
+                </a>
+
+                <a href="{{ url_for('student_library.student_library') }}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                    <span class="font-medium">Library</span>
+                </a>
+
+                <a href="{{ url_for('payments.student_payments') }}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="font-medium">Payments</span>
+                </a>
+
+                <a href="{{ url_for('profile.profile_page') }}" class="nav-link group">
+                    <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="font-medium">Profile</span>
+                </a>
+            </nav>
+
+            <!-- User Info & Logout (Desktop) -->
+            <div class="px-4 py-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        {{ session.get('user_full_name', 'U')[0] }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                            {{ session.get('user_full_name', 'User') }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            CPA Level {{ session.get('cpa_level', '0') }}
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" 
+                   class="flex items-center space-x-2 w-full px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span class="text-sm font-medium">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area (adjusts for both mobile and desktop) -->
+        <div class="flex-1 lg:ml-64 flex flex-col min-h-screen">
+            <!-- Top Bar - Optional for mobile -->
+            <div class="lg:hidden bg-white shadow-sm px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414"
+                         alt="Capital College Logo"
+                         class="h-8 w-8 rounded-full">
+                    <div>
+                        <h1 class="text-sm font-bold text-blue-600">Capital College</h1>
+                        <p class="text-xs text-gray-500">LMS Platform</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium">{{ session.get('user_full_name', 'User') }}</span>
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        {{ session.get('user_full_name', 'U')[0] }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-auto pb-20 lg:pb-0">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="max-w-4xl mx-auto mt-4 px-4">
+                            {% for category, message in messages %}
+                                <div class="mb-3 p-4 rounded-lg 
+                                    {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300
+                                    {% elif category == 'danger' %}bg-red-100 text-red-800 border border-red-300
+                                    {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                                    {% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Page Content - Single block for both mobile and desktop -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation - Same links as desktop sidebar -->
+    <nav class="mobile-nav lg:hidden">
+        <a href="{{ url_for('dashboards.dashboards') }}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="text-xs">Dashboard</span>
+        </a>
+
+        <a href="{{url_for('my_courses.my_courses')}}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <span class="text-xs">Courses</span>
+        </a>
+
+        <a href="{{ url_for('my_courses.live_classes') }}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-xs">Live</span>
+        </a>
+
+        <a href="{{ url_for('student_library.student_library') }}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+            <span class="text-xs">Library</span>
+        </a>
+
+        <a href="{{ url_for('payments.student_payments') }}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="text-xs">Payments</span>
+        </a>
+
+        <a href="{{ url_for('profile.profile_page') }}" class="mobile-nav-item">
+            <svg class="w-6 h-6 mb-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-xs">Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}")
+                .then(() => console.log("Service Worker registered"))
+                .catch(err => console.error("SW registration failed:", err));
+        }
+
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.bg-green-100, .bg-red-100, .bg-yellow-100, .bg-blue-100').forEach(el => {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 5000);
+
+        // Install prompt
+        let deferredPrompt;
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById("installBtn").style.display = "block";
+        });
+
+        document.getElementById("installBtn").addEventListener("click", async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to install: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+
+        // Prevent multiple form submissions
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('loading');
+                    }
+                });
+            });
+        });
+
+        // Active state for navigation (both desktop and mobile)
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            
+            // Desktop sidebar active state
+            const sidebarLinks = document.querySelectorAll('aside nav a');
+            sidebarLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPath.includes(href) || 
+                    (currentPath === '/' && href.includes('dashboard'))) {
+                    link.classList.add('nav-link-active');
+                    const svg = link.querySelector('svg');
+                    if (svg) svg.classList.add('text-blue-600');
+                }
+            });
+
+            // Mobile navigation active state
+            const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+            mobileNavItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (currentPath.includes(href) || 
+                    (currentPath === '/' && href.includes('dashboard'))) {
+                    item.classList.add('mobile-nav-active');
+                    const svg = item.querySelector('svg');
+                    if (svg) {
+                        svg.classList.remove('text-gray-400');
+                        svg.classList.add('text-blue-600');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
