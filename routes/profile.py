@@ -14,7 +14,7 @@ load_dotenv()
 profile_bp = Blueprint('profile', __name__)
 
 # External Email API configuration
-EMAIL_API_BASE_URL = os.getenv("EMAIL_API_BASE_URL", "http://okg8sswc8s0wc4sk4s808k4w.195.200.15.127.sslip.io/")
+EMAIL_API_BASE_URL = os.getenv("EMAIL_API_BASE_URL", "https://email.lunserktechnologies.com")
 
 # In-memory storage for OTPs (in production, use Redis or database)
 otp_storage = {}
@@ -572,5 +572,6 @@ def forgot_password_reset_page():
     if not email:
         flash("Missing email parameter", "error")
         return redirect(url_for("profile.forgot_password"))
+
 
     return render_template("reset_password.html", email=email)
