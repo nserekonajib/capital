@@ -38,6 +38,7 @@
         position: relative;
         aspect-ratio: 16/9;
         cursor: none;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .video-wrapper.mouse-moved {
@@ -81,6 +82,12 @@
         box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
         opacity: 1;
         pointer-events: auto;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+    }
+
+    .custom-play-btn:active {
+        transform: translate(-50%, -50%) scale(0.95);
     }
 
     .custom-play-btn:hover {
@@ -112,6 +119,7 @@
         width: 40px;
         height: 40px;
         fill: white;
+        pointer-events: none;
     }
 
     /* Hide default Plyr play button */
@@ -131,6 +139,18 @@
         }
 
         .custom-play-btn {
+            width: 70px;
+            height: 70px;
+        }
+
+        .custom-play-btn svg {
+            width: 35px;
+            height: 35px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .custom-play-btn {
             width: 60px;
             height: 60px;
         }
@@ -138,18 +158,6 @@
         .custom-play-btn svg {
             width: 30px;
             height: 30px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .custom-play-btn {
-            width: 50px;
-            height: 50px;
-        }
-
-        .custom-play-btn svg {
-            width: 25px;
-            height: 25px;
         }
     }
 
@@ -168,6 +176,7 @@
         cursor: pointer;
         transition: opacity 0.3s ease, background 0.2s ease;
         opacity: 1;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .custom-fs-btn.hidden {
@@ -180,10 +189,14 @@
         color: black;
     }
 
+    .custom-fs-btn:active {
+        background: rgba(255,255,255,0.3);
+    }
+
     @media (max-width: 480px) {
         .custom-fs-btn {
-            padding: 4px 10px;
-            font-size: 11px;
+            padding: 6px 12px;
+            font-size: 12px;
             top: 10px;
             right: 10px;
         }
@@ -303,7 +316,7 @@
                 </div>
                 
                 <!-- Custom Blue Play/Pause Button -->
-                <button class="custom-play-btn paused" id="customPlayBtn" onclick="togglePlayPause()">
+                <button class="custom-play-btn paused" id="customPlayBtn">
                     <svg viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
@@ -320,7 +333,7 @@
                 </div>
 
                 <!-- Custom Fullscreen Button -->
-                <button class="custom-fs-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
+                <button class="custom-fs-btn" id="fullscreenBtn">
                     FULL SCREEN
                 </button>
             </div>
@@ -382,7 +395,12 @@
                 let hideTimeout;
                 let isMouseOver = false;
 
-                function togglePlayPause() {
+                function togglePlayPause(e) {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    
                     if (isPlaying) {
                         player.pause();
                     } else {
@@ -441,6 +459,32 @@
                     }
                 }
 
+                // Add click handler directly to play button
+                playBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    togglePlayPause(e);
+                });
+
+                playBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    togglePlayPause(e);
+                }, { passive: false });
+
+                // Add click handler to fullscreen button
+                fullscreenBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleFullscreen();
+                });
+
+                fullscreenBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleFullscreen();
+                }, { passive: false });
+
                 // Mouse move handler for video wrapper
                 videoWrapper.addEventListener('mousemove', () => {
                     showControls();
@@ -462,7 +506,7 @@
                 player.on('play', () => {
                     isPlaying = true;
                     updatePlayButton();
-                    showControls(); // Show controls when play starts
+                    showControls();
                 });
 
                 player.on('pause', () => {
@@ -491,23 +535,49 @@
                     clearTimeout(hideTimeout);
                 });
 
-                // Touch support for mobile
+                // Touch support for mobile - single tap to show/hide controls
+                let touchTimeout;
+                let lastTouch = 0;
+
                 videoWrapper.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                    const now = Date.now();
+                    const touch = e.touches[0];
+                    
+                    // Check if it's a double tap
+                    if (now - lastTouch < 300) {
+                        // Double tap - toggle play/pause
+                        e.preventDefault();
+                        togglePlayPause(e);
+                    }
+                    
+                    lastTouch = now;
+                    
+                    // Show controls on touch
                     showControls();
                     
-                    // Toggle play/pause on double tap (optional)
-                    if (e.touches.length === 1) {
-                        // Simple tap toggles controls visibility
-                        if (isPlaying) {
-                            if (playBtn.classList.contains('hidden')) {
-                                showControls();
-                            } else {
-                                hideControls();
-                            }
-                        }
+                    // Clear previous timeout
+                    if (touchTimeout) {
+                        clearTimeout(touchTimeout);
                     }
-                });
+                    
+                    // Set timeout to hide controls after 3 seconds if not interacting
+                    if (isPlaying) {
+                        touchTimeout = setTimeout(() => {
+                            if (isPlaying) {
+                                playBtn.classList.add('hidden');
+                                fullscreenBtn.classList.add('hidden');
+                                videoInfoBar.classList.add('hidden');
+                                videoWrapper.classList.remove('mouse-moved');
+                            }
+                        }, 3000);
+                    }
+                }, { passive: true });
+
+                // Prevent iframe from capturing touches
+                const iframe = document.querySelector('#player iframe');
+                if (iframe) {
+                    iframe.style.pointerEvents = 'none';
+                }
 
                 /* ---- Custom Fullscreen ---- */
                 function toggleFullscreen() {
@@ -545,20 +615,6 @@
                 document.addEventListener('mozfullscreenchange', handleFullscreenChange);
                 document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-                /* ---- Mobile touch fix ---- */
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    const wrapper = document.getElementById('videoWrapper');
-                    wrapper.addEventListener('touchstart', function() {
-                        const iframe = document.querySelector('#player iframe');
-                        if (iframe) {
-                            iframe.style.opacity = '0.99';
-                            setTimeout(() => {
-                                iframe.style.opacity = '1';
-                            }, 50);
-                        }
-                    }, {passive: true});
-                }
-
                 // Pause helper for navigation
                 function pauseBeforeNavigate(event) {
                     if (event.ctrlKey || event.metaKey || event.shiftKey) return true;
@@ -572,12 +628,14 @@
                 document.addEventListener('keydown', function(e) {
                     if (e.code === 'Space' && !e.target.matches('input, textarea, button, a')) {
                         e.preventDefault();
-                        togglePlayPause();
+                        togglePlayPause(e);
                     }
                 });
 
                 // Initial show controls
-                showControls();
+                setTimeout(() => {
+                    showControls();
+                }, 500);
             </script>
             {% else %}
             <div class="bg-gray-800 rounded-xl flex items-center justify-center mb-6" style="aspect-ratio:16/9;" oncontextmenu="return false;">
