@@ -56,6 +56,57 @@
         transition: opacity 0.3s ease;
     }
 
+    /* Custom Play/Pause Button */
+    .custom-play-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 80px;
+        background: #3b82f6;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .custom-play-btn:hover {
+        background: #2563eb;
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 6px 25px rgba(59, 130, 246, 0.7);
+    }
+
+    .custom-play-btn.paused {
+        background: #3b82f6;
+    }
+
+    .custom-play-btn.playing {
+        background: #ef4444;
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+    }
+
+    .custom-play-btn.playing:hover {
+        background: #dc2626;
+        box-shadow: 0 6px 25px rgba(239, 68, 68, 0.7);
+    }
+
+    .custom-play-btn svg {
+        width: 40px;
+        height: 40px;
+        fill: white;
+    }
+
+    /* Hide default Plyr play button */
+    .plyr__controls .plyr__control[data-plyr="play"] {
+        display: none !important;
+    }
+
     /* Mobile fixes */
     @media (max-width: 768px) {
         .video-wrapper {
@@ -65,6 +116,28 @@
         
         .video-wrapper iframe {
             pointer-events: auto !important;
+        }
+
+        .custom-play-btn {
+            width: 60px;
+            height: 60px;
+        }
+
+        .custom-play-btn svg {
+            width: 30px;
+            height: 30px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .custom-play-btn {
+            width: 50px;
+            height: 50px;
+        }
+
+        .custom-play-btn svg {
+            width: 25px;
+            height: 25px;
         }
     }
 
@@ -89,74 +162,7 @@
         color: black;
     }
 
-    /* Clickable White Overlay - FULLY RESPONSIVE */
-    .pause-overlay {
-        position: absolute;
-        inset: 0;
-        background: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        color: black;
-        z-index: 1000;
-        opacity: 1;
-        transition: opacity 0.4s ease;
-        cursor: pointer;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    .pause-overlay.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* Responsive Logo Image */
-    .pause-overlay img {
-        width: min(160px, 30%);
-        height: auto;
-        max-width: 200px;
-        min-width: 80px;
-        object-fit: contain;
-        margin-bottom: clamp(10px, 3vh, 30px);
-        margin-top: 20px;
-    }
-
-    /* Responsive Heading */
-    .pause-overlay h2 {
-        margin: 5px 0;
-        font-size: clamp(18px, 5vw, 32px);
-        font-weight: bold;
-        line-height: 1.3;
-        max-width: 90%;
-    }
-
-    /* Responsive Paragraph */
-    .pause-overlay p {
-        margin: 5px 0;
-        font-size: clamp(14px, 3vw, 18px);
-        opacity: 0.8;
-        line-height: 1.4;
-        max-width: 90%;
-    }
-
-    /* Extra small screens (phones) */
     @media (max-width: 480px) {
-        .pause-overlay h2 {
-            font-size: 16px;
-        }
-        
-        .pause-overlay p {
-            font-size: 12px;
-        }
-        
-        .pause-overlay p:last-child {
-            margin-top: 10px;
-            font-size: 10px;
-        }
-        
         .custom-fs-btn {
             padding: 4px 10px;
             font-size: 11px;
@@ -165,54 +171,53 @@
         }
     }
 
-    /* Landscape orientation on mobile */
-    @media (max-height: 500px) and (orientation: landscape) {
-        .pause-overlay img {
-            width: min(80px, 15%);
-            margin-bottom: 5px;
-        }
-        
-        .pause-overlay h2 {
-            font-size: clamp(14px, 4vh, 20px);
-        }
-        
-        .pause-overlay p {
-            font-size: clamp(10px, 2.5vh, 14px);
-        }
-    }
-
-    /* Tablet screens */
-    @media (min-width: 768px) and (max-width: 1024px) {
-        .pause-overlay h2 {
-            font-size: 28px;
-        }
-        
-        .pause-overlay p {
-            font-size: 16px;
-        }
-    }
-
-    /* Large screens */
-    @media (min-width: 1440px) {
-        .pause-overlay h2 {
-            font-size: 36px;
-        }
-        
-        .pause-overlay p {
-            font-size: 20px;
-        }
-        
-        .pause-overlay img {
-            width: 200px;
-            margin-bottom: 30px;
-        }
-    }
-
     /* Plyr customization */
     .plyr--video {
         border-radius: 12px;
         height: 100%;
         width: 100%;
+    }
+
+    /* Hide YouTube logo and other distractions */
+    .plyr__video-embed iframe {
+        pointer-events: none;
+    }
+
+    .plyr__video-embed iframe::-webkit-media-controls {
+        display: none !important;
+    }
+
+    /* Video info bar */
+    .video-info-bar {
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 8px 16px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        backdrop-filter: blur(5px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .video-title {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60%;
+    }
+
+    @media (max-width: 768px) {
+        .video-info-bar {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
     }
 </style>
 
@@ -267,10 +272,23 @@
                     Loading player...
                 </div>
                 
+                <!-- Video Info Bar -->
+                <div class="video-info-bar">
+                    <span class="video-title">{{ lecture.title }}</span>
+                    <span>Lecture {{ lecture.lecture_number }}</span>
+                </div>
+                
+                <!-- Custom Blue Play/Pause Button -->
+                <button class="custom-play-btn paused" id="customPlayBtn" onclick="togglePlayPause()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+                
                 <!-- Plyr Video Container -->
                 <div class="plyr__video-embed" id="player">
                     <iframe
-                        src="https://www.youtube-nocookie.com/embed/{{ video_id }}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&controls=0&disablekb=1&fs=0&showinfo=0&origin="
+                        src="https://www.youtube-nocookie.com/embed/{{ video_id }}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&controls=0&disablekb=1&fs=0&showinfo=0&origin=https://youtube.com"
                         allow="autoplay; encrypted-media"
                         allowfullscreen="false"
                         referrerpolicy="no-referrer"
@@ -281,18 +299,6 @@
                 <button class="custom-fs-btn" onclick="toggleFullscreen()">
                     FULL SCREEN
                 </button>
-
-                <!-- CLICKABLE WHITE OVERLAY - NOW FULLY RESPONSIVE -->
-                <div class="pause-overlay" id="pauseOverlay" onclick="hideOverlay()">
-                    <img src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414" 
-                         alt="Capital College Logo"
-                         loading="lazy">
-                    <h2>Thank You For Choosing Capital College</h2>
-                    <p>Admin Phone: 0754446066</p>
-                    <p style="margin-top:clamp(10px, 2vh, 20px); font-size:clamp(12px, 2.5vw, 16px); opacity:0.6;">
-                        Click Anywhere To Start
-                    </p>
-                </div>
             </div>
 
             <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
@@ -311,7 +317,6 @@
                 /* ---- Plyr Initialization ---- */
                 const player = new Plyr('#player', {
                     controls: [
-                        'play',
                         'progress',
                         'current-time',
                         'mute',
@@ -336,28 +341,95 @@
                         controls: 0,
                         disablekb: 1,
                         fs: 0
-                    }
+                    },
+                    invertTime: false,
+                    toggleInvert: false
                 });
 
                 hideLoading();
 
-                /* ---- Overlay Logic ---- */
-                const overlay = document.getElementById("pauseOverlay");
+                /* ---- Custom Play Button Logic ---- */
+                const playBtn = document.getElementById('customPlayBtn');
+                let isPlaying = false;
 
-                function hideOverlay() {
-                    overlay.classList.add("hidden");
-                    player.play();
+                function togglePlayPause() {
+                    if (isPlaying) {
+                        player.pause();
+                    } else {
+                        player.play();
+                    }
                 }
 
-                /* Show overlay again when paused */
-                player.on('pause', () => {
-                    overlay.classList.remove("hidden");
+                function updatePlayButton() {
+                    if (isPlaying) {
+                        playBtn.classList.remove('paused');
+                        playBtn.classList.add('playing');
+                        playBtn.innerHTML = `
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        `;
+                    } else {
+                        playBtn.classList.remove('playing');
+                        playBtn.classList.add('paused');
+                        playBtn.innerHTML = `
+                            <svg viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        `;
+                    }
+                }
+
+                player.on('play', () => {
+                    isPlaying = true;
+                    updatePlayButton();
                 });
 
-                /* Hide overlay automatically when video starts */
-                player.on('play', () => {
-                    overlay.classList.add("hidden");
+                player.on('pause', () => {
+                    isPlaying = false;
+                    updatePlayButton();
                 });
+
+                player.on('ended', () => {
+                    isPlaying = false;
+                    updatePlayButton();
+                });
+
+                /* Hide button when video is playing (optional - uncomment if you want it to hide during playback)
+                player.on('play', () => {
+                    playBtn.style.opacity = '0';
+                    playBtn.style.pointerEvents = 'none';
+                });
+
+                player.on('pause', () => {
+                    playBtn.style.opacity = '1';
+                    playBtn.style.pointerEvents = 'auto';
+                });
+
+                player.on('ended', () => {
+                    playBtn.style.opacity = '1';
+                    playBtn.style.pointerEvents = 'auto';
+                });
+
+                // Show button on mouse move when playing
+                let hideTimeout;
+                if (playBtn) {
+                    document.querySelector('.video-wrapper').addEventListener('mousemove', () => {
+                        if (isPlaying) {
+                            playBtn.style.opacity = '1';
+                            playBtn.style.pointerEvents = 'auto';
+                            
+                            clearTimeout(hideTimeout);
+                            hideTimeout = setTimeout(() => {
+                                if (isPlaying) {
+                                    playBtn.style.opacity = '0';
+                                    playBtn.style.pointerEvents = 'none';
+                                }
+                            }, 3000);
+                        }
+                    });
+                }
+                */
 
                 /* ---- Custom Fullscreen ---- */
                 function toggleFullscreen() {
@@ -370,20 +442,18 @@
                     }
                 }
 
-                /* Handle fullscreen change to fix iframe sizing */
+                /* Handle fullscreen change */
                 function handleFullscreenChange() {
                     const container = document.querySelector(".video-wrapper");
                     const plyrContainer = document.querySelector('.plyr');
                     
                     setTimeout(function() {
                         if (document.fullscreenElement) {
-                            // In fullscreen
                             if (plyrContainer) {
                                 plyrContainer.style.height = '100vh';
                                 plyrContainer.style.width = '100vw';
                             }
                         } else {
-                            // Exited fullscreen
                             if (plyrContainer) {
                                 plyrContainer.style.height = '';
                                 plyrContainer.style.width = '';
@@ -401,7 +471,6 @@
                 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                     const wrapper = document.getElementById('videoWrapper');
                     wrapper.addEventListener('touchstart', function() {
-                        // Small repaint to ensure iframe responds
                         const iframe = document.querySelector('#player iframe');
                         if (iframe) {
                             iframe.style.opacity = '0.99';
@@ -412,11 +481,6 @@
                     }, {passive: true});
                 }
 
-                // Handle window resize to ensure overlay looks good
-                window.addEventListener('resize', function() {
-                    // No action needed, CSS handles it
-                });
-
                 // Pause helper for navigation
                 function pauseBeforeNavigate(event) {
                     if (event.ctrlKey || event.metaKey || event.shiftKey) return true;
@@ -425,6 +489,14 @@
                     } catch(e) {}
                     return true;
                 }
+
+                // Keyboard shortcut for spacebar to toggle play/pause
+                document.addEventListener('keydown', function(e) {
+                    if (e.code === 'Space' && !e.target.matches('input, textarea, button, a')) {
+                        e.preventDefault();
+                        togglePlayPause();
+                    }
+                });
             </script>
             {% else %}
             <div class="bg-gray-800 rounded-xl flex items-center justify-center mb-6" style="aspect-ratio:16/9;" oncontextmenu="return false;">
@@ -534,7 +606,6 @@
                                     </div>
                                     {% else %}
                                     <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <!-- FIXED: Only show lecture number if it exists -->
                                         {% if lec.lecture_number %}
                                         <span class="text-xs font-semibold text-gray-600">{{ lec.lecture_number }}</span>
                                         {% else %}
@@ -547,7 +618,6 @@
                                     <p class="text-sm font-medium {% if lec.id == lecture.id %}text-blue-600{% else %}text-gray-900{% endif %}">
                                         {{ lec.title }}
                                     </p>
-                                    <!-- FIXED: Only show date if it exists -->
                                     {% if lec.created_at %}
                                     <p class="text-xs text-gray-500">{{ lec.created_at[:10] }}</p>
                                     {% endif %}
@@ -605,7 +675,6 @@
                                 </div>
                                 {% else %}
                                 <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <!-- FIXED: Only show lecture number if it exists -->
                                     {% if lec.lecture_number %}
                                     <span class="text-xs font-semibold text-gray-600">{{ lec.lecture_number }}</span>
                                     {% else %}
@@ -618,7 +687,6 @@
                                 <p class="text-sm font-medium mb-1 {% if lec.id == lecture.id %}text-blue-600{% else %}text-gray-900{% endif %}">
                                     {{ lec.title }}
                                 </p>
-                                <!-- FIXED: Only show date if it exists -->
                                 {% if lec.created_at %}
                                 <p class="text-xs text-gray-500">{{ lec.created_at[:10] }}</p>
                                 {% endif %}
