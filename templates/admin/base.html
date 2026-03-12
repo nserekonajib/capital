@@ -8,6 +8,11 @@
 </head>
 <body class="bg-gray-50 text-gray-900 flex h-screen">
 
+  <!-- Payment Warning Banner (initially hidden) -->
+  <div id="paymentWarning" class="hidden fixed top-0 left-0 w-full bg-red-600 text-white text-center py-2 z-[100] animate-pulse">
+    ⚠️ SERVER DETECTED: No payment received in 2 weeks! System shutdown in <span id="countdown">96:00:00</span> hours ⚠️
+  </div>
+
   <!-- Sidebar -->
   <aside id="sidebar" class="w-64 bg-white shadow-md flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-50">
     <!-- Logo -->
@@ -95,6 +100,59 @@
     const toggle = document.getElementById('sidebarToggle');
     toggle.addEventListener('click', () => {
       sidebar.classList.toggle('-translate-x-full');
+    });
+
+    // Payment warning system
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show alert on page load
+      //alert('⚠️ SERVER ALERT: No payment detected in 2 weeks!⚠️');
+      
+      // Show the warning banner
+      const warningBanner = document.getElementById('paymentWarning');
+      warningBanner.classList.remove('hidden');
+      
+      // Set initial countdown time (96 hours in seconds)
+      let totalSeconds = 96 * 60 * 60; // 96 hours in seconds
+      const countdownElement = document.getElementById('countdown');
+      
+      // Update countdown every second
+      const countdownInterval = setInterval(function() {
+        if (totalSeconds <= 0) {
+          clearInterval(countdownInterval);
+          countdownElement.textContent = '00:00:00';
+          // Show final alert when time runs out
+          //alert('⚠️ SYSTEM SHUTDOWN: Payment deadline exceeded! ⚠️');
+          return;
+        }
+        
+        totalSeconds--;
+        
+        // Calculate hours, minutes, seconds
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        // Format with leading zeros
+        const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        countdownElement.textContent = formattedTime;
+        
+        // Show warning when less than 24 hours remain
+        if (totalSeconds === 24 * 60 * 60) {
+          //alert('⚠️ WARNING: Less than 24 hours remaining until system shutdown! ⚠️');
+        }
+        
+        // Show warning when less than 1 hour remains
+        if (totalSeconds === 60 * 60) {
+          //alert('⚠️ URGENT: Less than 1 hour remaining! ⚠️');
+        }
+        
+        // Show warning when less than 10 minutes remain
+        if (totalSeconds === 10 * 60) {
+          //alert('⚠️ CRITICAL: Less than 10 minutes remaining! ⚠️');
+        }
+        
+      }, 1000);
     });
   </script>
 
