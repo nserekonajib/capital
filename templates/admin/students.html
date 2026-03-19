@@ -75,8 +75,12 @@
               </label>
             </td>
             <td class="p-2 border text-center">
-              <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
-                      data-id="{{ student.id }}">Edit</button>
+              <div class="flex gap-2 justify-center">
+                <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                        data-id="{{ student.id }}">Edit</button>
+                <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                        data-id="{{ student.id }}" data-name="{{ student.full_name }}">Reset Password</button>
+              </div>
             </td>
           </tr>
         {% endfor %}
@@ -122,12 +126,54 @@
   </div>
 </div>
 
+<!-- Reset Password Modal -->
+<div id="resetPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h3 class="text-xl font-bold text-green-600 mb-4">Reset Student Password</h3>
+    <form id="resetPasswordForm">
+      <input type="hidden" id="resetStudentId" name="student_id">
+      
+      <div class="mb-4">
+        <label class="block mb-2 text-gray-700 font-semibold">Student</label>
+        <input type="text" id="resetStudentName" class="w-full p-2 border rounded bg-gray-50" readonly disabled>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 text-gray-700">New Password</label>
+        <input type="password" id="newPassword" name="new_password" class="w-full p-2 border rounded" required minlength="6">
+        <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 text-gray-700">Confirm Password</label>
+        <input type="password" id="confirmPassword" class="w-full p-2 border rounded" required>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6">
+        <button type="button" id="cancelReset" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+          Cancel
+        </button>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Reset Password
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   const studentsTable = document.getElementById("studentsTable");
   const searchInput = document.getElementById("searchInput");
+  
+  // Edit Modal elements
   const editModal = document.getElementById("editModal");
   const editForm = document.getElementById("editForm");
   const cancelEdit = document.getElementById("cancelEdit");
+  
+  // Reset Password Modal elements
+  const resetModal = document.getElementById("resetPasswordModal");
+  const resetForm = document.getElementById("resetPasswordForm");
+  const cancelReset = document.getElementById("cancelReset");
 
   // Function to create table rows with toggle button
   function renderStudents(data) {
@@ -154,8 +200,12 @@
             </label>
           </td>
           <td class="p-2 border text-center">
-            <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
-                    data-id="${student.id}">Edit</button>
+            <div class="flex gap-2 justify-center">
+              <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                      data-id="${student.id}">Edit</button>
+              <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                      data-id="${student.id}" data-name="${student.full_name}">Reset</button>
+            </div>
           </td>
         </tr>
       `;
@@ -196,6 +246,21 @@
           
           editModal.classList.remove('hidden');
         }
+      });
+    });
+
+    // Add click event to all reset password buttons
+    document.querySelectorAll('.reset-password-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const studentId = button.dataset.id;
+        const studentName = button.dataset.name;
+        
+        document.getElementById('resetStudentId').value = studentId;
+        document.getElementById('resetStudentName').value = studentName;
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        
+        resetModal.classList.remove('hidden');
       });
     });
   }
@@ -240,6 +305,58 @@
   // Cancel edit
   cancelEdit.addEventListener('click', () => {
     editModal.classList.add('hidden');
+  });
+
+  // Reset Password form submission
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const studentId = document.getElementById('resetStudentId').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validate passwords
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    const res = await fetch('/admin/students/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        student_id: studentId,
+        new_password: newPassword 
+      })
+    });
+    
+    const result = await res.json();
+    if(result.success) {
+      alert('Password reset successfully!');
+      resetModal.classList.add('hidden');
+    } else {
+      alert('Error: ' + result.message);
+    }
+  });
+
+  // Cancel reset
+  cancelReset.addEventListener('click', () => {
+    resetModal.classList.add('hidden');
+  });
+
+  // Close modals when clicking outside (optional)
+  window.addEventListener('click', (e) => {
+    if (e.target === editModal) {
+      editModal.classList.add('hidden');
+    }
+    if (e.target === resetModal) {
+      resetModal.classList.add('hidden');
+    }
   });
 </script>
 
