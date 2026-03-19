@@ -102,6 +102,7 @@ def get_student(student_id):
         print(f"Error getting student: {e}")
         return jsonify(None)
 
+
 @students_bp.route("/admin/students/update", methods=["POST"])
 @admin_login_required
 def update_student():
@@ -122,3 +123,123 @@ def update_student():
     except Exception as e:
         print(f"Error updating student: {e}")
         return jsonify({"success": False})
+    
+    
+@students_bp.route("/admin/students/reset-password", methods=["POST"])
+@admin_login_required
+def reset_student_password():
+    """Reset a student's password (admin only)"""
+    client = get_admin_client()
+    try:
+        data = request.json
+        student_id = data.get("student_id")
+        new_password = data.get("new_password")
+        
+        # Validate input
+        if not student_id or not new_password:
+            return jsonify({
+                "success": False, 
+                "message": "Student ID and new password are required"
+            })
+        
+        # Validate password strength (optional)
+        if len(new_password) < 6:
+            return jsonify({
+                "success": False, 
+                "message": "Password must be at least 6 characters long"
+            })
+        
+        # Hash the new password
+        hashed_pw = generate_password_hash(new_password)
+        
+        # Update the student's password
+        res = client.from_("students").update(
+            {"password_hash": hashed_pw}
+        ).eq("id", student_id).execute()
+        
+        # Check for errors
+        if hasattr(res, 'error') and res.error:
+            return jsonify({
+                "success": False, 
+                "message": f"Database error: {res.error}"
+            })
+        
+        # Optional: Log the password reset action
+        admin_id = session.get('admin_id')
+        print(f"Admin {admin_id} reset password for student {student_id}")
+        
+        return jsonify({
+            "success": True, 
+            "message": "Password reset successfully"
+        })
+        
+    except Exception as e:
+        print(f"Error resetting password: {e}")
+        return jsonify({
+            "success": False, 
+            "message": f"Server error: {str(e)}"
+        })
+
+# Alternative: Route with form for password reset (GET)
+@students_bp.route("/admin/students/reset-password-form/<int:student_id>")
+@admin_login_required
+def reset_password_form(student_id):
+    """Display password reset form for a specific student"""
+    client = get_admin_client()
+    try:
+        # Get student details
+        res = client.from_("students").select("id, full_name, email").eq("id", student_id).execute()
+        
+        if not res.data:
+            flash("Student not found", "danger")
+            return redirect(url_for("students.students_management"))
+        
+        student = res.data[0]
+        return render_template("admin/reset_password.html", student=student)
+        
+    except Exception as e:
+        print(f"Error loading reset password form: {e}")
+        flash("Error loading student data", "danger")
+        return redirect(url_for("students.students_management"))
+
+# Alternative: Form submission endpoint
+@students_bp.route("/admin/students/reset-password-submit", methods=["POST"])
+@admin_login_required
+def reset_password_submit():
+    """Handle password reset form submission"""
+    client = get_admin_client()
+    try:
+        student_id = request.form.get("student_id")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+        
+        # Validate
+        if not student_id or not new_password:
+            flash("Student ID and new password are required", "danger")
+            return redirect(request.referrer or url_for("students.students_management"))
+        
+        if new_password != confirm_password:
+            flash("Passwords do not match", "danger")
+            return redirect(request.referrer)
+        
+        if len(new_password) < 6:
+            flash("Password must be at least 6 characters long", "danger")
+            return redirect(request.referrer)
+        
+        # Hash and update
+        hashed_pw = generate_password_hash(new_password)
+        res = client.from_("students").update(
+            {"password_hash": hashed_pw}
+        ).eq("id", student_id).execute()
+        
+        if hasattr(res, 'error') and res.error:
+            flash(f"Error resetting password: {res.error}", "danger")
+        else:
+            flash("Password reset successfully!", "success")
+            
+        return redirect(url_for("students.students_management"))
+        
+    except Exception as e:
+        print(f"Error resetting password: {e}")
+        flash(f"Server error: {str(e)}", "danger")
+        return redirect(url_for("students.students_management"))
