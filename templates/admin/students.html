@@ -38,54 +38,79 @@
 
   <!-- Students Table -->
   <div class="w-full md:w-2/3 bg-white p-6 rounded-lg shadow">
-    <div class="flex justify-between mb-4">
-      <h2 class="text-xl font-bold text-blue-600">Students</h2>
-      <input type="text" id="searchInput" placeholder="Search by name or email" class="border p-2 rounded">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <div>
+        <h2 class="text-xl font-bold text-blue-600">Students</h2>
+        <p class="text-sm text-gray-600 mt-1">
+          Showing <span id="displayCount">{{ students|length }}</span> of <span id="totalCount">{{ total_count }}</span> students
+        </p>
+      </div>
+      <div class="relative w-full sm:w-64">
+        <input type="text" id="searchInput" placeholder="Search by name or email..." 
+               class="w-full border p-2 rounded pl-8">
+        <svg class="absolute left-2 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
     </div>
-    <table class="w-full table-auto border-collapse">
-      <thead>
-        <tr class="bg-gray-100 text-left">
-          <th class="p-2 border">Name</th>
-          <th class="p-2 border">CPA Level</th>
-          <th class="p-2 border">Email</th>
-          <th class="p-2 border">Phone</th>
-          <th class="p-2 border text-center">Status</th>
-          <th class="p-2 border text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="studentsTable">
-        {% for student in students %}
-          <tr class="hover:bg-gray-50">
-            <td class="p-2 border">{{ student.full_name }}</td>
-            <td class="p-2 border">{{ student.cpa_level }}</td>
-            <td class="p-2 border">{{ student.email }}</td>
-            <td class="p-2 border">{{ student.phone_number }}</td>
-            <td class="p-2 border text-center">
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" class="sr-only peer status-toggle" 
-                       data-id="{{ student.id }}" {{ 'checked' if student.status=='active' else '' }}>
-                <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                  <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
-                    <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
-                  </svg>
-                  <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
-                    <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
-                  </svg>
-                </div>
-              </label>
-            </td>
-            <td class="p-2 border text-center">
-              <div class="flex gap-2 justify-center">
-                <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
-                        data-id="{{ student.id }}">Edit</button>
-                <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
-                        data-id="{{ student.id }}" data-name="{{ student.full_name }}">Reset Password</button>
-              </div>
-            </td>
+
+    <!-- Search Status -->
+    <div id="searchStatus" class="mb-3 text-sm text-gray-600 hidden">
+      <span id="searchResultCount"></span>
+      <button id="clearSearch" class="text-blue-600 hover:text-blue-800 ml-2">Clear search</button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full table-auto border-collapse">
+        <thead>
+          <tr class="bg-gray-100 text-left">
+            <th class="p-2 border">Name</th>
+            <th class="p-2 border">CPA Level</th>
+            <th class="p-2 border">Email</th>
+            <th class="p-2 border">Phone</th>
+            <th class="p-2 border text-center">Status</th>
+            <th class="p-2 border text-center">Actions</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody id="studentsTable">
+          {% for student in students %}
+            <tr class="hover:bg-gray-50">
+              <td class="p-2 border">{{ student.full_name }}</td>
+              <td class="p-2 border">{{ student.cpa_level }}</td>
+              <td class="p-2 border">{{ student.email }}</td>
+              <td class="p-2 border">{{ student.phone_number }}</td>
+              <td class="p-2 border text-center">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" class="sr-only peer status-toggle" 
+                         data-id="{{ student.id }}" {{ 'checked' if student.status=='active' else '' }}>
+                  <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
+                    <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                      <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
+                    </svg>
+                    <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                      <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </label>
+              </td>
+              <td class="p-2 border text-center">
+                <div class="flex gap-2 justify-center">
+                  <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                          data-id="{{ student.id }}">Edit</button>
+                  <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                          data-id="{{ student.id }}" data-name="{{ student.full_name }}">Reset</button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="text-center py-8 text-gray-500 hidden">
+      No students found matching your search.
+    </div>
   </div>
 
 </div>
@@ -164,6 +189,12 @@
 <script>
   const studentsTable = document.getElementById("studentsTable");
   const searchInput = document.getElementById("searchInput");
+  const searchStatus = document.getElementById("searchStatus");
+  const searchResultCount = document.getElementById("searchResultCount");
+  const clearSearch = document.getElementById("clearSearch");
+  const noResults = document.getElementById("noResults");
+  const displayCount = document.getElementById("displayCount");
+  const totalCount = parseInt('{{ total_count }}');
   
   // Edit Modal elements
   const editModal = document.getElementById("editModal");
@@ -175,43 +206,76 @@
   const resetForm = document.getElementById("resetPasswordForm");
   const cancelReset = document.getElementById("cancelReset");
 
-  // Function to create table rows with toggle button
-  function renderStudents(data) {
-    studentsTable.innerHTML = "";
-    data.forEach(student => {
-      studentsTable.innerHTML += `
-        <tr class="hover:bg-gray-50">
-          <td class="p-2 border">${student.full_name}</td>
-          <td class="p-2 border">${student.cpa_level}</td>
-          <td class="p-2 border">${student.email}</td>
-          <td class="p-2 border">${student.phone_number}</td>
-          <td class="p-2 border text-center">
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer status-toggle" 
-                     data-id="${student.id}" ${student.status === 'active' ? 'checked' : ''}>
-              <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
-                  <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
-                </svg>
-                <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
-                  <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
-                </svg>
-              </div>
-            </label>
-          </td>
-          <td class="p-2 border text-center">
-            <div class="flex gap-2 justify-center">
-              <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
-                      data-id="${student.id}">Edit</button>
-              <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
-                      data-id="${student.id}" data-name="${student.full_name}">Reset</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
+  let currentSearchQuery = "";
 
-    // Add click event to all toggle buttons
+  // Function to create table rows
+  function renderStudents(data, isSearch = false) {
+    studentsTable.innerHTML = "";
+    
+    if (data.length === 0) {
+      studentsTable.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No students found</td></tr>';
+      noResults.classList.remove('hidden');
+      displayCount.innerText = '0';
+    } else {
+      data.forEach(student => {
+        studentsTable.innerHTML += `
+          <tr class="hover:bg-gray-50">
+            <td class="p-2 border">${escapeHtml(student.full_name)}</td>
+            <td class="p-2 border">${escapeHtml(student.cpa_level)}</td>
+            <td class="p-2 border">${escapeHtml(student.email)}</td>
+            <td class="p-2 border">${escapeHtml(student.phone_number || '')}</td>
+            <td class="p-2 border text-center">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer status-toggle" 
+                       data-id="${student.id}" ${student.status === 'active' ? 'checked' : ''}>
+                <div class="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-[''] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:translate-x-12 peer-hover:after:scale-95">
+                  <svg class="absolute top-1 left-12 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                    <path class="svg-fill-primary" d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
+                  </svg>
+                  <svg class="absolute top-1 left-1 stroke-gray-900 w-10 h-10" height="100" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 100" width="100" x="0" xmlns="http://www.w3.org/2000/svg" y="0">
+                    <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </label>
+            </td>
+            <td class="p-2 border text-center">
+              <div class="flex gap-2 justify-center">
+                <button class="edit-btn bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600" 
+                        data-id="${student.id}">Edit</button>
+                <button class="reset-password-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                        data-id="${student.id}" data-name="${escapeHtml(student.full_name)}">Reset</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      
+      noResults.classList.add('hidden');
+      displayCount.innerText = data.length;
+    }
+
+    // Update search status
+    if (isSearch) {
+      searchStatus.classList.remove('hidden');
+      searchResultCount.innerText = `Found ${data.length} student${data.length !== 1 ? 's' : ''}`;
+    } else {
+      searchStatus.classList.add('hidden');
+    }
+
+    // Add event listeners
+    attachEventListeners();
+  }
+
+  // Helper function to escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Attach event listeners to dynamic elements
+  function attachEventListeners() {
+    // Status toggle buttons
     document.querySelectorAll('.status-toggle').forEach(checkbox => {
       checkbox.addEventListener('change', async () => {
         const studentId = checkbox.dataset.id;
@@ -225,12 +289,12 @@
         const data = await res.json();
         if(!data.success){
           alert('Failed to update status');
-          checkbox.checked = !checkbox.checked; // Revert the toggle
+          checkbox.checked = !checkbox.checked;
         }
       });
     });
 
-    // Add click event to all edit buttons
+    // Edit buttons
     document.querySelectorAll('.edit-btn').forEach(button => {
       button.addEventListener('click', async () => {
         const studentId = button.dataset.id;
@@ -249,7 +313,7 @@
       });
     });
 
-    // Add click event to all reset password buttons
+    // Reset password buttons
     document.querySelectorAll('.reset-password-btn').forEach(button => {
       button.addEventListener('click', () => {
         const studentId = button.dataset.id;
@@ -265,15 +329,30 @@
     });
   }
 
-  // Initial render
-  renderStudents({{ students|tojson }});
+  // Live search with debounce
+  let searchTimeout;
+  searchInput.addEventListener('keyup', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+      const query = searchInput.value.trim();
+      currentSearchQuery = query;
+      
+      const res = await fetch(`/admin/students/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      
+      renderStudents(data.students, data.is_search);
+    }, 300);
+  });
 
-  // Live search
-  searchInput.addEventListener('keyup', async () => {
-    const query = searchInput.value;
-    const res = await fetch(`/admin/students/search?q=${query}`);
+  // Clear search
+  clearSearch.addEventListener('click', async () => {
+    searchInput.value = '';
+    currentSearchQuery = '';
+    
+    const res = await fetch(`/admin/students/search?q=`);
     const data = await res.json();
-    renderStudents(data);
+    
+    renderStudents(data.students, false);
   });
 
   // Edit form submission
@@ -292,11 +371,11 @@
     const result = await res.json();
     if(result.success) {
       editModal.classList.add('hidden');
-      // Refresh the table
-      const query = searchInput.value;
-      const searchRes = await fetch(`/admin/students/search?q=${query}`);
+      // Refresh the table with current search
+      const query = searchInput.value.trim();
+      const searchRes = await fetch(`/admin/students/search?q=${encodeURIComponent(query)}`);
       const data = await searchRes.json();
-      renderStudents(data);
+      renderStudents(data.students, data.is_search);
     } else {
       alert('Failed to update student');
     }
@@ -315,7 +394,6 @@
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     
-    // Validate passwords
     if (newPassword.length < 6) {
       alert('Password must be at least 6 characters long');
       return;
@@ -349,7 +427,7 @@
     resetModal.classList.add('hidden');
   });
 
-  // Close modals when clicking outside (optional)
+  // Close modals when clicking outside
   window.addEventListener('click', (e) => {
     if (e.target === editModal) {
       editModal.classList.add('hidden');
@@ -358,6 +436,9 @@
       resetModal.classList.add('hidden');
     }
   });
+
+  // Initial render with event listeners
+  attachEventListeners();
 </script>
 
 {% endblock %}
