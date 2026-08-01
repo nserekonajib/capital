@@ -6,9 +6,6 @@
 {% block page_subtitle %}Lecture {{ lecture.lecture_number }} • {{ course.title }}{% endblock %}
 
 {% block content %}
-<!-- Plyr CSS -->
-<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-
 <style>
     /* Disable right click / text selection on entire page */
     * {
@@ -49,6 +46,7 @@
         max-height: 100vh !important;
         border-radius: 0 !important;
         aspect-ratio: auto !important;
+        background: #000;
     }
 
     .video-wrapper:-webkit-full-screen {
@@ -58,6 +56,7 @@
         max-height: 100vh !important;
         border-radius: 0 !important;
         aspect-ratio: auto !important;
+        background: #000;
     }
 
     .video-wrapper:-moz-full-screen {
@@ -67,6 +66,7 @@
         max-height: 100vh !important;
         border-radius: 0 !important;
         aspect-ratio: auto !important;
+        background: #000;
     }
 
     .video-wrapper:-ms-fullscreen {
@@ -76,34 +76,24 @@
         max-height: 100vh !important;
         border-radius: 0 !important;
         aspect-ratio: auto !important;
+        background: #000;
     }
 
-    /* Player container inside fullscreen */
-    .video-wrapper:fullscreen .plyr,
-    .video-wrapper:fullscreen .plyr__video-wrapper,
-    .video-wrapper:fullscreen .plyr__video-embed,
-    .video-wrapper:fullscreen iframe {
-        width: 100vw !important;
-        height: 100vh !important;
-        border-radius: 0 !important;
+    /* YouTube iframe container */
+    #youtube-player {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 
-    .video-wrapper:-webkit-full-screen .plyr,
-    .video-wrapper:-webkit-full-screen .plyr__video-wrapper,
-    .video-wrapper:-webkit-full-screen .plyr__video-embed,
-    .video-wrapper:-webkit-full-screen iframe {
-        width: 100vw !important;
-        height: 100vh !important;
-        border-radius: 0 !important;
-    }
-
-    .video-wrapper:-moz-full-screen .plyr,
-    .video-wrapper:-moz-full-screen .plyr__video-wrapper,
-    .video-wrapper:-moz-full-screen .plyr__video-embed,
-    .video-wrapper:-moz-full-screen iframe {
-        width: 100vw !important;
-        height: 100vh !important;
-        border-radius: 0 !important;
+    #youtube-player iframe {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 
     /* Loading state */
@@ -121,24 +111,85 @@
         font-size: 14px;
         z-index: 10;
         transition: opacity 0.3s ease;
+        flex-direction: column;
+        gap: 16px;
     }
 
-    /* Plyr customization */
-    .plyr--video {
-        border-radius: 12px;
-        height: 100%;
-        width: 100%;
+    .video-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
     }
 
-    /* Ensure iframe works properly */
-    .plyr__video-embed iframe {
-        pointer-events: auto;
+    .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Custom Fullscreen Button */
+    .custom-fs-btn {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 20;
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(4px);
+        -webkit-tap-highlight-color: transparent;
+        -webkit-appearance: none;
+        appearance: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        min-width: 110px;
+        text-align: center;
+        font-family: inherit;
+    }
+
+    .custom-fs-btn:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+    }
+
+    .custom-fs-btn:active {
+        transform: scale(0.95);
     }
 
     /* Mobile fixes */
     @media (max-width: 768px) {
         .video-wrapper {
             border-radius: 8px;
+        }
+        
+        .custom-fs-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            bottom: 15px;
+            right: 15px;
+            min-width: 90px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .custom-fs-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            bottom: 10px;
+            right: 10px;
+            min-width: 75px;
         }
     }
 </style>
@@ -157,16 +208,11 @@
             (e.ctrlKey && ['U','S','P'].includes(e.key))
         ) {
             e.preventDefault();
+            return false;
         }
     });
 
     document.addEventListener("dragstart", e => e.preventDefault());
-
-    setInterval(() => {
-        if (window.outerHeight - window.innerHeight > 200) {
-            document.body.innerHTML = "";
-        }
-    }, 1000);
 </script>
 
 <!-- Main Container -->
@@ -182,147 +228,283 @@
             {% set video_id = video_id.split('&')[0] if '&' in video_id else video_id %}
 
             <div class="video-wrapper" id="videoWrapper" oncontextmenu="return false;">
-                <div id="playerLoading" class="video-loading">
-                    <svg width="40" height="40" viewBox="0 0 40 40" style="margin-right: 10px;">
-                        <circle cx="20" cy="20" r="18" fill="none" stroke="#2563eb" stroke-width="4" stroke-dasharray="30 30">
-                            <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="1s" repeatCount="indefinite"/>
-                        </circle>
-                    </svg>
-                    Loading player...
+                <!-- Loading State -->
+                <div class="video-loading" id="videoLoading">
+                    <div class="spinner"></div>
+                    <span>Loading video...</span>
                 </div>
-                
-                <!-- Plyr Video Container -->
-                <div class="plyr__video-embed" id="player">
-                    <iframe
-                        src="https://www.youtube-nocookie.com/embed/{{ video_id }}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&controls=1&disablekb=1&fs=1&showinfo=0&origin=https://sch.capitalcollege.ac.ug&enablejsapi=1&autoplay=0&cc_load_policy=0&hl=en&widget_referrer=https://sch.capitalcollege.ac.ug/"
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        style="border:0; width:100%; height:100%;"
-                        allowfullscreen
-                    ></iframe>
-                </div>
+
+                <!-- YouTube Player Container -->
+                <div id="youtube-player"></div>
+
+                <!-- Custom Fullscreen Button -->
+                <button class="custom-fs-btn" id="fullscreenBtn" aria-label="Toggle Fullscreen">
+                    ⛶ Full Screen
+                </button>
             </div>
 
-            <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+            <!-- YouTube IFrame API -->
+            <script src="https://www.youtube.com/iframe_api"></script>
 
             <script>
                 (function() {
                     // DOM Elements
                     const videoWrapper = document.getElementById('videoWrapper');
-                    const loader = document.getElementById('playerLoading');
+                    const fullscreenBtn = document.getElementById('fullscreenBtn');
+                    const loadingEl = document.getElementById('videoLoading');
+                    const playerContainer = document.getElementById('youtube-player');
                     
-                    // Initialize Plyr
-                    function initPlayer() {
+                    // State
+                    let player = null;
+                    let isFullscreen = false;
+                    let isPlaying = false;
+                    let isReady = false;
+
+                    // Get the current origin for proper YouTube embedding
+                    const origin = window.location.origin;
+                    
+                    // Video ID from server
+                    const videoId = '{{ video_id }}';
+
+                    // Helper: Request fullscreen with cross-browser support
+                    function requestFullscreen(element) {
                         try {
-                            const player = new Plyr('#player', {
-                                controls: [
-                                    'play-large',
-                                    'play',
-                                    'progress',
-                                    'current-time',
-                                    'duration',
-                                    'mute',
-                                    'volume',
-                                    'captions',
-                                    'settings',
-                                    'pip',
-                                    'fullscreen'
-                                ],
-                                settings: ['speed', 'quality'],
-                                speed: {
-                                    selected: 1,
-                                    options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
-                                },
-                                keyboard: { focused: true, global: false },
-                                youtube: {
-                                    noCookie: true,
-                                    rel: 0,
-                                    modestbranding: 1,
-                                    iv_load_policy: 3,
-                                    playsinline: 1,
-                                    controls: 1,
-                                    disablekb: 1,
-                                    fs: 1,
-                                    autoplay: 0,
-                                    origin: 'https://sch.capitalcollege.ac.ug'
-                                },
-                                invertTime: false,
-                                toggleInvert: false,
-                                fullscreen: { enabled: true, fallback: true }
-                            });
-
-                            // Hide loading indicator when ready
-                            player.on('ready', () => {
-                                if (loader) {
-                                    loader.style.opacity = '0';
-                                    setTimeout(() => {
-                                        loader.style.display = 'none';
-                                    }, 300);
-                                }
-                                console.log('Player ready');
-                            });
-
-                            // Handle fullscreen changes
-                            player.on('fullscreen', (event) => {
-                                console.log('Fullscreen toggled:', event);
-                            });
-
-                            // Handle play/pause
-                            player.on('play', () => {
-                                console.log('Playing');
-                            });
-
-                            player.on('pause', () => {
-                                console.log('Paused');
-                            });
-
-                            // Error handling
-                            player.on('error', (error) => {
-                                console.error('Player error:', error);
-                                if (loader) {
-                                    loader.innerHTML = 'Error loading video. Please try again.';
-                                    loader.style.opacity = '1';
-                                    loader.style.background = 'rgba(0,0,0,0.8)';
-                                }
-                            });
-
-                            // Store player globally for navigation
-                            window.plyrPlayer = player;
-                            
-                            return player;
-                        } catch (e) {
-                            console.error('Plyr initialization error:', e);
-                            if (loader) {
-                                loader.innerHTML = 'Error initializing player. Please refresh.';
-                                loader.style.opacity = '1';
+                            if (element.requestFullscreen) {
+                                element.requestFullscreen();
+                            } else if (element.webkitRequestFullscreen) {
+                                element.webkitRequestFullscreen();
+                            } else if (element.mozRequestFullScreen) {
+                                element.mozRequestFullScreen();
+                            } else if (element.msRequestFullscreen) {
+                                element.msRequestFullscreen();
+                            } else {
+                                return false;
                             }
-                            return null;
+                            return true;
+                        } catch (e) {
+                            console.warn('Fullscreen request failed:', e);
+                            return false;
                         }
                     }
 
-                    // Initialize after DOM is ready
-                    let playerInstance = null;
-                    
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', () => {
-                            playerInstance = initPlayer();
-                        });
-                    } else {
-                        playerInstance = initPlayer();
+                    // Helper: Exit fullscreen
+                    function exitFullscreen() {
+                        try {
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            } else if (document.mozCancelFullScreen) {
+                                document.mozCancelFullScreen();
+                            } else if (document.msExitFullscreen) {
+                                document.msExitFullscreen();
+                            }
+                        } catch (e) {
+                            console.warn('Fullscreen exit failed:', e);
+                        }
                     }
 
-                    // Helper function to pause video before navigation
-                    window.pauseBeforeNavigate = function(event) {
-                        if (event.ctrlKey || event.metaKey || event.shiftKey) return true;
-                        if (window.plyrPlayer) {
+                    // Check if currently in fullscreen
+                    function checkFullscreen() {
+                        return !!(document.fullscreenElement || 
+                                 document.webkitFullscreenElement || 
+                                 document.mozFullScreenElement || 
+                                 document.msFullscreenElement);
+                    }
+
+                    // Update fullscreen button text
+                    function updateFullscreenButton() {
+                        const isFs = checkFullscreen();
+                        fullscreenBtn.textContent = isFs ? '⛶ Exit' : '⛶ Full Screen';
+                    }
+
+                    // Toggle fullscreen
+                    function toggleFullscreen() {
+                        if (checkFullscreen()) {
+                            exitFullscreen();
+                        } else {
+                            requestFullscreen(videoWrapper);
+                        }
+                    }
+
+                    // YouTube Player API callbacks
+                    function onYouTubeIframeAPIReady() {
+                        console.log('YouTube API ready, creating player...');
+                        createPlayer();
+                    }
+
+                    function createPlayer() {
+                        if (typeof YT === 'undefined' || !YT.Player) {
+                            console.log('YT not ready, waiting...');
+                            setTimeout(createPlayer, 100);
+                            return;
+                        }
+
+                        try {
+                            player = new YT.Player('youtube-player', {
+                                videoId: videoId,
+                                playerVars: {
+                                    'origin': origin,
+                                    'modestbranding': 1,
+                                    'rel': 0,
+                                    'iv_load_policy': 3,
+                                    'playsinline': 1,
+                                    'controls': 1,
+                                    'disablekb': 0,
+                                    'fs': 1,
+                                    'enablejsapi': 1,
+                                    'widget_referrer': origin
+                                },
+                                events: {
+                                    'onReady': onPlayerReady,
+                                    'onStateChange': onPlayerStateChange,
+                                    'onError': onPlayerError
+                                }
+                            });
+                            console.log('Player created successfully');
+                        } catch (e) {
+                            console.error('Error creating player:', e);
+                            loadingEl.innerHTML = `
+                                <span style="color: #ef4444;">⚠️ Failed to load video</span>
+                                <span style="font-size: 12px; color: #6b7280;">Please refresh or try again later</span>
+                            `;
+                            loadingEl.classList.remove('hidden');
+                        }
+                    }
+
+                    function onPlayerReady(event) {
+                        console.log('Player ready');
+                        isReady = true;
+                        loadingEl.classList.add('hidden');
+                        updateFullscreenButton();
+                    }
+
+                    function onPlayerStateChange(event) {
+                        const state = event.data;
+                        isPlaying = (state === YT.PlayerState.PLAYING);
+                        console.log('Player state:', state);
+                    }
+
+                    function onPlayerError(event) {
+                        console.error('YouTube player error:', event.data);
+                        loadingEl.innerHTML = `
+                            <span style="color: #ef4444;">⚠️ Video playback error</span>
+                            <span style="font-size: 12px; color: #6b7280;">Error code: ${event.data}</span>
+                        `;
+                        loadingEl.classList.remove('hidden');
+                    }
+
+                    // Handle fullscreen changes
+                    function handleFullscreenChange() {
+                        updateFullscreenButton();
+                        
+                        // Ensure player resizes properly
+                        if (player && typeof player.playVideo === 'function') {
                             try {
-                                window.plyrPlayer.pause();
-                            } catch(e) {
-                                console.warn('Could not pause player:', e);
+                                // Force a resize event
+                                setTimeout(() => {
+                                    if (player.getIframe) {
+                                        const iframe = player.getIframe();
+                                        if (iframe) {
+                                            // Trigger resize
+                                            window.dispatchEvent(new Event('resize'));
+                                        }
+                                    }
+                                }, 100);
+                            } catch (e) {
+                                // Ignore
                             }
+                        }
+                    }
+
+                    // Pause function for navigation
+                    function pauseBeforeNavigate(event) {
+                        if (event.ctrlKey || event.metaKey || event.shiftKey) return true;
+                        if (player && isPlaying && typeof player.pauseVideo === 'function') {
+                            try {
+                                player.pauseVideo();
+                            } catch(e) {}
                         }
                         return true;
-                    };
+                    }
+
+                    // ========== INITIALIZATION ==========
+
+                    // Setup YouTube API callback
+                    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+                    // If YouTube API is already loaded, create player immediately
+                    if (typeof YT !== 'undefined' && YT.Player) {
+                        setTimeout(createPlayer, 50);
+                    }
+
+                    // Fullscreen button handler
+                    fullscreenBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFullscreen();
+                    });
+
+                    fullscreenBtn.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFullscreen();
+                    }, { passive: false });
+
+                    // Listen for fullscreen changes
+                    document.addEventListener('fullscreenchange', handleFullscreenChange);
+                    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+                    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+                    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+                    // Update fullscreen button on load
+                    setTimeout(updateFullscreenButton, 500);
+
+                    // Handle window resize for proper iframe sizing
+                    window.addEventListener('resize', function() {
+                        if (player && player.getIframe) {
+                            try {
+                                const iframe = player.getIframe();
+                                if (iframe) {
+                                    // YouTube iframe auto-resizes, no action needed
+                                }
+                            } catch (e) {}
+                        }
+                    });
+
+                    // Keyboard shortcut: Escape to exit fullscreen
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape' && checkFullscreen()) {
+                            // Let native behavior handle it
+                        }
+                    });
+
+                    // Spacebar to toggle play/pause when video is focused
+                    document.addEventListener('keydown', function(e) {
+                        if (e.code === 'Space' && !e.target.matches('input, textarea, button, a')) {
+                            const activeElement = document.activeElement;
+                            // Only handle if not in a form field
+                            if (activeElement && !activeElement.matches('input, textarea, button, select')) {
+                                e.preventDefault();
+                                if (player && typeof player.getPlayerState === 'function') {
+                                    try {
+                                        const state = player.getPlayerState();
+                                        if (state === YT.PlayerState.PLAYING) {
+                                            player.pauseVideo();
+                                        } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.ENDED) {
+                                            player.playVideo();
+                                        }
+                                    } catch(err) {}
+                                }
+                            }
+                        }
+                    });
+
+                    // Expose pause function globally
+                    window.pauseBeforeNavigate = pauseBeforeNavigate;
+
+                    console.log('Video player initialized with video ID:', videoId);
+                    console.log('Origin:', origin);
 
                 })();
             </script>
@@ -378,7 +560,7 @@
                        class="w-full sm:w-auto text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-200 flex items-center justify-center text-sm sm:text-base order-first sm:order-none mb-2 sm:mb-0"
                        onclick="return pauseBeforeNavigate(event)">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 7V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
                         </svg>
                         Back to Course
                     </a>
