@@ -41,7 +41,7 @@
         display: block;
     }
 
-    /* Fullscreen styles - must be direct */
+    /* Fullscreen styles */
     .video-wrapper:fullscreen {
         width: 100vw !important;
         height: 100vh !important;
@@ -88,6 +88,24 @@
         border-radius: 0 !important;
     }
 
+    .video-wrapper:-webkit-full-screen .plyr,
+    .video-wrapper:-webkit-full-screen .plyr__video-wrapper,
+    .video-wrapper:-webkit-full-screen .plyr__video-embed,
+    .video-wrapper:-webkit-full-screen iframe {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
+    .video-wrapper:-moz-full-screen .plyr,
+    .video-wrapper:-moz-full-screen .plyr__video-wrapper,
+    .video-wrapper:-moz-full-screen .plyr__video-embed,
+    .video-wrapper:-moz-full-screen iframe {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+    }
+
     /* Loading state */
     .video-loading {
         position: absolute;
@@ -105,130 +123,6 @@
         transition: opacity 0.3s ease;
     }
 
-    /* Custom Play/Pause Button */
-    .custom-play-btn {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80px;
-        height: 80px;
-        background: #3b82f6;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
-        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
-        opacity: 1;
-        pointer-events: auto;
-        -webkit-tap-highlight-color: transparent;
-        outline: none;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .custom-play-btn:active {
-        transform: translate(-50%, -50%) scale(0.95);
-    }
-
-    .custom-play-btn.paused {
-        background: #3b82f6;
-    }
-
-    .custom-play-btn.playing {
-        background: #ef4444;
-        box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6);
-    }
-
-    .custom-play-btn.hidden {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    .custom-play-btn svg {
-        width: 40px;
-        height: 40px;
-        fill: white;
-        pointer-events: none;
-    }
-
-    /* Hide default Plyr play button */
-    .plyr__controls .plyr__control[data-plyr="play"] {
-        display: none !important;
-    }
-
-    /* Custom Fullscreen Button */
-    .custom-fs-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        z-index: 2000;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 10px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        opacity: 1;
-        backdrop-filter: blur(4px);
-        -webkit-tap-highlight-color: transparent;
-        -webkit-appearance: none;
-        appearance: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        min-width: 120px;
-        text-align: center;
-    }
-
-    .custom-fs-btn.hidden {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    .custom-fs-btn:hover {
-        background: rgba(255, 255, 255, 0.9);
-        color: black;
-    }
-
-    /* Video info bar */
-    .video-info-bar {
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 12px 20px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1500;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
-        backdrop-filter: blur(4px);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        transition: opacity 0.2s ease;
-        opacity: 1;
-    }
-
-    .video-info-bar.hidden {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    .video-title {
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 60%;
-    }
-
     /* Plyr customization */
     .plyr--video {
         border-radius: 12px;
@@ -236,9 +130,9 @@
         width: 100%;
     }
 
-    /* Ensure iframe captures touches properly */
+    /* Ensure iframe works properly */
     .plyr__video-embed iframe {
-        pointer-events: none;
+        pointer-events: auto;
     }
 
     /* Mobile fixes */
@@ -246,45 +140,10 @@
         .video-wrapper {
             border-radius: 8px;
         }
-        
-        .custom-play-btn {
-            width: 70px;
-            height: 70px;
-        }
-
-        .custom-play-btn svg {
-            width: 35px;
-            height: 35px;
-        }
-
-        .custom-fs-btn {
-            padding: 8px 16px;
-            font-size: 13px;
-            top: 10px;
-            right: 10px;
-            min-width: 100px;
-        }
-
-        .video-info-bar {
-            padding: 10px 16px;
-            font-size: 12px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .custom-play-btn {
-            width: 60px;
-            height: 60px;
-        }
-
-        .custom-play-btn svg {
-            width: 30px;
-            height: 30px;
-        }
     }
 </style>
 
-<!-- Disable right-click -->
+<!-- Disable right-click and keyboard shortcuts -->
 <script>
     document.addEventListener('contextmenu', function(e) {
         e.preventDefault();
@@ -332,33 +191,16 @@
                     Loading player...
                 </div>
                 
-                <!-- Video Info Bar -->
-                <div class="video-info-bar" id="videoInfoBar">
-                    <span class="video-title">{{ lecture.title }}</span>
-                    <span>Lecture {{ lecture.lecture_number }}</span>
-                </div>
-                
-                <!-- Custom Play/Pause Button -->
-                <button class="custom-play-btn paused" id="customPlayBtn" aria-label="Play/Pause">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                    </svg>
-                </button>
-                
                 <!-- Plyr Video Container -->
                 <div class="plyr__video-embed" id="player">
                     <iframe
-                        src="https://www.youtube-nocookie.com/embed/{{ video_id }}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&controls=0&disablekb=1&fs=0&showinfo=0&origin=https://capitalcollege.ac.ug&enablejsapi=1"
-                        allow="autoplay; encrypted-media; fullscreen"
-                        referrerpolicy="no-referrer"
-                        style="border:0;"
+                        src="https://www.youtube-nocookie.com/embed/{{ video_id }}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&controls=1&disablekb=1&fs=1&showinfo=0&origin=https://sch.capitalcollege.ac.ug&enablejsapi=1&autoplay=0&cc_load_policy=0&hl=en&widget_referrer=https://sch.capitalcollege.ac.ug/"
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        style="border:0; width:100%; height:100%;"
+                        allowfullscreen
                     ></iframe>
                 </div>
-
-                <!-- Custom Fullscreen Button -->
-                <button class="custom-fs-btn" id="fullscreenBtn" aria-label="Toggle Fullscreen">
-                    FULL SCREEN
-                </button>
             </div>
 
             <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
@@ -367,328 +209,120 @@
                 (function() {
                     // DOM Elements
                     const videoWrapper = document.getElementById('videoWrapper');
-                    const playBtn = document.getElementById('customPlayBtn');
-                    const fullscreenBtn = document.getElementById('fullscreenBtn');
-                    const videoInfoBar = document.getElementById('videoInfoBar');
                     const loader = document.getElementById('playerLoading');
                     
-                    // State
-                    let isPlaying = false;
-                    let hideTimer = null;
-                    let player = null;
-                    
-                    // Helper: Check if in fullscreen
-                    function isFullscreen() {
-                        return !!(document.fullscreenElement || 
-                                 document.webkitFullscreenElement || 
-                                 document.mozFullScreenElement || 
-                                 document.msFullscreenElement);
-                    }
-                    
-                    // Helper: Request fullscreen with cross-browser support
-                    function requestFullscreen(element) {
-                        if (element.requestFullscreen) {
-                            element.requestFullscreen();
-                        } else if (element.webkitRequestFullscreen) {
-                            element.webkitRequestFullscreen();
-                        } else if (element.mozRequestFullScreen) {
-                            element.mozRequestFullScreen();
-                        } else if (element.msRequestFullscreen) {
-                            element.msRequestFullscreen();
-                        } else {
-                            console.log('Fullscreen API not supported');
-                            return false;
-                        }
-                        return true;
-                    }
-                    
-                    // Helper: Exit fullscreen with cross-browser support
-                    function exitFullscreen() {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        } else if (document.webkitExitFullscreen) {
-                            document.webkitExitFullscreen();
-                        } else if (document.mozCancelFullScreen) {
-                            document.mozCancelFullScreen();
-                        } else if (document.msExitFullscreen) {
-                            document.msExitFullscreen();
-                        }
-                    }
-                    
-                    // Hide loading indicator
-                    function hideLoading() {
-                        if (loader) {
-                            loader.style.opacity = '0';
-                            setTimeout(() => {
-                                loader.style.display = 'none';
-                            }, 300);
-                        }
-                    }
-
-                    // Initialize Plyr after a small delay to ensure DOM is ready
-                    setTimeout(() => {
+                    // Initialize Plyr
+                    function initPlayer() {
                         try {
-                            player = new Plyr('#player', {
+                            const player = new Plyr('#player', {
                                 controls: [
+                                    'play-large',
+                                    'play',
                                     'progress',
                                     'current-time',
+                                    'duration',
                                     'mute',
                                     'volume',
-                                    'settings'
+                                    'captions',
+                                    'settings',
+                                    'pip',
+                                    'fullscreen'
                                 ],
-                                settings: ['speed'],
+                                settings: ['speed', 'quality'],
                                 speed: {
                                     selected: 1,
-                                    options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+                                    options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
                                 },
-                                keyboard: { focused: false, global: false },
+                                keyboard: { focused: true, global: false },
                                 youtube: {
                                     noCookie: true,
                                     rel: 0,
                                     modestbranding: 1,
                                     iv_load_policy: 3,
                                     playsinline: 1,
-                                    controls: 0,
+                                    controls: 1,
                                     disablekb: 1,
-                                    fs: 0,
-                                    autoplay: 0
+                                    fs: 1,
+                                    autoplay: 0,
+                                    origin: 'https://sch.capitalcollege.ac.ug'
                                 },
                                 invertTime: false,
                                 toggleInvert: false,
-                                fullscreen: { enabled: false } // Disable native fullscreen
+                                fullscreen: { enabled: true, fallback: true }
                             });
 
-                            hideLoading();
-
-                            // Player event listeners
+                            // Hide loading indicator when ready
                             player.on('ready', () => {
+                                if (loader) {
+                                    loader.style.opacity = '0';
+                                    setTimeout(() => {
+                                        loader.style.display = 'none';
+                                    }, 300);
+                                }
                                 console.log('Player ready');
                             });
 
+                            // Handle fullscreen changes
+                            player.on('fullscreen', (event) => {
+                                console.log('Fullscreen toggled:', event);
+                            });
+
+                            // Handle play/pause
                             player.on('play', () => {
-                                isPlaying = true;
-                                updatePlayButton();
-                                showAllControls();
-                                startHideTimer();
+                                console.log('Playing');
                             });
 
                             player.on('pause', () => {
-                                isPlaying = false;
-                                updatePlayButton();
-                                showAllControls();
-                                if (hideTimer) {
-                                    clearTimeout(hideTimer);
-                                    hideTimer = null;
+                                console.log('Paused');
+                            });
+
+                            // Error handling
+                            player.on('error', (error) => {
+                                console.error('Player error:', error);
+                                if (loader) {
+                                    loader.innerHTML = 'Error loading video. Please try again.';
+                                    loader.style.opacity = '1';
+                                    loader.style.background = 'rgba(0,0,0,0.8)';
                                 }
                             });
 
-                            player.on('ended', () => {
-                                isPlaying = false;
-                                updatePlayButton();
-                                showAllControls();
-                                if (hideTimer) {
-                                    clearTimeout(hideTimer);
-                                    hideTimer = null;
-                                }
-                            });
+                            // Store player globally for navigation
+                            window.plyrPlayer = player;
+                            
+                            return player;
                         } catch (e) {
                             console.error('Plyr initialization error:', e);
-                            hideLoading();
-                        }
-                    }, 100);
-
-                    // Helper functions
-                    function hideAllControls() {
-                        playBtn.classList.add('hidden');
-                        fullscreenBtn.classList.add('hidden');
-                        videoInfoBar.classList.add('hidden');
-                    }
-
-                    function showAllControls() {
-                        playBtn.classList.remove('hidden');
-                        fullscreenBtn.classList.remove('hidden');
-                        videoInfoBar.classList.remove('hidden');
-                    }
-
-                    function startHideTimer() {
-                        if (hideTimer) {
-                            clearTimeout(hideTimer);
-                        }
-                        if (isPlaying) {
-                            hideTimer = setTimeout(() => {
-                                hideAllControls();
-                            }, 1000);
-                        }
-                    }
-
-                    function updatePlayButton() {
-                        if (isPlaying) {
-                            playBtn.classList.remove('paused');
-                            playBtn.classList.add('playing');
-                            playBtn.innerHTML = `
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                                </svg>
-                            `;
-                        } else {
-                            playBtn.classList.remove('playing');
-                            playBtn.classList.add('paused');
-                            playBtn.innerHTML = `
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z"/>
-                                </svg>
-                            `;
-                        }
-                    }
-
-                    function togglePlayPause(e) {
-                        if (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
-                        if (player) {
-                            if (isPlaying) {
-                                player.pause();
-                            } else {
-                                player.play();
+                            if (loader) {
+                                loader.innerHTML = 'Error initializing player. Please refresh.';
+                                loader.style.opacity = '1';
                             }
+                            return null;
                         }
                     }
 
-                    // Play button handlers
-                    playBtn.addEventListener('click', togglePlayPause);
-                    playBtn.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        togglePlayPause(e);
-                    }, { passive: false });
-
-                    // Fullscreen button handler - SIMPLIFIED and FIXED
-                    fullscreenBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        console.log('Fullscreen button clicked');
-                        
-                        if (!isFullscreen()) {
-                            // Request fullscreen on the video wrapper
-                            const success = requestFullscreen(videoWrapper);
-                            if (success) {
-                                console.log('Fullscreen requested');
-                                // Update button text
-                                fullscreenBtn.textContent = 'EXIT';
-                                // Ensure controls are visible
-                                setTimeout(() => {
-                                    showAllControls();
-                                    if (isPlaying) {
-                                        startHideTimer();
-                                    }
-                                }, 100);
-                            }
-                        } else {
-                            // Exit fullscreen
-                            exitFullscreen();
-                            console.log('Fullscreen exited');
-                            // Update button text
-                            fullscreenBtn.textContent = 'FULL SCREEN';
-                        }
-                    });
-
-                    // Touch handler for fullscreen
-                    fullscreenBtn.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        if (!isFullscreen()) {
-                            requestFullscreen(videoWrapper);
-                            fullscreenBtn.textContent = 'EXIT';
-                        } else {
-                            exitFullscreen();
-                            fullscreenBtn.textContent = 'FULL SCREEN';
-                        }
-                    }, { passive: false });
-
-                    // Fullscreen change handlers
-                    function handleFullscreenChange() {
-                        console.log('Fullscreen change detected');
-                        setTimeout(() => {
-                            if (isFullscreen()) {
-                                fullscreenBtn.textContent = 'EXIT';
-                                // Force show controls when entering fullscreen
-                                showAllControls();
-                                if (isPlaying) {
-                                    startHideTimer();
-                                }
-                            } else {
-                                fullscreenBtn.textContent = 'FULL SCREEN';
-                                showAllControls();
-                                if (isPlaying) {
-                                    startHideTimer();
-                                }
-                            }
-                        }, 100);
+                    // Initialize after DOM is ready
+                    let playerInstance = null;
+                    
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', () => {
+                            playerInstance = initPlayer();
+                        });
+                    } else {
+                        playerInstance = initPlayer();
                     }
 
-                    // Listen for fullscreen changes across browsers
-                    document.addEventListener('fullscreenchange', handleFullscreenChange);
-                    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-                    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-                    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-                    // Mouse/touch interaction for showing controls
-                    videoWrapper.addEventListener('mousemove', () => {
-                        if (isPlaying) {
-                            showAllControls();
-                            startHideTimer();
-                        }
-                    });
-
-                    videoWrapper.addEventListener('mouseenter', () => {
-                        if (isPlaying) {
-                            showAllControls();
-                            startHideTimer();
-                        }
-                    });
-
-                    videoWrapper.addEventListener('touchstart', () => {
-                        if (isPlaying) {
-                            showAllControls();
-                            startHideTimer();
-                        }
-                    }, { passive: true });
-
-                    // Double-tap to toggle play/pause
-                    let lastTouch = 0;
-                    videoWrapper.addEventListener('touchend', (e) => {
-                        const now = Date.now();
-                        if (now - lastTouch < 300) {
-                            e.preventDefault();
-                            togglePlayPause(e);
-                        }
-                        lastTouch = now;
-                    });
-
-                    // Spacebar handler
-                    document.addEventListener('keydown', function(e) {
-                        if (e.code === 'Space' && !e.target.matches('input, textarea, button, a')) {
-                            e.preventDefault();
-                            togglePlayPause(e);
-                        }
-                    });
-
-                    // Pause helper for navigation
+                    // Helper function to pause video before navigation
                     window.pauseBeforeNavigate = function(event) {
                         if (event.ctrlKey || event.metaKey || event.shiftKey) return true;
-                        if (player && isPlaying) {
-                            try { player.pause(); } catch(e) {}
+                        if (window.plyrPlayer) {
+                            try {
+                                window.plyrPlayer.pause();
+                            } catch(e) {
+                                console.warn('Could not pause player:', e);
+                            }
                         }
                         return true;
                     };
-
-                    // Initial show controls
-                    setTimeout(() => {
-                        showAllControls();
-                    }, 500);
 
                 })();
             </script>
@@ -706,7 +340,7 @@
             </script>
             {% endif %}
 
-            <!-- Lecture Details (same as before) -->
+            <!-- Lecture Details -->
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 lecture-details">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{{ lecture.title }}</h1>
 
@@ -744,7 +378,7 @@
                        class="w-full sm:w-auto text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-200 flex items-center justify-center text-sm sm:text-base order-first sm:order-none mb-2 sm:mb-0"
                        onclick="return pauseBeforeNavigate(event)">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21l-7-5-7 7V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
                         </svg>
                         Back to Course
                     </a>
