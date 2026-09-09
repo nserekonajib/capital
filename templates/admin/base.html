@@ -1,305 +1,1773 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel | Professional Dashboard</title>
-  <!-- Tailwind CDN + Font Awesome Icons (Professional SVG Icons) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    /* Custom subtle transitions for interactive elements */
-    .nav-link {
-      transition: all 0.2s ease;
-    }
-    .nav-link:hover {
-      transform: translateX(2px);
-    }
-    /* Custom scrollbar for cleaner look */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-    /* Smooth fade for flash messages */
-    .flash-message {
-      animation: fadeSlideDown 0.3s ease forwards;
-    }
-    @keyframes fadeSlideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    /* Payment status card subtle styling */
-    .status-card {
-      transition: box-shadow 0.2s;
-    }
-    .status-card:hover {
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-    }
-  </style>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Admin Panel | Management Dashboard</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    >
+
+    <!-- Inter Font -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+
+        /* =========================================
+           BODY
+        ========================================= */
+
+        body {
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+
+        /* =========================================
+           SCROLLBAR
+        ========================================= */
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+
+        /* =========================================
+           SIDEBAR
+        ========================================= */
+
+        #sidebar {
+            background:
+                linear-gradient(
+                    180deg,
+                    #071a3d 0%,
+                    #061631 55%,
+                    #041127 100%
+                );
+
+            box-shadow:
+                10px 0 35px rgba(2, 12, 35, 0.12);
+
+            transition:
+                transform 0.3s ease,
+                width 0.3s ease;
+        }
+
+
+        /* Sidebar scrollbar */
+
+        #sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+        }
+
+
+        /* =========================================
+           BRAND
+        ========================================= */
+
+        .brand-logo {
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.04);
+            box-shadow:
+                0 8px 25px rgba(37,99,235,0.25);
+        }
+
+
+        /* =========================================
+           NAVIGATION
+        ========================================= */
+
+        .nav-link {
+            position: relative;
+
+            display: flex;
+            align-items: center;
+
+            min-height: 46px;
+
+            color: #b8c5dc;
+
+            border-radius: 12px;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        /* Hover */
+
+        .nav-link:hover {
+            color: #ffffff;
+
+            background:
+                rgba(255,255,255,0.075);
+
+            transform: translateX(3px);
+        }
+
+
+        .nav-link:hover .nav-icon {
+            color: #60a5fa;
+            transform: scale(1.08);
+        }
+
+
+        .nav-icon {
+            width: 21px;
+
+            color: #7183a3;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+
+        /* =========================================
+           ACTIVE NAVIGATION
+        ========================================= */
+
+        .nav-link.active {
+
+            color: #ffffff;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(37,99,235,0.30),
+                    rgba(37,99,235,0.10)
+                );
+
+            box-shadow:
+                inset 0 0 0 1px rgba(96,165,250,0.10);
+        }
+
+
+        .nav-link.active::before {
+
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+
+            width: 4px;
+
+            border-radius: 0 5px 5px 0;
+
+            background: #3b82f6;
+
+            box-shadow:
+                0 0 12px rgba(59,130,246,0.65);
+        }
+
+
+        .nav-link.active .nav-icon {
+            color: #60a5fa;
+        }
+
+
+        /* =========================================
+           NAV SECTION LABELS
+        ========================================= */
+
+        .nav-section-title {
+
+            color: #647694;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.12em;
+
+            text-transform: uppercase;
+
+            padding:
+                18px 12px 7px;
+        }
+
+
+        /* =========================================
+           TOP HEADER
+        ========================================= */
+
+        .top-header {
+
+            background:
+                rgba(255,255,255,0.92);
+
+            backdrop-filter:
+                blur(14px);
+
+            -webkit-backdrop-filter:
+                blur(14px);
+
+            border-bottom:
+                1px solid #e7edf5;
+        }
+
+
+        /* =========================================
+           MOBILE OVERLAY
+        ========================================= */
+
+        #sidebarOverlay {
+            background:
+                rgba(2, 12, 35, 0.55);
+
+            backdrop-filter:
+                blur(2px);
+        }
+
+
+        /* =========================================
+           FLASH MESSAGES
+        ========================================= */
+
+        .flash-message {
+
+            animation:
+                fadeSlideDown 0.35s ease forwards;
+        }
+
+
+        @keyframes fadeSlideDown {
+
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* =========================================
+           CONTENT ANIMATION
+        ========================================= */
+
+        .page-content {
+
+            animation:
+                pageFade 0.35s ease;
+        }
+
+
+        @keyframes pageFade {
+
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* =========================================
+           USER AVATAR
+        ========================================= */
+
+        .admin-avatar {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #1d4ed8
+                );
+
+            box-shadow:
+                0 5px 15px rgba(37,99,235,0.20);
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media (max-width: 767px) {
+
+            #sidebar {
+                width: 285px;
+            }
+
+        }
+
+    </style>
+
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 flex h-screen font-sans antialiased">
 
-  <!-- Professional Payment Status Bar (Replaces old alert banner) - Clean, informative, no alerts -->
-  <div id="paymentStatusBar" class="fixed top-0 left-0 w-full bg-white border-b border-blue-100 shadow-sm z-[100] py-2.5 px-4 backdrop-blur-sm bg-white/95">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <!-- Professional SVG-like icon using Font Awesome (solid, modern) -->
-        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
-          <i class="fas fa-exclamation-triangle text-sm"></i>
+
+<body class="min-h-screen">
+
+
+<!-- =========================================================
+     MOBILE SIDEBAR OVERLAY
+========================================================= -->
+
+<div
+    id="sidebarOverlay"
+    class="fixed inset-0 z-40 hidden md:hidden"
+></div>
+
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside
+    id="sidebar"
+    class="
+        fixed
+        inset-y-0
+        left-0
+        z-50
+
+        w-72
+
+        flex
+        flex-col
+
+        transform
+        -translate-x-full
+
+        md:translate-x-0
+
+        transition-transform
+        duration-300
+        ease-out
+
+        overflow-y-auto
+    "
+>
+
+
+    <!-- =====================================================
+         BRAND
+    ====================================================== -->
+
+    <div
+        class="
+            px-5
+            py-6
+
+            border-b
+            border-white/10
+
+            flex
+            items-center
+            gap-3
+        "
+    >
+
+        <!-- Logo -->
+
+        <div
+            class="
+                brand-logo
+
+                w-11
+                h-11
+
+                rounded-xl
+
+                bg-white
+
+                p-1.5
+
+                flex
+                items-center
+                justify-center
+
+                shadow-lg
+            "
+        >
+
+            <img
+                src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414"
+                alt="Logo"
+                class="
+                    w-full
+                    h-full
+                    object-contain
+                "
+            >
+
         </div>
-      
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="dismissPaymentHint" class="text-gray-400 hover:text-blue-600 transition-colors text-sm flex items-center gap-1 bg-gray-50 hover:bg-blue-50 px-3 py-1 rounded-full">
-          <i class="fas fa-check-circle text-xs"></i>
-          <span class="text-xs font-medium">Dismiss</span>
+
+
+        <!-- Brand Name -->
+
+        <div class="min-w-0">
+
+            <h1
+                class="
+                    text-white
+                    font-extrabold
+                    text-lg
+                    tracking-tight
+                    truncate
+                "
+            >
+                AdminCore
+            </h1>
+
+            <p
+                class="
+                    text-blue-200/60
+                    text-[10px]
+                    font-medium
+                    uppercase
+                    tracking-wider
+                "
+            >
+                Management Portal
+            </p>
+
+        </div>
+
+
+        <!-- Mobile Close -->
+
+        <button
+            id="sidebarClose"
+            class="
+                md:hidden
+                ml-auto
+
+                w-8
+                h-8
+
+                rounded-lg
+
+                text-slate-400
+                hover:text-white
+                hover:bg-white/10
+
+                transition
+            "
+        >
+
+            <i class="fas fa-times"></i>
+
         </button>
-        <a href="#" class="text-blue-600 text-xs font-medium hover:underline flex items-center gap-1 bg-blue-50/50 px-3 py-1 rounded-full">
-          <i class="fas fa-credit-card text-xs"></i>
-          <span>Review payments</span>
-        </a>
-      </div>
-    </div>
-  </div>
 
-  <!-- Sidebar (Professional, blue accents) -->
-  <aside id="sidebar" class="w-72 bg-white shadow-lg flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-out z-50 border-r border-gray-100">
-    <!-- Logo Area with refined style -->
-    <div class="flex items-center space-x-3 px-6 py-6 border-b border-gray-100 bg-white">
-      <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-        <i class="fas fa-shield-alt text-white text-lg"></i>
-      </div>
-      <div>
-        <span class="text-xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">AdminCore</span>
-        <p class="text-xs text-gray-400 mt-0.5">Management Portal</p>
-      </div>
     </div>
 
-    <!-- Nav Links with professional SVG-like icons (FontAwesome pro style) -->
-    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-      <a href="{{ url_for('admin_dashboard.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-tachometer-alt w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Dashboard</span>
-      </a>
-      <a href="{{ url_for('students.students_management') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-user-graduate w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Students Management</span>
-      </a>
-      <a href="{{ url_for('courses.manage_courses') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-book-open w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Courses & Lectures</span>
-      </a>
-      <a href="{{ url_for('schedule.live_classes') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-chalkboard-user w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Live Classes</span>
-      </a>
-      <a href="/admin/requests" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-clipboard-list w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Requests</span>
-      </a>
-      <a href="{{url_for('library.manage_library')}}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-landmark w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Study Resources</span>
-      </a>
-      <a href="{{ url_for('adminauth.bulk_import_page') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-        <i class="fas fa-upload w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-        <span class="font-medium">Bulk Import Users</span>
-      </a>
-      <a href="{{ url_for('admin_payments.admin_payments_dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-blue-600 bg-blue-50/40 border-l-3 border-blue-500 font-medium">
-        <i class="fas fa-credit-card w-5 h-5 text-blue-500"></i>
-        <span>Payments</span>
-      </a>
 
-      {% if session.get('admin_logged_in') and session.get('admin_role') == 'superadmin' %}
-        <a href="{{ url_for('adminauth.create_admin_user') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:text-blue-600 hover:bg-blue-50/70 transition-all group">
-          <i class="fas fa-user-shield w-5 h-5 text-gray-400 group-hover:text-blue-500 transition"></i>
-          <span class="font-medium">Create Admin</span>
-        </a>
-      {% endif %}
-    </nav>
-    
-    <!-- Logout / Login Section with refined styling -->
-    <div class="px-4 py-5 border-t border-gray-100 bg-gray-50/30">
-      {% if session.get('admin_logged_in') %}
-        <a href="{{ url_for('adminauth.logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition-all group">
-          <i class="fas fa-sign-out-alt w-5 h-5 text-red-400 group-hover:text-red-500"></i>
-          <span class="font-medium">Logout</span>
-        </a>
-      {% else %}
-        <a href="{{ url_for('adminauth.login') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-blue-600 hover:bg-blue-50 transition-all group">
-          <i class="fas fa-key w-5 h-5 text-blue-400 group-hover:text-blue-500"></i>
-          <span class="font-medium">Login</span>
-        </a>
-      {% endif %}
-    </div>
-  </aside>
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
 
-  <!-- Page Wrapper -->
-  <div class="flex-1 flex flex-col md:ml-72">
-    <!-- Navbar (Sticky, professional) -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 py-3.5 sticky top-0 z-40 shadow-sm">
-      <button id="sidebarToggle" class="md:hidden text-gray-500 focus:outline-none hover:text-blue-500 transition">
-        <i class="fas fa-bars text-xl"></i>
-      </button>
-      <div class="flex items-center gap-2">
-        <i class="fas fa-chart-line text-blue-500 text-lg"></i>
-        <span class="text-base font-semibold text-gray-700">Analytics Overview</span>
-      </div>
-      
-      <!-- Profile indicator with professional icon -->
-      <div class="flex items-center gap-3">
-        <div class="hidden md:flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full">
-          <i class="fas fa-bell text-gray-400 text-sm"></i>
-          <span class="text-xs text-gray-500">Admin</span>
+    <nav
+        class="
+            flex-1
+            px-4
+            py-4
+        "
+    >
+
+
+        <!-- MAIN -->
+
+        <div class="nav-section-title">
+            Main
         </div>
-        {% if session.get('admin_logged_in') %}
-        <div class="flex items-center gap-2">
-          <div class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 flex items-center justify-center">
-            <i class="fas fa-user-cog text-blue-600 text-sm"></i>
-          </div>
+
+
+        <!-- Dashboard -->
+
+        <a
+            href="{{ url_for('admin_dashboard.dashboard') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-chart-pie
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <!-- Students -->
+
+        <a
+            href="{{ url_for('students.students_management') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-user-graduate
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Students Management
+            </span>
+
+        </a>
+
+
+        <!-- Courses -->
+
+        <a
+            href="{{ url_for('courses.manage_courses') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-book-open
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Courses & Lectures
+            </span>
+
+        </a>
+
+
+        <!-- Live Classes -->
+
+        <a
+            href="{{ url_for('schedule.live_classes') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-chalkboard-user
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Live Classes
+            </span>
+
+        </a>
+
+
+        <!-- =================================================
+             MANAGEMENT
+        ================================================== -->
+
+        <div class="nav-section-title">
+            Management
         </div>
+
+
+        <!-- Requests -->
+
+        <a
+            href="/admin/requests"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-clipboard-list
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Requests
+            </span>
+
+        </a>
+
+
+        <!-- Resources -->
+
+        <a
+            href="{{ url_for('library.manage_library') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-book
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Study Resources
+            </span>
+
+        </a>
+
+
+        <!-- Bulk Import -->
+
+        <a
+            href="{{ url_for('adminauth.bulk_import_page') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-file-import
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Bulk Import Users
+            </span>
+
+        </a>
+
+
+        <!-- Payments -->
+
+        <a
+            href="{{ url_for('admin_payments.admin_payments_dashboard') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-credit-card
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Payments
+            </span>
+
+        </a>
+
+
+        <!-- =================================================
+             ADMINISTRATION
+        ================================================== -->
+
+        {% if session.get('admin_logged_in')
+              and session.get('admin_role') == 'superadmin' %}
+
+        <div class="nav-section-title">
+            Administration
+        </div>
+
+
+        <!-- Create Admin -->
+
+        <a
+            href="{{ url_for('adminauth.create_admin_user') }}"
+            class="nav-link group px-3 mb-1"
+        >
+
+            <i
+                class="
+                    fas
+                    fa-user-shield
+                    nav-icon
+                    mr-3
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Create Admin
+            </span>
+
+        </a>
+
         {% endif %}
-      </div>
+
+
+    </nav>
+
+
+    <!-- =====================================================
+         ACCOUNT AREA
+    ====================================================== -->
+
+    <div
+        class="
+            p-4
+
+            border-t
+            border-white/10
+        "
+    >
+
+        {% if session.get('admin_logged_in') %}
+
+
+        <!-- Logged In User -->
+
+        <div
+            class="
+                mb-3
+                px-3
+                py-3
+
+                rounded-xl
+
+                bg-white/[0.045]
+
+                border
+                border-white/[0.06]
+
+                flex
+                items-center
+                gap-3
+            "
+        >
+
+            <div
+                class="
+                    admin-avatar
+
+                    w-9
+                    h-9
+
+                    rounded-lg
+
+                    flex
+                    items-center
+                    justify-center
+
+                    text-white
+                "
+            >
+
+                <i class="fas fa-user text-sm"></i>
+
+            </div>
+
+
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-white
+                        text-xs
+                        font-semibold
+                        truncate
+                    "
+                >
+                    Administrator
+                </p>
+
+                <p
+                    class="
+                        text-slate-400
+                        text-[10px]
+                        truncate
+                    "
+                >
+                    {{ session.get('admin_role', 'Admin')|capitalize }}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Logout -->
+
+        <a
+            href="{{ url_for('adminauth.logout') }}"
+            class="
+                nav-link
+                px-3
+
+                text-red-300
+                hover:text-red-200
+                hover:bg-red-500/10
+            "
+        >
+
+            <i
+                class="
+                    fas
+                    fa-right-from-bracket
+                    nav-icon
+                    mr-3
+                    !text-red-400
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Logout
+            </span>
+
+        </a>
+
+
+        {% else %}
+
+
+        <!-- Login -->
+
+        <a
+            href="{{ url_for('adminauth.login') }}"
+            class="
+                nav-link
+                px-3
+
+                text-blue-200
+                hover:text-white
+                hover:bg-blue-500/10
+            "
+        >
+
+            <i
+                class="
+                    fas
+                    fa-right-to-bracket
+                    nav-icon
+                    mr-3
+                    !text-blue-400
+                "
+            ></i>
+
+            <span class="font-medium text-sm">
+                Login
+            </span>
+
+        </a>
+
+
+        {% endif %}
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     PAGE WRAPPER
+========================================================= -->
+
+<div
+    class="
+        min-h-screen
+
+        md:ml-72
+
+        flex
+        flex-col
+    "
+>
+
+
+    <!-- =====================================================
+         TOP NAVBAR
+    ====================================================== -->
+
+    <header
+        class="
+            top-header
+
+            h-[68px]
+
+            sticky
+            top-0
+
+            z-30
+
+            flex
+            items-center
+            justify-between
+
+            px-4
+            sm:px-6
+        "
+    >
+
+
+        <!-- Left -->
+
+        <div class="flex items-center gap-4">
+
+
+            <!-- Mobile Menu -->
+
+            <button
+                id="sidebarToggle"
+                class="
+                    md:hidden
+
+                    w-10
+                    h-10
+
+                    rounded-xl
+
+                    bg-slate-100
+
+                    text-slate-600
+
+                    hover:bg-blue-50
+                    hover:text-blue-600
+
+                    transition
+                "
+            >
+
+                <i class="fas fa-bars"></i>
+
+            </button>
+
+
+            <!-- Page Title -->
+
+            <div>
+
+                <div
+                    class="
+                        flex
+                        items-center
+                        gap-2
+                    "
+                >
+
+                    <div
+                        class="
+                            hidden
+                            sm:flex
+
+                            w-8
+                            h-8
+
+                            rounded-lg
+
+                            bg-blue-50
+
+                            items-center
+                            justify-center
+                        "
+                    >
+
+                        <i
+                            class="
+                                fas
+                                fa-chart-line
+                                text-blue-600
+                                text-sm
+                            "
+                        ></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <p
+                            class="
+                                text-sm
+                                font-bold
+                                text-slate-800
+                            "
+                        >
+                            Admin Dashboard
+                        </p>
+
+                        <p
+                            class="
+                                hidden
+                                sm:block
+
+                                text-[10px]
+                                text-slate-400
+                            "
+                        >
+                            Management overview
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Right -->
+
+        <div class="flex items-center gap-3">
+
+
+            <!-- Status -->
+
+            <div
+                class="
+                    hidden
+                    sm:flex
+
+                    items-center
+                    gap-2
+
+                    px-3
+                    py-2
+
+                    rounded-full
+
+                    bg-emerald-50
+                    border
+                    border-emerald-100
+                "
+            >
+
+                <span
+                    class="
+                        w-2
+                        h-2
+                        rounded-full
+                        bg-emerald-500
+
+                        animate-pulse
+                    "
+                ></span>
+
+                <span
+                    class="
+                        text-xs
+                        font-medium
+                        text-emerald-700
+                    "
+                >
+                    System Online
+                </span>
+
+            </div>
+
+
+            <!-- Notification -->
+
+            <button
+                class="
+                    relative
+
+                    w-10
+                    h-10
+
+                    rounded-xl
+
+                    text-slate-500
+
+                    hover:bg-slate-100
+                    hover:text-blue-600
+
+                    transition
+                "
+            >
+
+                <i class="far fa-bell"></i>
+
+                <span
+                    class="
+                        absolute
+                        top-2
+                        right-2
+
+                        w-1.5
+                        h-1.5
+
+                        rounded-full
+
+                        bg-blue-600
+                    "
+                ></span>
+
+            </button>
+
+
+            <!-- Avatar -->
+
+            {% if session.get('admin_logged_in') %}
+
+            <div
+                class="
+                    admin-avatar
+
+                    w-9
+                    h-9
+
+                    rounded-xl
+
+                    flex
+                    items-center
+                    justify-center
+
+                    text-white
+
+                    cursor-pointer
+                "
+            >
+
+                <i class="fas fa-user-cog text-sm"></i>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
     </header>
 
-    <!-- Flash Messages (Elegant and clean) -->
-    <div class="max-w-6xl mx-auto w-full mt-5 px-6">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="flash-message mb-4 p-3.5 rounded-xl shadow-sm flex items-center gap-3 
-              {% if category == 'success' %}bg-emerald-50 text-emerald-800 border-l-4 border-emerald-500
-              {% elif category == 'danger' %}bg-rose-50 text-rose-800 border-l-4 border-rose-500
-              {% elif category == 'info' %}bg-blue-50 text-blue-800 border-l-4 border-blue-500
-              {% elif category == 'warning' %}bg-amber-50 text-amber-800 border-l-4 border-amber-500
-              {% else %}bg-gray-50 text-gray-700 border-l-4 border-gray-400{% endif %}">
-              <i class="{% if category == 'success' %}fas fa-check-circle{% elif category == 'danger' %}fas fa-exclamation-circle{% elif category == 'info' %}fas fa-info-circle{% elif category == 'warning' %}fas fa-clock{% else %}fas fa-bell{% endif %}"></i>
-              <span class="text-sm">{{ message }}</span>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    <div
+        class="
+            max-w-7xl
+            w-full
+            mx-auto
+
+            px-4
+            sm:px-6
+
+            pt-5
+        "
+    >
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="
+                            flash-message
+
+                            mb-4
+
+                            px-4
+                            py-3.5
+
+                            rounded-xl
+
+                            border
+
+                            shadow-sm
+
+                            flex
+                            items-center
+                            gap-3
+
+                            {% if category == 'success' %}
+
+                                bg-emerald-50
+                                border-emerald-200
+                                text-emerald-800
+
+                            {% elif category == 'danger' %}
+
+                                bg-rose-50
+                                border-rose-200
+                                text-rose-800
+
+                            {% elif category == 'info' %}
+
+                                bg-blue-50
+                                border-blue-200
+                                text-blue-800
+
+                            {% elif category == 'warning' %}
+
+                                bg-amber-50
+                                border-amber-200
+                                text-amber-800
+
+                            {% else %}
+
+                                bg-slate-50
+                                border-slate-200
+                                text-slate-700
+
+                            {% endif %}
+                        "
+                    >
+
+                        <i
+                            class="
+                                {% if category == 'success' %}
+                                    fas fa-check-circle
+                                {% elif category == 'danger' %}
+                                    fas fa-exclamation-circle
+                                {% elif category == 'info' %}
+                                    fas fa-info-circle
+                                {% elif category == 'warning' %}
+                                    fas fa-triangle-exclamation
+                                {% else %}
+                                    fas fa-bell
+                                {% endif %}
+                            "
+                        ></i>
+
+
+                        <span class="text-sm font-medium">
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
     </div>
 
-   
-        <!-- Main content placeholder - Professional and clean -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div class="flex items-center gap-3 border-b border-gray-100 pb-4 mb-5">
-            <i class="fas fa-tasks text-blue-500 text-lg"></i>
-            <h2 class="text-xl font-semibold text-gray-800">Management Overview</h2>
-            <span class="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-full">Live</span>
-          </div>
-          {% block content %}
-          <!-- Default content if block is empty -->
-          <div class="text-center py-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 mb-4">
-              <i class="fas fa-cog text-blue-400 text-2xl"></i>
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main
+        class="
+            page-content
+
+            flex-1
+
+            w-full
+            max-w-7xl
+
+            mx-auto
+
+            px-4
+            sm:px-6
+
+            py-6
+        "
+    >
+
+        {% block content %}
+
+        <!-- Default content -->
+
+        <div
+            class="
+                bg-white
+
+                rounded-2xl
+
+                border
+                border-slate-200
+
+                shadow-sm
+
+                p-8
+
+                text-center
+            "
+        >
+
+            <div
+                class="
+                    w-16
+                    h-16
+
+                    mx-auto
+                    mb-4
+
+                    rounded-2xl
+
+                    bg-blue-50
+
+                    flex
+                    items-center
+                    justify-center
+                "
+            >
+
+                <i
+                    class="
+                        fas
+                        fa-layer-group
+
+                        text-blue-600
+                        text-2xl
+                    "
+                ></i>
+
             </div>
-            <p class="text-gray-500">Select a section from the sidebar to manage your educational platform.</p>
-            <div class="mt-4 flex justify-center gap-3 flex-wrap">
-              <span class="px-3 py-1.5 bg-gray-50 rounded-lg text-xs text-gray-600 flex items-center gap-2"><i class="fas fa-check-circle text-blue-400 text-xs"></i> Student insights</span>
-              <span class="px-3 py-1.5 bg-gray-50 rounded-lg text-xs text-gray-600 flex items-center gap-2"><i class="fas fa-video text-blue-400 text-xs"></i> Live classes ready</span>
-            </div>
-          </div>
-          {% endblock %}
+
+
+            <h2
+                class="
+                    text-xl
+                    font-bold
+                    text-slate-800
+                "
+            >
+                Management Dashboard
+            </h2>
+
+
+            <p
+                class="
+                    mt-2
+
+                    max-w-md
+                    mx-auto
+
+                    text-sm
+                    text-slate-500
+                "
+            >
+                Select a section from the sidebar to manage your educational platform.
+            </p>
+
         </div>
-        
-        <!-- Additional professional info card with blue theme -->
-        <div class="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100 flex items-center justify-between flex-wrap gap-3">
-          <div class="flex items-center gap-3">
-            <i class="fas fa-shield-alt text-blue-600 text-2xl"></i>
-            <div>
-              <h4 class="font-semibold text-gray-800">System Health</h4>
-              <p class="text-sm text-gray-600">All services operational · Last backup: 2 hours ago</p>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <span class="px-3 py-1 bg-white rounded-full text-xs text-blue-600 shadow-sm flex items-center gap-1"><i class="fas fa-database"></i> 98% uptime</span>
-            <span class="px-3 py-1 bg-white rounded-full text-xs text-blue-600 shadow-sm flex items-center gap-1"><i class="fas fa-microchip"></i> CPU 1 Active</span>
-          </div>
-        </div>
-      </div>
+
+        {% endblock %}
+
     </main>
-  </div>
 
-  <!-- Professional Toggle Script & Payment Banner Dismiss (No alert, no intrusive timers) -->
-  <script>
-    (function() {
-      // Sidebar toggle with smooth behavior
-      const sidebar = document.getElementById('sidebar');
-      const toggleBtn = document.getElementById('sidebarToggle');
-      if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          sidebar.classList.toggle('-translate-x-full');
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer
+        class="
+            px-6
+            py-4
+
+            border-t
+            border-slate-200
+
+            bg-white/60
+        "
+    >
+
+        <div
+            class="
+                max-w-7xl
+                mx-auto
+
+                flex
+                items-center
+                justify-between
+
+                gap-4
+            "
+        >
+
+            <p
+                class="
+                    text-[11px]
+                    text-slate-400
+                "
+            >
+                © 2026 Admin Management Portal
+            </p>
+
+
+            <div
+                class="
+                    hidden
+                    sm:flex
+
+                    items-center
+                    gap-2
+
+                    text-[11px]
+                    text-slate-400
+                "
+            >
+
+                <span
+                    class="
+                        w-1.5
+                        h-1.5
+                        rounded-full
+                        bg-emerald-500
+                    "
+                ></span>
+
+                All systems operational
+
+            </div>
+
+        </div>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+(function () {
+
+    const sidebar =
+        document.getElementById('sidebar');
+
+    const toggle =
+        document.getElementById('sidebarToggle');
+
+    const close =
+        document.getElementById('sidebarClose');
+
+    const overlay =
+        document.getElementById('sidebarOverlay');
+
+
+    /* ==========================================
+       OPEN SIDEBAR
+    ========================================== */
+
+    function openSidebar() {
+
+        sidebar.classList.remove(
+            '-translate-x-full'
+        );
+
+        overlay.classList.remove(
+            'hidden'
+        );
+
+        document.body.classList.add(
+            'overflow-hidden'
+        );
+    }
+
+
+    /* ==========================================
+       CLOSE SIDEBAR
+    ========================================== */
+
+    function closeSidebar() {
+
+        sidebar.classList.add(
+            '-translate-x-full'
+        );
+
+        overlay.classList.add(
+            'hidden'
+        );
+
+        document.body.classList.remove(
+            'overflow-hidden'
+        );
+    }
+
+
+    if (toggle) {
+
+        toggle.addEventListener(
+            'click',
+            openSidebar
+        );
+
+    }
+
+
+    if (close) {
+
+        close.addEventListener(
+            'click',
+            closeSidebar
+        );
+
+    }
+
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            'click',
+            closeSidebar
+        );
+
+    }
+
+
+    /* ==========================================
+       CLOSE AFTER NAVIGATION ON MOBILE
+    ========================================== */
+
+    document
+        .querySelectorAll('#sidebar a')
+        .forEach(function (link) {
+
+            link.addEventListener(
+                'click',
+                function () {
+
+                    if (
+                        window.innerWidth < 768
+                    ) {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
         });
-      }
 
-      // Handle dismiss of payment status bar - Professional and user-friendly, no alert
-      const dismissBtn = document.getElementById('dismissPaymentHint');
-      const paymentStatusBar = document.getElementById('paymentStatusBar');
-      if (dismissBtn && paymentStatusBar) {
-        dismissBtn.addEventListener('click', function() {
-          // Smooth fade-out removal (better UX)
-          paymentStatusBar.style.transition = 'opacity 0.25s ease-out, transform 0.2s';
-          paymentStatusBar.style.opacity = '0';
-          paymentStatusBar.style.transform = 'translateY(-100%)';
-          setTimeout(() => {
-            paymentStatusBar.style.display = 'none';
-          }, 250);
-          // Optional: Store preference in sessionStorage to remember dismissal
-          sessionStorage.setItem('paymentStatusDismissed', 'true');
+
+    /* ==========================================
+       ACTIVE NAVIGATION
+       
+       Automatically highlights the current
+       Flask page without changing routes.
+    ========================================== */
+
+    const currentPath =
+        window.location.pathname;
+
+
+    document
+        .querySelectorAll('#sidebar .nav-link')
+        .forEach(function (link) {
+
+            const href =
+                link.getAttribute('href');
+
+
+            if (!href || href === '#') {
+                return;
+            }
+
+
+            try {
+
+                const linkPath =
+                    new URL(
+                        href,
+                        window.location.origin
+                    ).pathname;
+
+
+                if (
+                    linkPath === currentPath
+                    ||
+                    (
+                        linkPath !== '/' &&
+                        currentPath.startsWith(
+                            linkPath
+                        )
+                    )
+                ) {
+
+                    link.classList.add(
+                        'active'
+                    );
+
+                }
+
+            } catch (error) {
+
+                // Ignore invalid navigation URLs.
+
+            }
+
         });
-      }
 
-      // Check if user previously dismissed the banner (optional persistent UX)
-      if (paymentStatusBar && sessionStorage.getItem('paymentStatusDismissed') === 'true') {
-        paymentStatusBar.style.display = 'none';
-      }
 
-      // No alerts, no aggressive warnings — clean admin experience.
-      // Minimal console logging for admin insight (non-intrusive)
-      console.log('[Admin Portal] Ready — Professional interface with payment status overview');
-      
-      // Add subtle resource hint if memory API available (purely informative)
-      if (window.performance && window.performance.memory) {
-        const memUsed = Math.round(window.performance.memory.usedJSHeapSize / 1048576);
-        if (memUsed < 300) {
-          // Silently log, no UI impact
-          console.debug(`[System] Memory usage: ${memUsed} MB`);
+    /* ==========================================
+       FLASH MESSAGE AUTO DISMISS
+    ========================================== */
+
+    const messages =
+        document.querySelectorAll(
+            '.flash-message'
+        );
+
+
+    messages.forEach(function (message) {
+
+        setTimeout(function () {
+
+            message.style.transition =
+                'opacity .3s ease, transform .3s ease';
+
+            message.style.opacity = '0';
+
+            message.style.transform =
+                'translateY(-8px)';
+
+            setTimeout(function () {
+
+                message.remove();
+
+            }, 300);
+
+        }, 5000);
+
+    });
+
+
+    /* ==========================================
+       ESC KEY CLOSE
+    ========================================== */
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (
+                event.key === 'Escape'
+                &&
+                window.innerWidth < 768
+            ) {
+
+                closeSidebar();
+
+            }
+
         }
-      }
+    );
 
-      // Optional: auto-dismiss flash messages after 5 seconds for cleaner UI
-      const flashMessages = document.querySelectorAll('.flash-message');
-      if (flashMessages.length) {
-        flashMessages.forEach(msg => {
-          setTimeout(() => {
-            msg.style.transition = 'opacity 0.3s';
-            msg.style.opacity = '0';
-            setTimeout(() => msg.remove(), 300);
-          }, 5000);
-        });
-      }
-    })();
-  </script>
-  <!-- No intrusive timers, no alerts, fully professional SVG icons via FontAwesome and clean blue main coloring -->
+
+    /* ==========================================
+       HANDLE RESIZE
+    ========================================== */
+
+    window.addEventListener(
+        'resize',
+        function () {
+
+            if (window.innerWidth >= 768) {
+
+                overlay.classList.add(
+                    'hidden'
+                );
+
+                document.body.classList.remove(
+                    'overflow-hidden'
+                );
+
+            }
+
+        }
+    );
+
+
+})();
+
+</script>
+
 </body>
 </html>
+

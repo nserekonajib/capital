@@ -1,497 +1,2157 @@
 {% extends "admin/base.html" %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Capital College LMS</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <style>
-        .stat-card {
-            transition: all 0.3s ease;
-            border-left: 4px solid;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .activity-timeline {
-            position: relative;
-        }
-        .activity-timeline::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e5e7eb;
-        }
-        .activity-item {
-            position: relative;
-            padding-left: 3rem;
-            margin-bottom: 1.5rem;
-        }
-        .activity-item::before {
-            content: '';
-            position: absolute;
-            left: 16px;
-            top: 8px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 3px solid white;
-            z-index: 1;
-        }
-        .health-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .health-healthy { background-color: #10b981; }
-        .health-degraded { background-color: #f59e0b; }
-        .health-unhealthy { background-color: #ef4444; }
-        .live-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-    </style>
-</head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-blue-800 text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <i class="bi bi-shield-lock text-2xl"></i>
-                    <div>
-                        <h1 class="text-xl font-bold">Capital College Admin</h1>
-                        <p class="text-blue-200 text-sm">LMS Management System</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div class="text-right">
-                        <p class="font-medium">{{ admin_email }}</p>
-                        <p class="text-blue-200 text-sm capitalize">{{ admin_role }}</p>
-                    </div>
-                    <div class="dropdown relative">
-                        <button class="bg-blue-700 p-2 rounded-lg hover:bg-blue-600 transition-colors">
-                            <i class="bi bi-person-circle text-xl"></i>
-                        </button>
-                        <div class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden">
-                            <a href="{{ url_for('adminauth.logout') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                                <i class="bi bi-box-arrow-right mr-2"></i>Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Welcome Section -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-            <p class="text-gray-600 mt-2">Welcome back! Here's what's happening with your LMS.</p>
-            <p class="text-gray-500 text-sm mt-1">
-                Last updated: {% if current_time %}{{ current_time.strftime('%B %d, %Y at %I:%M %p') }}{% else %}Just now{% endif %}
+<!-- Bootstrap Icons -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+    /* =========================================================
+       CAPITAL COLLEGE LMS — ADMIN DASHBOARD
+       Premium Navy / Blue UI
+       ========================================================= */
+
+    :root {
+        --cc-navy: #071a33;
+        --cc-navy-2: #0b2342;
+        --cc-blue: #155eef;
+        --cc-blue-dark: #0f4ac6;
+        --cc-blue-light: #eff6ff;
+        --cc-sky: #3b82f6;
+
+        --cc-bg: #f4f7fb;
+        --cc-card: #ffffff;
+
+        --cc-text: #0f172a;
+        --cc-text-2: #475569;
+        --cc-muted: #94a3b8;
+
+        --cc-border: #e2e8f0;
+        --cc-border-light: #edf2f7;
+
+        --cc-success: #16a34a;
+        --cc-warning: #d97706;
+        --cc-danger: #dc2626;
+
+        --cc-radius: 16px;
+        --cc-radius-sm: 10px;
+
+        --cc-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.04),
+            0 8px 30px rgba(15, 23, 42, 0.06);
+
+        --cc-shadow-hover:
+            0 12px 35px rgba(15, 23, 42, 0.10);
+    }
+
+    /* =========================
+       RESET
+       ========================= */
+
+    .cc-dashboard,
+    .cc-dashboard * {
+        box-sizing: border-box;
+    }
+
+    .cc-dashboard {
+        min-height: 100vh;
+        background:
+            radial-gradient(
+                circle at top right,
+                rgba(21, 94, 239, 0.05),
+                transparent 30%
+            ),
+            var(--cc-bg);
+
+        color: var(--cc-text);
+        font-family:
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+    }
+
+    /* =========================
+       TOP HEADER
+       ========================= */
+
+    .cc-topbar {
+        background:
+            linear-gradient(
+                135deg,
+                var(--cc-navy),
+                var(--cc-navy-2)
+            );
+
+        color: white;
+        padding: 18px 28px;
+
+        border-radius: 18px;
+        margin-bottom: 28px;
+
+        box-shadow:
+            0 10px 35px rgba(7, 26, 51, 0.18);
+
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cc-topbar::after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        right: -90px;
+        top: -150px;
+
+        background: rgba(59, 130, 246, 0.12);
+        border-radius: 50%;
+    }
+
+    .cc-topbar-inner {
+        position: relative;
+        z-index: 2;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+    }
+
+    .cc-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .cc-brand-icon {
+        width: 48px;
+        height: 48px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.12);
+
+        border-radius: 13px;
+
+        font-size: 22px;
+        color: #93c5fd;
+    }
+
+    .cc-brand-title {
+        font-size: 18px;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .cc-brand-subtitle {
+        margin: 3px 0 0;
+        font-size: 12px;
+        color: #bfdbfe;
+    }
+
+    .cc-admin-area {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .cc-admin-info {
+        text-align: right;
+    }
+
+    .cc-admin-email {
+        font-size: 13px;
+        font-weight: 650;
+        color: white;
+        margin: 0;
+    }
+
+    .cc-admin-role {
+        font-size: 11px;
+        color: #bfdbfe;
+        margin-top: 3px;
+        text-transform: capitalize;
+    }
+
+    .cc-admin-menu {
+        position: relative;
+    }
+
+    .cc-admin-button {
+        width: 43px;
+        height: 43px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+
+        background: rgba(255,255,255,0.09);
+        color: white;
+
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+    .cc-admin-button:hover {
+        background: rgba(255,255,255,0.17);
+        transform: translateY(-1px);
+    }
+
+    .cc-dropdown {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+
+        width: 190px;
+
+        background: white;
+        border: 1px solid var(--cc-border);
+
+        border-radius: 12px;
+
+        padding: 7px;
+
+        box-shadow:
+            0 15px 40px rgba(15,23,42,.16);
+
+        z-index: 100;
+        display: none;
+    }
+
+    .cc-dropdown.show {
+        display: block;
+        animation: dropdownIn .18s ease;
+    }
+
+    @keyframes dropdownIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .cc-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        padding: 10px 12px;
+
+        border-radius: 8px;
+
+        color: var(--cc-text);
+        text-decoration: none;
+
+        font-size: 13px;
+        font-weight: 550;
+
+        transition: .18s ease;
+    }
+
+    .cc-dropdown a:hover {
+        background: var(--cc-blue-light);
+        color: var(--cc-blue);
+    }
+
+    /* =========================
+       PAGE HEADER
+       ========================= */
+
+    .cc-page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        margin-bottom: 25px;
+    }
+
+    .cc-page-title {
+        margin: 0;
+        font-size: 29px;
+        line-height: 1.2;
+        font-weight: 780;
+        letter-spacing: -0.035em;
+        color: var(--cc-text);
+    }
+
+    .cc-page-description {
+        margin: 7px 0 0;
+        font-size: 14px;
+        color: var(--cc-text-2);
+    }
+
+    .cc-last-updated {
+        font-size: 11px;
+        color: var(--cc-muted);
+        margin-top: 7px;
+    }
+
+    /* =========================
+       SECTION LABEL
+       ========================= */
+
+    .cc-section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 14px;
+    }
+
+    .cc-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        font-size: 15px;
+        font-weight: 750;
+
+        margin: 0;
+    }
+
+    .cc-section-title i {
+        color: var(--cc-blue);
+    }
+
+    /* =========================
+       SYSTEM HEALTH
+       ========================= */
+
+    .cc-health-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 14px;
+
+        margin-bottom: 28px;
+    }
+
+    .cc-health-card {
+        background: var(--cc-card);
+
+        border: 1px solid var(--cc-border);
+        border-radius: var(--cc-radius-sm);
+
+        padding: 17px;
+
+        box-shadow: var(--cc-shadow);
+
+        transition: all .22s ease;
+    }
+
+    .cc-health-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--cc-shadow-hover);
+        border-color: #cbd5e1;
+    }
+
+    .cc-health-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .cc-health-label {
+        font-size: 11px;
+        font-weight: 650;
+        color: var(--cc-text-2);
+
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .cc-health-icon {
+        width: 36px;
+        height: 36px;
+
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: var(--cc-blue);
+        background: var(--cc-blue-light);
+    }
+
+    .cc-health-value {
+        margin-top: 10px;
+
+        display: flex;
+        align-items: center;
+        gap: 7px;
+
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--cc-text);
+    }
+
+    .cc-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .cc-status-healthy {
+        background: var(--cc-success);
+        box-shadow: 0 0 0 4px rgba(22,163,74,.10);
+    }
+
+    .cc-status-degraded {
+        background: var(--cc-warning);
+        box-shadow: 0 0 0 4px rgba(217,119,6,.10);
+    }
+
+    .cc-status-unhealthy {
+        background: var(--cc-danger);
+        box-shadow: 0 0 0 4px rgba(220,38,38,.10);
+    }
+
+    /* =========================
+       STATISTICS
+       ========================= */
+
+    .cc-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 16px;
+
+        margin-bottom: 30px;
+    }
+
+    .cc-stat-card {
+        position: relative;
+
+        background: var(--cc-card);
+
+        border: 1px solid var(--cc-border);
+        border-radius: var(--cc-radius);
+
+        padding: 21px;
+
+        box-shadow: var(--cc-shadow);
+
+        overflow: hidden;
+
+        transition:
+            transform .22s ease,
+            box-shadow .22s ease,
+            border-color .22s ease;
+    }
+
+    .cc-stat-card::before {
+        content: "";
+
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+
+        width: 3px;
+
+        background: var(--cc-blue);
+    }
+
+    .cc-stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--cc-shadow-hover);
+        border-color: #cbd5e1;
+    }
+
+    .cc-stat-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 15px;
+    }
+
+    .cc-stat-label {
+        margin: 0 0 5px;
+
+        color: var(--cc-text-2);
+
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .cc-stat-value {
+        margin: 0;
+
+        color: var(--cc-text);
+
+        font-size: 30px;
+        line-height: 1;
+
+        font-weight: 800;
+        letter-spacing: -0.04em;
+    }
+
+    .cc-stat-description {
+        margin: 9px 0 0;
+
+        font-size: 11px;
+        color: var(--cc-muted);
+    }
+
+    .cc-stat-icon {
+        width: 49px;
+        height: 49px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: var(--cc-blue-light);
+        color: var(--cc-blue);
+
+        border-radius: 13px;
+
+        font-size: 21px;
+    }
+
+    /* =========================
+       MAIN GRID
+       ========================= */
+
+    .cc-main-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+
+        gap: 22px;
+    }
+
+    .cc-column {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    /* =========================
+       PANELS
+       ========================= */
+
+    .cc-panel {
+        background: var(--cc-card);
+
+        border: 1px solid var(--cc-border);
+        border-radius: var(--cc-radius);
+
+        box-shadow: var(--cc-shadow);
+
+        overflow: hidden;
+    }
+
+    .cc-panel-header {
+        padding: 18px 21px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        border-bottom: 1px solid var(--cc-border-light);
+    }
+
+    .cc-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        margin: 0;
+
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    .cc-panel-title i {
+        color: var(--cc-blue);
+    }
+
+    .cc-panel-body {
+        padding: 21px;
+    }
+
+    /* =========================
+       ACTIVITY
+       ========================= */
+
+    .cc-activity {
+        position: relative;
+    }
+
+    .cc-activity::before {
+        content: "";
+
+        position: absolute;
+
+        left: 7px;
+        top: 4px;
+        bottom: 4px;
+
+        width: 1px;
+
+        background: var(--cc-border);
+    }
+
+    .cc-activity-item {
+        position: relative;
+
+        display: flex;
+        gap: 15px;
+
+        margin-bottom: 18px;
+    }
+
+    .cc-activity-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .cc-activity-dot {
+        position: relative;
+        z-index: 2;
+
+        width: 15px;
+        height: 15px;
+
+        flex-shrink: 0;
+
+        margin-top: 3px;
+
+        border-radius: 50%;
+
+        background: white;
+
+        border: 4px solid var(--cc-blue);
+
+        box-shadow: 0 0 0 2px white;
+    }
+
+    .cc-activity-content {
+        flex: 1;
+
+        padding: 13px 14px;
+
+        background: #f8fafc;
+
+        border: 1px solid var(--cc-border-light);
+        border-radius: 11px;
+
+        transition: .18s ease;
+    }
+
+    .cc-activity-content:hover {
+        background: var(--cc-blue-light);
+        border-color: #dbeafe;
+    }
+
+    .cc-activity-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+
+        gap: 12px;
+    }
+
+    .cc-activity-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--cc-text);
+    }
+
+    .cc-activity-description {
+        margin-top: 4px;
+
+        font-size: 12px;
+        line-height: 1.6;
+
+        color: var(--cc-text-2);
+    }
+
+    .cc-activity-time {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+
+        margin-top: 8px;
+
+        font-size: 10px;
+        color: var(--cc-muted);
+    }
+
+    .cc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+
+        padding: 5px 8px;
+
+        border-radius: 7px;
+
+        font-size: 9px;
+        font-weight: 700;
+
+        white-space: nowrap;
+        text-transform: uppercase;
+    }
+
+    .cc-badge-blue {
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .cc-badge-warning {
+        color: #92400e;
+        background: #fef3c7;
+    }
+
+    .cc-badge-danger {
+        color: #991b1b;
+        background: #fee2e2;
+    }
+
+    .cc-badge-success {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    /* =========================
+       QUICK ACTIONS
+       ========================= */
+
+    .cc-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 12px;
+    }
+
+    .cc-action {
+        text-decoration: none;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        text-align: center;
+
+        min-height: 125px;
+
+        padding: 15px 10px;
+
+        border: 1px solid var(--cc-border);
+        border-radius: 12px;
+
+        color: var(--cc-text);
+
+        background: white;
+
+        transition:
+            transform .2s ease,
+            border-color .2s ease,
+            background .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .cc-action:hover {
+        transform: translateY(-3px);
+
+        color: var(--cc-blue);
+
+        border-color: #bfdbfe;
+        background: var(--cc-blue-light);
+
+        box-shadow: 0 8px 20px rgba(21,94,239,.08);
+    }
+
+    .cc-action-icon {
+        width: 45px;
+        height: 45px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        margin-bottom: 10px;
+
+        border-radius: 12px;
+
+        background: var(--cc-blue-light);
+        color: var(--cc-blue);
+
+        font-size: 19px;
+
+        transition: .2s ease;
+    }
+
+    .cc-action:hover .cc-action-icon {
+        background: var(--cc-blue);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .cc-action span {
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    /* =========================
+       LIVE CLASSES
+       ========================= */
+
+    .cc-live-item {
+        padding: 15px;
+
+        border: 1px solid var(--cc-border);
+        border-left: 3px solid var(--cc-blue);
+
+        border-radius: 11px;
+
+        background: #fafcff;
+
+        margin-bottom: 12px;
+
+        transition: .2s ease;
+    }
+
+    .cc-live-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .cc-live-item:hover {
+        border-color: #bfdbfe;
+        background: var(--cc-blue-light);
+        transform: translateX(2px);
+    }
+
+    .cc-live-item.live {
+        border-left-color: var(--cc-danger);
+    }
+
+    .cc-live-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+
+        gap: 10px;
+    }
+
+    .cc-live-title {
+        margin: 0;
+
+        font-size: 12px;
+        font-weight: 750;
+
+        line-height: 1.45;
+    }
+
+    .cc-live-details {
+        margin-top: 11px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .cc-live-detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        font-size: 11px;
+
+        color: var(--cc-text-2);
+    }
+
+    .cc-live-detail i {
+        width: 15px;
+        color: var(--cc-muted);
+    }
+
+    .cc-live-actions {
+        display: flex;
+        gap: 7px;
+
+        margin-top: 13px;
+    }
+
+    .cc-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 6px;
+
+        min-height: 32px;
+
+        padding: 0 11px;
+
+        border-radius: 8px;
+
+        text-decoration: none;
+
+        font-size: 10px;
+        font-weight: 700;
+
+        border: 1px solid transparent;
+
+        transition: .18s ease;
+    }
+
+    .cc-button-primary {
+        color: white;
+        background: var(--cc-blue);
+    }
+
+    .cc-button-primary:hover {
+        background: var(--cc-blue-dark);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .cc-button-outline {
+        color: var(--cc-blue);
+        background: white;
+        border-color: #bfdbfe;
+    }
+
+    .cc-button-outline:hover {
+        background: var(--cc-blue-light);
+    }
+
+    .cc-button-disabled {
+        color: var(--cc-muted);
+        background: #f8fafc;
+        border-color: var(--cc-border);
+        cursor: not-allowed;
+    }
+
+    .cc-live-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: var(--cc-danger);
+
+        animation: livePulse 1.5s infinite;
+    }
+
+    @keyframes livePulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: .45;
+            transform: scale(.8);
+        }
+    }
+
+    .cc-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+
+        padding: 4px 7px;
+
+        border-radius: 6px;
+
+        background: #fee2e2;
+        color: #b91c1c;
+
+        font-size: 8px;
+        font-weight: 800;
+
+        white-space: nowrap;
+    }
+
+    /* =========================
+       SYSTEM INFO
+       ========================= */
+
+    .cc-info-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cc-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 15px;
+
+        padding: 12px 0;
+
+        border-bottom: 1px solid var(--cc-border-light);
+    }
+
+    .cc-info-row:first-child {
+        padding-top: 0;
+    }
+
+    .cc-info-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .cc-info-label {
+        font-size: 11px;
+        color: var(--cc-text-2);
+    }
+
+    .cc-info-value {
+        font-size: 12px;
+        font-weight: 750;
+        color: var(--cc-text);
+    }
+
+    .cc-role {
+        padding: 4px 8px;
+
+        background: var(--cc-blue-light);
+        color: var(--cc-blue);
+
+        border-radius: 6px;
+
+        font-size: 9px;
+        font-weight: 750;
+
+        text-transform: capitalize;
+    }
+
+    /* =========================
+       EMPTY STATES
+       ========================= */
+
+    .cc-empty {
+        text-align: center;
+        padding: 35px 15px;
+    }
+
+    .cc-empty-icon {
+        font-size: 30px;
+        color: #cbd5e1;
+
+        display: block;
+
+        margin-bottom: 10px;
+    }
+
+    .cc-empty-text {
+        margin: 0;
+
+        color: var(--cc-text-2);
+
+        font-size: 12px;
+    }
+
+    .cc-empty-button {
+        margin-top: 13px;
+    }
+
+    /* =========================
+       RESPONSIVE
+       ========================= */
+
+    @media (max-width: 1100px) {
+
+        .cc-health-grid,
+        .cc-stat-grid {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .cc-main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 700px) {
+
+        .cc-topbar {
+            padding: 15px;
+            border-radius: 14px;
+        }
+
+        .cc-topbar-inner {
+            align-items: flex-start;
+        }
+
+        .cc-admin-info {
+            display: none;
+        }
+
+        .cc-page-header {
+            display: block;
+        }
+
+        .cc-page-title {
+            font-size: 24px;
+        }
+
+        .cc-health-grid,
+        .cc-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .cc-actions-grid {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .cc-panel-header,
+        .cc-panel-body {
+            padding: 16px;
+        }
+
+        .cc-activity-row {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 450px) {
+
+        .cc-actions-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .cc-stat-value {
+            font-size: 26px;
+        }
+
+        .cc-live-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+
+<div class="cc-dashboard">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="cc-topbar">
+
+        <div class="cc-topbar-inner">
+
+            <div class="cc-brand">
+
+                <div class="cc-brand-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <div>
+                    <h1 class="cc-brand-title">
+                        Capital College
+                    </h1>
+
+                    <p class="cc-brand-subtitle">
+                        Learning Management System
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="cc-admin-area">
+
+                <div class="cc-admin-info">
+
+                    <p class="cc-admin-email">
+                        {{ admin_email }}
+                    </p>
+
+                    <p class="cc-admin-role">
+                        {{ admin_role }}
+                    </p>
+
+                </div>
+
+
+                <div class="cc-admin-menu">
+
+                    <button
+                        type="button"
+                        class="cc-admin-button"
+                        id="ccAdminButton"
+                        aria-label="Account menu">
+
+                        <i class="bi bi-person-circle"></i>
+
+                    </button>
+
+
+                    <div class="cc-dropdown" id="ccDropdown">
+
+                        <a href="{{ url_for('adminauth.logout') }}">
+
+                            <i class="bi bi-box-arrow-right"></i>
+
+                            Sign out
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+
+    <div class="cc-page-header">
+
+        <div>
+
+            <h2 class="cc-page-title">
+                Admin Dashboard
+            </h2>
+
+            <p class="cc-page-description">
+                Monitor your LMS, manage academic activity and oversee system operations.
             </p>
+
+            <p class="cc-last-updated">
+
+                <i class="bi bi-clock-history"></i>
+
+                Last updated:
+
+                {% if current_time %}
+                    {{ current_time.strftime('%B %d, %Y at %I:%M %p') }}
+                {% else %}
+                    Just now
+                {% endif %}
+
+            </p>
+
         </div>
 
-        <!-- System Health -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Database</p>
-                        <div class="flex items-center mt-1">
-                            <span class="health-indicator health-{{ system_health.get('database', 'unknown') }}"></span>
-                            <span class="text-sm font-medium capitalize">{{ system_health.get('database', 'unknown') }}</span>
-                        </div>
+    </div>
+
+
+    <!-- =====================================================
+         SYSTEM HEALTH
+         ===================================================== -->
+
+    <div class="cc-section-heading">
+
+        <h3 class="cc-section-title">
+            <i class="bi bi-activity"></i>
+            System Health
+        </h3>
+
+    </div>
+
+
+    <div class="cc-health-grid">
+
+        <!-- DATABASE -->
+
+        <div class="cc-health-card">
+
+            <div class="cc-health-top">
+
+                <div>
+
+                    <div class="cc-health-label">
+                        Database
                     </div>
-                    <i class="bi bi-database text-2xl text-blue-500"></i>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Storage</p>
-                        <div class="flex items-center mt-1">
-                            <span class="health-indicator health-{{ system_health.get('storage', 'unknown') }}"></span>
-                            <span class="text-sm font-medium capitalize">{{ system_health.get('storage', 'unknown') }}</span>
-                        </div>
+
+                    <div class="cc-health-value">
+
+                        <span class="cc-status cc-status-{{ system_health.get('database', 'unknown') }}"></span>
+
+                        {{ system_health.get('database', 'unknown')|capitalize }}
+
                     </div>
-                    <i class="bi bi-hdd text-2xl text-green-500"></i>
+
                 </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">API Services</p>
-                        <div class="flex items-center mt-1">
-                            <span class="health-indicator health-{{ system_health.get('api', 'unknown') }}"></span>
-                            <span class="text-sm font-medium capitalize">{{ system_health.get('api', 'unknown') }}</span>
-                        </div>
-                    </div>
-                    <i class="bi bi-cloud-check text-2xl text-purple-500"></i>
+
+                <div class="cc-health-icon">
+                    <i class="bi bi-database"></i>
                 </div>
+
             </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Last Checked</p>
-                        <p class="text-sm font-medium text-gray-900 mt-1">
-                            {{ system_health.get('last_checked', current_time)|string|truncate(16, True, '') }}
-                        </p>
-                    </div>
-                    <i class="bi bi-clock text-2xl text-yellow-500"></i>
-                </div>
-            </div>
+
         </div>
 
-        <!-- Statistics Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Students -->
-            <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Total Students</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ admin_stats.get('total_students', 0) }}</p>
-                        <p class="text-gray-500 text-sm mt-2">Registered users</p>
+
+        <!-- STORAGE -->
+
+        <div class="cc-health-card">
+
+            <div class="cc-health-top">
+
+                <div>
+
+                    <div class="cc-health-label">
+                        Storage
                     </div>
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <i class="bi bi-people text-blue-600 text-xl"></i>
+
+                    <div class="cc-health-value">
+
+                        <span class="cc-status cc-status-{{ system_health.get('storage', 'unknown') }}"></span>
+
+                        {{ system_health.get('storage', 'unknown')|capitalize }}
+
                     </div>
+
                 </div>
+
+                <div class="cc-health-icon">
+                    <i class="bi bi-hdd"></i>
+                </div>
+
             </div>
 
-            <!-- Total Courses -->
-            <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-green-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Total Courses</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ admin_stats.get('total_courses', 0) }}</p>
-                        <p class="text-gray-500 text-sm mt-2">Available courses</p>
-                    </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <i class="bi bi-book text-green-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pending Requests -->
-            <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-yellow-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Pending Requests</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ admin_stats.get('pending_requests', 0) }}</p>
-                        <p class="text-gray-500 text-sm mt-2">Awaiting approval</p>
-                    </div>
-                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <i class="bi bi-clock-history text-yellow-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Live Classes -->
-            <div class="stat-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 border-l-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">Active Live Classes</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ admin_stats.get('active_live_classes', 0) }}</p>
-                        <p class="text-gray-500 text-sm mt-2">Scheduled sessions</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <i class="bi bi-camera-video text-purple-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Recent Activity & Quick Actions -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Recent Activity -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="bi bi-activity mr-2 text-blue-600"></i>
-                            Recent Activity
-                        </h3>
+
+        <!-- API -->
+
+        <div class="cc-health-card">
+
+            <div class="cc-health-top">
+
+                <div>
+
+                    <div class="cc-health-label">
+                        API Services
                     </div>
-                    <div class="p-6">
-                        {% if admin_stats.get('recent_activity') %}
-                        <div class="activity-timeline">
-                            {% for activity in admin_stats.recent_activity %}
-                            <div class="activity-item">
-                                <div class="bg-white p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <p class="font-medium text-gray-900">{{ activity.title }}</p>
-                                            <p class="text-sm text-gray-600 mt-1">{{ activity.description }}</p>
-                                            <p class="text-xs text-gray-500 mt-2">
-                                                <i class="bi bi-clock mr-1"></i>
-                                                {{ activity.timestamp|string|truncate(16, True, '') }}
-                                            </p>
+
+                    <div class="cc-health-value">
+
+                        <span class="cc-status cc-status-{{ system_health.get('api', 'unknown') }}"></span>
+
+                        {{ system_health.get('api', 'unknown')|capitalize }}
+
+                    </div>
+
+                </div>
+
+                <div class="cc-health-icon">
+                    <i class="bi bi-cloud-check"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LAST CHECK -->
+
+        <div class="cc-health-card">
+
+            <div class="cc-health-top">
+
+                <div>
+
+                    <div class="cc-health-label">
+                        Last Checked
+                    </div>
+
+                    <div class="cc-health-value">
+
+                        {{ system_health.get(
+                            'last_checked',
+                            current_time
+                        )|string|truncate(16, True, '') }}
+
+                    </div>
+
+                </div>
+
+                <div class="cc-health-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         STATISTICS
+         ===================================================== -->
+
+    <div class="cc-section-heading">
+
+        <h3 class="cc-section-title">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            LMS Overview
+        </h3>
+
+    </div>
+
+
+    <div class="cc-stat-grid">
+
+
+        <!-- STUDENTS -->
+
+        <div class="cc-stat-card">
+
+            <div class="cc-stat-content">
+
+                <div>
+
+                    <p class="cc-stat-label">
+                        Total Students
+                    </p>
+
+                    <p class="cc-stat-value">
+                        {{ admin_stats.get('total_students', 0) }}
+                    </p>
+
+                    <p class="cc-stat-description">
+                        Registered users
+                    </p>
+
+                </div>
+
+                <div class="cc-stat-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- COURSES -->
+
+        <div class="cc-stat-card">
+
+            <div class="cc-stat-content">
+
+                <div>
+
+                    <p class="cc-stat-label">
+                        Total Courses
+                    </p>
+
+                    <p class="cc-stat-value">
+                        {{ admin_stats.get('total_courses', 0) }}
+                    </p>
+
+                    <p class="cc-stat-description">
+                        Available courses
+                    </p>
+
+                </div>
+
+                <div class="cc-stat-icon">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- REQUESTS -->
+
+        <div class="cc-stat-card">
+
+            <div class="cc-stat-content">
+
+                <div>
+
+                    <p class="cc-stat-label">
+                        Pending Requests
+                    </p>
+
+                    <p class="cc-stat-value">
+                        {{ admin_stats.get('pending_requests', 0) }}
+                    </p>
+
+                    <p class="cc-stat-description">
+                        Awaiting approval
+                    </p>
+
+                </div>
+
+                <div class="cc-stat-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LIVE CLASSES -->
+
+        <div class="cc-stat-card">
+
+            <div class="cc-stat-content">
+
+                <div>
+
+                    <p class="cc-stat-label">
+                        Active Live Classes
+                    </p>
+
+                    <p class="cc-stat-value">
+                        {{ admin_stats.get('active_live_classes', 0) }}
+                    </p>
+
+                    <p class="cc-stat-description">
+                        Scheduled sessions
+                    </p>
+
+                </div>
+
+                <div class="cc-stat-icon">
+                    <i class="bi bi-camera-video-fill"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
+
+    <div class="cc-main-grid">
+
+
+        <!-- =================================================
+             LEFT COLUMN
+             ================================================= -->
+
+        <div class="cc-column">
+
+
+            <!-- RECENT ACTIVITY -->
+
+            <div class="cc-panel">
+
+                <div class="cc-panel-header">
+
+                    <h3 class="cc-panel-title">
+
+                        <i class="bi bi-activity"></i>
+
+                        Recent Activity
+
+                    </h3>
+
+                </div>
+
+
+                <div class="cc-panel-body">
+
+                    {% if admin_stats.get('recent_activity') %}
+
+                    <div class="cc-activity">
+
+                        {% for activity in admin_stats.recent_activity %}
+
+                        <div class="cc-activity-item">
+
+                            <div class="cc-activity-dot"></div>
+
+
+                            <div class="cc-activity-content">
+
+                                <div class="cc-activity-row">
+
+                                    <div>
+
+                                        <div class="cc-activity-title">
+                                            {{ activity.title }}
                                         </div>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            {% if activity.color == 'success' %}bg-green-100 text-green-800
-                                            {% elif activity.color == 'warning' %}bg-yellow-100 text-yellow-800
-                                            {% elif activity.color == 'danger' %}bg-red-100 text-red-800
-                                            {% else %}bg-blue-100 text-blue-800{% endif %}">
-                                            <i class="bi bi-{{ activity.icon }} mr-1"></i>
-                                            {{ activity.type|title }}
-                                        </span>
+
+                                        <div class="cc-activity-description">
+                                            {{ activity.description }}
+                                        </div>
+
+                                        <div class="cc-activity-time">
+
+                                            <i class="bi bi-clock"></i>
+
+                                            {{ activity.timestamp|string|truncate(16, True, '') }}
+
+                                        </div>
+
                                     </div>
+
+
+                                    <span class="cc-badge
+                                        {% if activity.color == 'success' %}
+                                            cc-badge-success
+                                        {% elif activity.color == 'warning' %}
+                                            cc-badge-warning
+                                        {% elif activity.color == 'danger' %}
+                                            cc-badge-danger
+                                        {% else %}
+                                            cc-badge-blue
+                                        {% endif %}
+                                    ">
+
+                                        <i class="bi bi-{{ activity.icon }}"></i>
+
+                                        {{ activity.type|title }}
+
+                                    </span>
+
                                 </div>
+
                             </div>
-                            {% endfor %}
+
                         </div>
-                        {% else %}
-                        <div class="text-center py-8">
-                            <i class="bi bi-inbox text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500">No recent activity</p>
-                        </div>
-                        {% endif %}
+
+                        {% endfor %}
+
                     </div>
+
+                    {% else %}
+
+                    <div class="cc-empty">
+
+                        <i class="bi bi-inbox cc-empty-icon"></i>
+
+                        <p class="cc-empty-text">
+                            No recent activity
+                        </p>
+
+                    </div>
+
+                    {% endif %}
+
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="bi bi-lightning mr-2 text-blue-600"></i>
-                            Quick Actions
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <a href="{{ url_for('courses.manage_courses') }}" 
-                               class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group">
-                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-                                    <i class="bi bi-book text-blue-600 text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 text-center">Manage Courses</span>
-                            </a>
-
-                            <a href="{{ url_for('admin_requests.manage_requests') }}" 
-                               class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200 group">
-                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
-                                    <i class="bi bi-send-check text-green-600 text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 text-center">Course Requests</span>
-                            </a>
-
-                            <a href="{{ url_for('schedule.live_classes') }}" 
-                               class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group">
-                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-                                    <i class="bi bi-camera-video text-purple-600 text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 text-center">Live Classes</span>
-                            </a>
-
-                            {% if admin_role == 'superadmin' %}
-                            <a href="{{ url_for('adminauth.create_admin_user') }}" 
-                               class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-yellow-300 hover:bg-yellow-50 transition-all duration-200 group">
-                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-yellow-200 transition-colors">
-                                    <i class="bi bi-person-plus text-yellow-600 text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 text-center">Add Admin</span>
-                            </a>
-                            {% else %}
-                            <a href="{{ url_for('library.manage_library') }}" 
-                               class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200 group">
-                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-indigo-200 transition-colors">
-                                    <i class="bi bi-journal-text text-indigo-600 text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 text-center">Library</span>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Upcoming Live Classes & System Info -->
-            <div class="space-y-8">
-                <!-- Upcoming Live Classes -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="bi bi-camera-video mr-2 text-blue-600"></i>
-                            Upcoming Live Classes
-                        </h3>
+
+            <!-- QUICK ACTIONS -->
+
+            <div class="cc-panel">
+
+                <div class="cc-panel-header">
+
+                    <h3 class="cc-panel-title">
+
+                        <i class="bi bi-lightning-charge-fill"></i>
+
+                        Quick Actions
+
+                    </h3>
+
+                </div>
+
+
+                <div class="cc-panel-body">
+
+                    <div class="cc-actions-grid">
+
+
+                        <!-- COURSES -->
+
+                        <a
+                            href="{{ url_for('courses.manage_courses') }}"
+                            class="cc-action">
+
+                            <div class="cc-action-icon">
+                                <i class="bi bi-journal-bookmark-fill"></i>
+                            </div>
+
+                            <span>
+                                Manage Courses
+                            </span>
+
+                        </a>
+
+
+                        <!-- REQUESTS -->
+
+                        <a
+                            href="{{ url_for('admin_requests.manage_requests') }}"
+                            class="cc-action">
+
+                            <div class="cc-action-icon">
+                                <i class="bi bi-send-check-fill"></i>
+                            </div>
+
+                            <span>
+                                Course Requests
+                            </span>
+
+                        </a>
+
+
+                        <!-- LIVE CLASSES -->
+
+                        <a
+                            href="{{ url_for('schedule.live_classes') }}"
+                            class="cc-action">
+
+                            <div class="cc-action-icon">
+                                <i class="bi bi-camera-video-fill"></i>
+                            </div>
+
+                            <span>
+                                Live Classes
+                            </span>
+
+                        </a>
+
+
+                        <!-- ADMIN / LIBRARY -->
+
+                        {% if admin_role == 'superadmin' %}
+
+                        <a
+                            href="{{ url_for('adminauth.create_admin_user') }}"
+                            class="cc-action">
+
+                            <div class="cc-action-icon">
+                                <i class="bi bi-person-plus-fill"></i>
+                            </div>
+
+                            <span>
+                                Add Admin
+                            </span>
+
+                        </a>
+
+                        {% else %}
+
+                        <a
+                            href="{{ url_for('library.manage_library') }}"
+                            class="cc-action">
+
+                            <div class="cc-action-icon">
+                                <i class="bi bi-collection-fill"></i>
+                            </div>
+
+                            <span>
+                                Library
+                            </span>
+
+                        </a>
+
+                        {% endif %}
+
                     </div>
-                    <div class="p-6">
-                        {% if upcoming_classes %}
-                        <div class="space-y-4">
-                            {% for class in upcoming_classes %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             RIGHT COLUMN
+             ================================================= -->
+
+        <div class="cc-column">
+
+
+            <!-- UPCOMING LIVE CLASSES -->
+
+            <div class="cc-panel">
+
+                <div class="cc-panel-header">
+
+                    <h3 class="cc-panel-title">
+
+                        <i class="bi bi-camera-video-fill"></i>
+
+                        Upcoming Live Classes
+
+                    </h3>
+
+                </div>
+
+
+                <div class="cc-panel-body">
+
+                    {% if upcoming_classes %}
+
+                        {% for class in upcoming_classes %}
+
                             {% set now = current_time %}
                             {% set class_start = class.datetime %}
                             {% set class_end = class.datetime + timedelta(minutes=class.duration) %}
                             {% set can_start = now >= class_start and now <= class_end %}
                             {% set is_live = can_start %}
                             {% set is_upcoming = now < class_start %}
-                            
-                            <div class="border-l-4 {% if is_live %}border-green-500 bg-green-50{% elif is_upcoming %}border-blue-500 bg-blue-50{% else %}border-gray-400 bg-gray-50{% endif %} rounded-r-lg p-4">
-                                <div class="flex items-start justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-900 text-sm flex-1">{{ class.title }}</h4>
+
+
+                            <div class="cc-live-item {% if is_live %}live{% endif %}">
+
+
+                                <div class="cc-live-title-row">
+
+                                    <h4 class="cc-live-title">
+                                        {{ class.title }}
+                                    </h4>
+
+
                                     {% if is_live %}
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
-                                        <span class="live-indicator bg-green-500"></span>
-                                        LIVE NOW
+
+                                    <span class="cc-live-badge">
+
+                                        <span class="cc-live-dot"></span>
+
+                                        LIVE
+
                                     </span>
+
                                     {% endif %}
+
                                 </div>
-                                <div class="space-y-1 text-sm text-gray-600">
-                                    <p class="flex items-center">
-                                        <i class="bi bi-book mr-2"></i>
-                                        {{ class.course_title }}
-                                    </p>
-                                    <p class="flex items-center">
-                                        <i class="bi bi-person mr-2"></i>
-                                        {{ class.instructor }}
-                                    </p>
-                                    <p class="flex items-center">
-                                        <i class="bi bi-calendar mr-2"></i>
-                                        {{ class.datetime.strftime('%b %d, %I:%M %p') }}
-                                    </p>
+
+
+                                <div class="cc-live-details">
+
+                                    <div class="cc-live-detail">
+
+                                        <i class="bi bi-book"></i>
+
+                                        <span>
+                                            {{ class.course_title }}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="cc-live-detail">
+
+                                        <i class="bi bi-person"></i>
+
+                                        <span>
+                                            {{ class.instructor }}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="cc-live-detail">
+
+                                        <i class="bi bi-calendar3"></i>
+
+                                        <span>
+                                            {{ class.datetime.strftime('%b %d, %I:%M %p') }}
+                                        </span>
+
+                                    </div>
+
                                 </div>
-                                <div class="mt-3 flex space-x-2">
+
+
+                                <div class="cc-live-actions">
+
+
                                     {% if class.zoom_start_url %}
+
                                         {% if is_live %}
-                                        <a href="{{ class.zoom_start_url }}" target="_blank"
-                                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors duration-200 shadow-sm">
-                                            <i class="bi bi-play-circle mr-2"></i>
-                                            Start Class
-                                        </a>
+
+                                            <a
+                                                href="{{ class.zoom_start_url }}"
+                                                target="_blank"
+                                                class="cc-button cc-button-primary">
+
+                                                <i class="bi bi-play-fill"></i>
+
+                                                Start Class
+
+                                            </a>
+
                                         {% elif is_upcoming %}
-                                        <button class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white cursor-not-allowed opacity-50">
-                                            <i class="bi bi-clock mr-2"></i>
-                                            Starts {{ class_start.strftime('%I:%M %p') }}
-                                        </button>
+
+                                            <span class="cc-button cc-button-disabled">
+
+                                                <i class="bi bi-clock"></i>
+
+                                                Starts {{ class_start.strftime('%I:%M %p') }}
+
+                                            </span>
+
                                         {% else %}
-                                        <button class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white cursor-not-allowed opacity-50">
-                                            <i class="bi bi-x-circle mr-2"></i>
-                                            Class Ended
-                                        </button>
+
+                                            <span class="cc-button cc-button-disabled">
+
+                                                <i class="bi bi-check-circle"></i>
+
+                                                Class Ended
+
+                                            </span>
+
                                         {% endif %}
+
                                     {% else %}
-                                    <button class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white cursor-not-allowed opacity-50">
-                                        <i class="bi bi-link-45deg mr-2"></i>
-                                        No Start Link
-                                    </button>
+
+                                        <span class="cc-button cc-button-disabled">
+
+                                            <i class="bi bi-link-45deg"></i>
+
+                                            No Start Link
+
+                                        </span>
+
                                     {% endif %}
-                                    
+
+
                                     {% if class.zoom_join_url and is_live %}
-                                    <a href="{{ class.zoom_join_url }}" target="_blank"
-                                       class="inline-flex items-center px-3 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 transition-colors duration-200">
-                                        <i class="bi bi-people mr-2"></i>
-                                        Join
-                                    </a>
+
+                                        <a
+                                            href="{{ class.zoom_join_url }}"
+                                            target="_blank"
+                                            class="cc-button cc-button-outline">
+
+                                            <i class="bi bi-people-fill"></i>
+
+                                            Join
+
+                                        </a>
+
                                     {% endif %}
+
+
                                 </div>
+
                             </div>
-                            {% endfor %}
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="cc-empty">
+
+                            <i class="bi bi-camera-video-off cc-empty-icon"></i>
+
+                            <p class="cc-empty-text">
+                                No upcoming live classes
+                            </p>
+
+
+                            <div class="cc-empty-button">
+
+                                <a
+                                    href="{{ url_for('schedule.create_live_class') }}"
+                                    class="cc-button cc-button-primary">
+
+                                    <i class="bi bi-plus-lg"></i>
+
+                                    Schedule Class
+
+                                </a>
+
+                            </div>
+
                         </div>
-                        {% else %}
-                        <div class="text-center py-6">
-                            <i class="bi bi-camera-video-off text-3xl text-gray-300 mb-2"></i>
-                            <p class="text-gray-500 text-sm mb-3">No upcoming live classes</p>
-                            <a href="{{ url_for('schedule.create_live_class') }}" 
-                               class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
-                                Schedule Class
-                            </a>
-                        </div>
-                        {% endif %}
-                    </div>
+
+                    {% endif %}
+
                 </div>
 
-                <!-- System Information -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="bi bi-info-circle mr-2 text-blue-600"></i>
-                            System Information
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Total Requests</span>
-                                <span class="text-sm font-medium text-gray-900">{{ admin_stats.get('total_requests', 0) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Library Resources</span>
-                                <span class="text-sm font-medium text-gray-900">{{ admin_stats.get('total_resources', 0) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Total Live Classes</span>
-                                <span class="text-sm font-medium text-gray-900">{{ admin_stats.get('total_live_classes', 0) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Admin Role</span>
-                                <span class="text-sm font-medium text-gray-900 capitalize">{{ admin_role }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
+
+
+            <!-- SYSTEM INFORMATION -->
+
+            <div class="cc-panel">
+
+                <div class="cc-panel-header">
+
+                    <h3 class="cc-panel-title">
+
+                        <i class="bi bi-info-circle-fill"></i>
+
+                        System Information
+
+                    </h3>
+
+                </div>
+
+
+                <div class="cc-panel-body">
+
+                    <div class="cc-info-list">
+
+
+                        <div class="cc-info-row">
+
+                            <span class="cc-info-label">
+                                Total Requests
+                            </span>
+
+                            <span class="cc-info-value">
+                                {{ admin_stats.get('total_requests', 0) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="cc-info-row">
+
+                            <span class="cc-info-label">
+                                Library Resources
+                            </span>
+
+                            <span class="cc-info-value">
+                                {{ admin_stats.get('total_resources', 0) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="cc-info-row">
+
+                            <span class="cc-info-label">
+                                Total Live Classes
+                            </span>
+
+                            <span class="cc-info-value">
+                                {{ admin_stats.get('total_live_classes', 0) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="cc-info-row">
+
+                            <span class="cc-info-label">
+                                Administrator
+                            </span>
+
+                            <span class="cc-role">
+                                {{ admin_role }}
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
+
     </div>
 
-    <script>
-        // Dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropdownButton = document.querySelector('.dropdown button');
-            const dropdownMenu = document.querySelector('.dropdown-menu');
-            
-            dropdownButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdownMenu.classList.toggle('hidden');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function() {
-                dropdownMenu.classList.add('hidden');
-            });
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const button = document.getElementById("ccAdminButton");
+    const dropdown = document.getElementById("ccDropdown");
+
+    if (button && dropdown) {
+
+        button.addEventListener("click", function (event) {
+
+            event.stopPropagation();
+
+            dropdown.classList.toggle("show");
+
         });
 
-        // Auto-refresh stats every 5 minutes
-        setInterval(function() {
-            fetch('/admin/api/stats')
-                .then(response => response.json())
-                .then(data => {
-                    // Update stats dynamically if needed
-                    console.log('Stats refreshed:', data);
-                })
-                .catch(error => console.error('Error refreshing stats:', error));
-        }, 300000); // 5 minutes
-    </script>
-</body>
-</html>
+
+        document.addEventListener("click", function () {
+
+            dropdown.classList.remove("show");
+
+        });
+
+
+        dropdown.addEventListener("click", function (event) {
+
+            event.stopPropagation();
+
+        });
+
+    }
+
+
+    /*
+     * Background statistics refresh.
+     * This intentionally does not reload the page.
+     */
+
+    setInterval(function () {
+
+        fetch("/admin/api/stats", {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(function (response) {
+
+            if (!response.ok) {
+                throw new Error("Statistics request failed");
+            }
+
+            return response.json();
+
+        })
+        .then(function (data) {
+
+            /*
+             * Reserved for live statistic updates.
+             * Existing dashboard values remain untouched.
+             */
+
+        })
+        .catch(function () {
+
+            /*
+             * Silent failure.
+             * The dashboard should continue working
+             * even when the background request fails.
+             */
+
+        });
+
+    }, 300000);
+
+});
+</script>
+
 {% endblock %}

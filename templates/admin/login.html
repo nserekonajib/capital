@@ -1,24 +1,503 @@
-{% extends "admin/base.html" %}
-{% block content %}
-<div class="bg-white shadow-lg rounded-lg p-8 max-w-md mx-auto">
-  <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">Admin Login</h2>
-  <form method="POST" class="space-y-4">
-    <div>
-      <label class="block mb-1 text-gray-700">Email</label>
-      <input type="email" name="email" required
-             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Login</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-card {
+            animation: cardIn .65s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        .logo {
+            animation: logoIn .7s cubic-bezier(.22, 1, .36, 1);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes logoIn {
+            from {
+                opacity: 0;
+                transform: scale(.7);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .input-wrapper:focus-within {
+            border-color: rgb(37 99 235);
+            box-shadow: 0 0 0 4px rgb(37 99 235 / 8%);
+            background: white;
+        }
+
+        .input-wrapper:focus-within svg {
+            color: rgb(37 99 235);
+        }
+
+        .login-btn {
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                background .2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 25px rgb(37 99 235 / 20%);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .background-circle {
+            position: absolute;
+            border-radius: 9999px;
+            pointer-events: none;
+            filter: blur(80px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-50 overflow-x-hidden">
+
+    <!-- Decorative Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+
+        <div
+            class="background-circle w-[420px] h-[420px]
+                   bg-blue-100/70
+                   -top-48 -right-48">
+        </div>
+
+        <div
+            class="background-circle w-[380px] h-[380px]
+                   bg-indigo-100/60
+                   -bottom-48 -left-48">
+        </div>
+
     </div>
 
-    <div>
-      <label class="block mb-1 text-gray-700">Password</label>
-      <input type="password" name="password" required
-             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
-    </div>
 
-    <button type="submit"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-      Login
-    </button>
-  </form>
-</div>
-{% endblock %}
+    <!-- Main Container -->
+    <main class="relative min-h-screen flex items-center justify-center px-5 py-10">
+
+        <div class="w-full max-w-[430px]">
+
+            <!-- Login Card -->
+            <div
+                class="login-card bg-white rounded-[28px]
+                       border border-slate-200/80
+                       shadow-[0_20px_70px_rgba(15,23,42,0.08)]
+                       overflow-hidden">
+
+                <!-- Header -->
+                <div class="px-8 sm:px-10 pt-10 pb-7 text-center">
+
+                    <!-- Logo -->
+                    <div class="logo flex justify-center mb-6">
+
+                        <div
+                            class="w-24 h-24 sm:w-28 sm:h-28
+                                   rounded-[24px]
+                                   bg-white
+                                   border border-slate-100
+                                   shadow-[0_12px_35px_rgba(15,23,42,0.10)]
+                                   p-4
+                                   flex items-center justify-center">
+
+                            <img
+                                src="https://ik.imagekit.io/rkdq3vbqs/j3cu5h2a_400x400%20(2)-modified.png?updatedAt=1750592971414"
+                                alt="Company Logo"
+                                class="w-full h-full object-contain"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Title -->
+                    <h1
+                        class="text-[27px] sm:text-[30px]
+                               font-extrabold
+                               tracking-tight
+                               text-slate-900">
+
+                        Welcome back
+
+                    </h1>
+
+
+                    <p class="mt-2 text-sm sm:text-[15px] text-slate-500">
+
+                        Sign in to your administrator account
+
+                    </p>
+
+                </div>
+
+
+                <!-- Form -->
+                <div class="px-8 sm:px-10 pb-9">
+
+                    <form method="POST" class="space-y-5">
+
+                        <!-- Email -->
+                        <div>
+
+                            <label
+                                for="email"
+                                class="block text-sm font-semibold text-slate-700 mb-2">
+
+                                Email address
+
+                            </label>
+
+
+                            <div
+                                class="input-wrapper
+                                       flex items-center
+                                       w-full
+                                       h-[52px]
+                                       bg-slate-50
+                                       border border-slate-200
+                                       rounded-xl
+                                       transition-all duration-200">
+
+                                <!-- Icon -->
+                                <div class="pl-4 pr-3">
+
+                                    <svg
+                                        class="w-[19px] h-[19px] text-slate-400 transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    required
+                                    autocomplete="email"
+                                    placeholder="Enter your email"
+                                    class="flex-1 h-full
+                                           bg-transparent
+                                           border-0
+                                           outline-none
+                                           text-sm
+                                           text-slate-900
+                                           placeholder:text-slate-400
+                                           pr-4"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Password -->
+                        <div>
+
+                            <div class="flex items-center justify-between mb-2">
+
+                                <label
+                                    for="password"
+                                    class="text-sm font-semibold text-slate-700">
+
+                                    Password
+
+                                </label>
+
+                            </div>
+
+
+                            <div
+                                class="input-wrapper
+                                       flex items-center
+                                       w-full
+                                       h-[52px]
+                                       bg-slate-50
+                                       border border-slate-200
+                                       rounded-xl
+                                       transition-all duration-200">
+
+                                <!-- Lock Icon -->
+                                <div class="pl-4 pr-3">
+
+                                    <svg
+                                        class="w-[19px] h-[19px] text-slate-400 transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+
+                                    </svg>
+
+                                </div>
+
+
+                                <input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    placeholder="Enter your password"
+                                    class="flex-1 h-full
+                                           bg-transparent
+                                           border-0
+                                           outline-none
+                                           text-sm
+                                           text-slate-900
+                                           placeholder:text-slate-400"
+                                >
+
+
+                                <!-- Password Toggle -->
+                                <button
+                                    type="button"
+                                    onclick="togglePassword()"
+                                    aria-label="Show password"
+                                    class="px-4
+                                           text-slate-400
+                                           hover:text-slate-600
+                                           transition-colors">
+
+                                    <svg
+                                        id="eye-open"
+                                        class="w-[19px] h-[19px]"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/>
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+                                    </svg>
+
+
+                                    <svg
+                                        id="eye-closed"
+                                        class="w-[19px] h-[19px] hidden"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.8"
+                                            d="M3 3l18 18M10.584 10.587a2 2 0 002.829 2.828M9.88 4.24A9.97 9.97 0 0112 4c4.478 0 8.269 2.943 9.543 7a10.05 10.05 0 01-4.132 5.411M6.228 6.228A9.958 9.958 0 002.457 11c.574 1.827 1.7 3.43 3.228 4.772"/>
+
+                                    </svg>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Login -->
+                        <button
+                            type="submit"
+                            class="login-btn
+                                   w-full
+                                   h-[52px]
+                                   mt-2
+                                   flex items-center
+                                   justify-center
+                                   gap-2
+                                   rounded-xl
+                                   bg-blue-600
+                                   hover:bg-blue-700
+                                   text-white
+                                   text-sm
+                                   font-bold">
+
+                            <span>
+                                Sign in
+                            </span>
+
+
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+
+                            </svg>
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- Security Footer -->
+                <div
+                    class="px-8 py-5
+                           bg-slate-50
+                           border-t border-slate-100
+                           text-center">
+
+                    <div
+                        class="flex items-center
+                               justify-center
+                               gap-2
+                               text-xs
+                               text-slate-400">
+
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24">
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+
+                        </svg>
+
+                        <span>
+                            Secure administrator access
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Copyright -->
+            <div class="text-center mt-6">
+
+                <p class="text-xs text-slate-400">
+                    © 2026 All rights reserved.
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- Password Script -->
+    <script>
+
+        function togglePassword() {
+
+            const password =
+                document.getElementById("password");
+
+            const open =
+                document.getElementById("eye-open");
+
+            const closed =
+                document.getElementById("eye-closed");
+
+
+            if (password.type === "password") {
+
+                password.type = "text";
+
+                open.classList.add("hidden");
+                closed.classList.remove("hidden");
+
+            } else {
+
+                password.type = "password";
+
+                open.classList.remove("hidden");
+                closed.classList.add("hidden");
+
+            }
+
+        }
+
+    </script>
+
+</body>
+</html>
