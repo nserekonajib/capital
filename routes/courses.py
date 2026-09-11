@@ -42,19 +42,50 @@ def get_user_enrolled_courses(user_id):
     except Exception as e:
         logger.error(f"Error fetching enrolled courses: {e}")
         return []
-
 def get_course_lectures(course_id):
-    """Get all lectures for a specific course ordered by lecture_number"""
+    """Get all lectures for a specific course ordered by lecture_number (numeric sort)"""
     try:
         response = supabase.table('lectures')\
             .select('*')\
             .eq('course_id', course_id)\
-            .order('lecture_number')\
             .execute()
         
-        if response.data:
-            return response.data
-        return []
+        lectures = response.data if response.data else []
+        
+        # Sort numerically by extracting number from lecture_number or title
+        def extract_lecture_num(lecture):
+            # Try lecture_number first
+            lecture_num = lecture.get('lecture_number')
+            if lecture_num is not None:
+                try:
+                    # If it's already a number
+                    if isinstance(lecture_num, (int, float)):
+                        return int(lecture_num)
+                    # If it's a string, extract digits
+                    digits = ''.join(ch for ch in str(lecture_num) if ch.isdigit())
+                    if digits:
+                        return int(digits)
+                except (ValueError, TypeError):
+                    pass
+            
+            # Fallback: try to extract from title (e.g., "TAXATION CLASS 05WD" -> 5)
+            title = lecture.get('title', '')
+            import re
+            match = re.search(r'(\d+)', title)
+            if match:
+                return int(match.group(1))
+            
+            # Last resort: use created_at order
+            return 999999
+        
+        lectures.sort(key=extract_lecture_num)
+        
+        # Also reassign lecture_number for display consistency
+        for idx, lecture in enumerate(lectures, start=1):
+            if not lecture.get('lecture_number'):
+                lecture['lecture_number'] = idx
+        
+        return lectures
     except Exception as e:
         logger.error(f"Error fetching lectures for course {course_id}: {e}")
         return []
