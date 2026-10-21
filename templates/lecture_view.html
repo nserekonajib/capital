@@ -9,15 +9,12 @@
 
 <style>
 /* =========================================================
-   CAPITAL COLLEGE — LECTURE PLAYER
-   Professional Dark Navy / Blue UI
+   CAPITAL COLLEGE — LECTURE PLAYER (NATIVE YOUTUBE CONTROLS)
    ========================================================= */
 
 :root {
     --cc-bg: #07111f;
-    --cc-bg-soft: #0a1728;
     --cc-card: #0d1b2d;
-    --cc-card-light: #102238;
 
     --cc-blue: #2563eb;
     --cc-blue-light: #3b82f6;
@@ -25,17 +22,12 @@
 
     --cc-blue-soft: rgba(37, 99, 235, 0.10);
     --cc-blue-border: rgba(59, 130, 246, 0.25);
-    --cc-blue-glow: rgba(37, 99, 235, 0.25);
 
     --cc-white: #ffffff;
     --cc-text: #e7edf7;
     --cc-text-soft: #a9b7ca;
-    --cc-muted: #6f8097;
 
     --cc-border: rgba(255, 255, 255, 0.07);
-    --cc-border-hover: rgba(255, 255, 255, 0.13);
-
-    --cc-danger: #ef4444;
 
     --cc-radius: 14px;
     --cc-radius-sm: 9px;
@@ -76,9 +68,6 @@
     position: relative;
 }
 
-
-/* subtle professional background */
-
 .lecture-page::before {
     content: "";
     position: fixed;
@@ -86,20 +75,12 @@
     pointer-events: none;
 
     background-image:
-        linear-gradient(
-            rgba(255,255,255,0.018) 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            rgba(255,255,255,0.018) 1px,
-            transparent 1px
-        );
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
 
     background-size: 60px 60px;
     z-index: 0;
 }
-
 
 .lecture-container {
     position: relative;
@@ -142,16 +123,12 @@
         transform 0.2s ease;
 }
 
-
 .back-link:hover {
     color: var(--cc-white);
-
     background: var(--cc-blue-soft);
     border-color: var(--cc-blue-border);
-
     transform: translateX(-3px);
 }
-
 
 .back-link i {
     color: var(--cc-blue-light);
@@ -177,7 +154,6 @@
 
     margin-bottom: 22px;
 }
-
 
 .player-card::before {
     content: "";
@@ -219,12 +195,11 @@
 
 
 /* =========================================================
-   YOUTUBE IFRAME
-   IMPORTANT:
-   pointer-events NONE prevents clicking links inside video.
+   YOUTUBE IFRAME — NATIVE CONTROLS ENABLED
    ========================================================= */
 
-#player {
+#player,
+#player iframe {
     position: absolute;
 
     inset: 0;
@@ -234,204 +209,7 @@
 
     border: 0;
 
-    pointer-events: none;
-
-    user-select: none;
-
     z-index: 1;
-}
-
-
-/* =========================================================
-   TRANSPARENT VIDEO INTERACTION OVERLAY
-   ========================================================= */
-
-.video-interaction-layer {
-    position: absolute;
-
-    inset: 0;
-
-    z-index: 5;
-
-    background: transparent;
-
-    cursor: pointer;
-
-    -webkit-user-select: none;
-    user-select: none;
-
-    -webkit-touch-callout: none;
-}
-
-
-/*
-   Only the central button is visible.
-   The rest of this layer remains completely transparent.
- */
-
-.center-play-button {
-    position: absolute;
-
-    top: 50%;
-    left: 50%;
-
-    width: 76px;
-    height: 76px;
-
-    transform: translate(-50%, -50%);
-
-    border: 1px solid rgba(255,255,255,0.18);
-
-    border-radius: 50%;
-
-    background: rgba(7, 17, 31, 0.72);
-
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: white;
-
-    cursor: pointer;
-
-    opacity: 0;
-
-    transition:
-        opacity 0.25s ease,
-        transform 0.25s ease,
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
-
-    pointer-events: auto;
-
-    box-shadow:
-        0 10px 35px rgba(0,0,0,0.35);
-}
-
-
-.center-play-button i {
-    font-size: 27px;
-
-    margin-left: 3px;
-
-    color: #ffffff;
-
-    transition: transform 0.2s ease;
-}
-
-
-.center-play-button.visible {
-    opacity: 1;
-}
-
-
-.center-play-button:hover {
-    transform:
-        translate(-50%, -50%)
-        scale(1.07);
-
-    background: rgba(37, 99, 235, 0.90);
-
-    border-color: rgba(255,255,255,0.35);
-
-    box-shadow:
-        0 0 0 8px rgba(37,99,235,0.10),
-        0 15px 45px rgba(0,0,0,0.45);
-}
-
-
-.center-play-button:hover i {
-    transform: scale(1.08);
-}
-
-
-/*
-   When video is playing we show the pause control
-   briefly when hovering over the video.
- */
-
-.video-interaction-layer:hover .center-play-button.playing {
-    opacity: 1;
-}
-
-
-.center-play-button.playing {
-    opacity: 0;
-}
-
-
-.center-play-button.playing i {
-    margin-left: 0;
-}
-
-
-/* =========================================================
-   LOADING
-   ========================================================= */
-
-.player-loading {
-    position: absolute;
-
-    inset: 0;
-
-    z-index: 10;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-direction: column;
-
-    gap: 13px;
-
-    background: #050a12;
-
-    transition:
-        opacity 0.35s ease,
-        visibility 0.35s ease;
-}
-
-
-.player-loading.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-
-.spinner {
-    width: 42px;
-    height: 42px;
-
-    border-radius: 50%;
-
-    border:
-        3px solid rgba(255,255,255,0.08);
-
-    border-top-color: var(--cc-blue-light);
-
-    animation:
-        lecture-spin 0.8s linear infinite;
-}
-
-
-@keyframes lecture-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-
-.player-loading span {
-    color: var(--cc-muted);
-
-    font-size: 12px;
-
-    letter-spacing: 0.03em;
 }
 
 
@@ -440,323 +218,25 @@
    ========================================================= */
 
 .player-error {
-    color: var(--cc-danger) !important;
-    font-weight: 600;
-}
-
-
-/* =========================================================
-   VIDEO CONTROLS
-   ========================================================= */
-
-.controls-bar {
-    position: relative;
-
-    z-index: 15;
-
-    height: 58px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-
-    padding: 0 15px;
-
-    background:
-        linear-gradient(
-            180deg,
-            #0c1828,
-            #091522
-        );
-
-    border-top: 1px solid var(--cc-border);
-}
-
-
-/* buttons */
-
-.player-btn {
-    width: 34px;
-    height: 34px;
-
-    flex: 0 0 auto;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
 
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+    gap: 13px;
 
-    border: 0;
-    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
 
-    background: transparent;
+    background: #050a12;
 
-    color: var(--cc-text-soft);
+    color: #ef4444;
 
-    cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-
-.player-btn:hover {
-    color: #ffffff;
-
-    background: rgba(37, 99, 235, 0.12);
-
-    transform: translateY(-1px);
-}
-
-
-.player-btn:active {
-    transform: scale(0.94);
-}
-
-
-.player-btn i {
-    font-size: 14px;
-}
-
-
-/* separator */
-
-.control-separator {
-    width: 1px;
-    height: 22px;
-
-    background: var(--cc-border);
-
-    flex: 0 0 auto;
-}
-
-
-/* =========================================================
-   VOLUME
-   ========================================================= */
-
-.volume-group {
-    display: flex;
-    align-items: center;
-
-    gap: 5px;
-
-    flex: 0 0 auto;
-}
-
-
-.volume-slider {
-    width: 72px;
-}
-
-
-/* =========================================================
-   SEEK
-   ========================================================= */
-
-.seek-group {
-    flex: 1;
-
-    min-width: 80px;
-
-    display: flex;
-    align-items: center;
-}
-
-
-.seek-slider {
-    width: 100%;
-}
-
-
-/* =========================================================
-   RANGE SLIDERS
-   ========================================================= */
-
-.player-slider {
-    appearance: none;
-    -webkit-appearance: none;
-
-    height: 4px;
-
-    border-radius: 20px;
-
-    outline: none;
-
-    cursor: pointer;
-
-    background:
-        linear-gradient(
-            to right,
-            var(--cc-blue) 0%,
-            var(--cc-blue) 0%,
-            rgba(255,255,255,0.08) 0%,
-            rgba(255,255,255,0.08) 100%
-        );
-}
-
-
-.player-slider::-webkit-slider-thumb {
-    appearance: none;
-    -webkit-appearance: none;
-
-    width: 12px;
-    height: 12px;
-
-    border-radius: 50%;
-
-    border: 2px solid #ffffff;
-
-    background: var(--cc-blue);
-
-    cursor: pointer;
-
-    box-shadow:
-        0 0 0 3px rgba(37,99,235,0.15);
-
-    transition:
-        transform 0.15s ease;
-}
-
-
-.player-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.18);
-}
-
-
-.player-slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-
-    border-radius: 50%;
-
-    border: 2px solid #ffffff;
-
-    background: var(--cc-blue);
-
-    cursor: pointer;
-}
-
-
-/* =========================================================
-   TIME
-   ========================================================= */
-
-.video-time {
-    display: flex;
-    align-items: center;
-
-    gap: 4px;
-
-    flex: 0 0 auto;
-
-    color: var(--cc-muted);
-
-    font-size: 11px;
-
-    font-variant-numeric: tabular-nums;
-
-    white-space: nowrap;
-}
-
-
-.video-time #currentTime {
-    color: var(--cc-text);
-}
-
-
-/* =========================================================
-   SPEED
-   ========================================================= */
-
-.speed-select {
-    height: 32px;
-
-    padding: 0 8px;
-
-    border:
-        1px solid var(--cc-border);
-
-    border-radius: 7px;
-
-    background: var(--cc-card);
-
-    color: var(--cc-text-soft);
-
-    outline: none;
-
-    font-size: 11px;
-
-    cursor: pointer;
-}
-
-
-.speed-select:hover,
-.speed-select:focus {
-    border-color: var(--cc-blue-border);
-
-    color: #ffffff;
-}
-
-
-.speed-select option {
-    background: var(--cc-card);
-    color: #ffffff;
-}
-
-
-/* =========================================================
-   FULLSCREEN
-   ========================================================= */
-
-.fullscreen-btn {
-    margin-left: 2px;
-}
-
-
-/* =========================================================
-   FULLSCREEN PLAYER
-   ========================================================= */
-
-.player-card:fullscreen,
-.player-card:-webkit-full-screen {
-    width: 100vw !important;
-    height: 100vh !important;
-
-    max-width: none !important;
-    max-height: none !important;
-
-    margin: 0 !important;
-
-    border-radius: 0 !important;
-
-    background: #000;
-}
-
-
-.player-card:fullscreen .video-wrapper,
-.player-card:-webkit-full-screen .video-wrapper {
-    height: calc(100vh - 58px);
-
-    aspect-ratio: auto;
-}
-
-
-.player-card:fullscreen #player,
-.player-card:-webkit-full-screen #player {
-    height: 100%;
-}
-
-
-.player-card:fullscreen .controls-bar,
-.player-card:-webkit-full-screen .controls-bar {
-    position: absolute;
-
-    left: 0;
-    right: 0;
-    bottom: 0;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 
@@ -774,15 +254,12 @@
             rgba(9,21,34,0.98)
         );
 
-    border:
-        1px solid var(--cc-border);
+    border: 1px solid var(--cc-border);
 
     border-radius: var(--cc-radius);
 
-    box-shadow:
-        0 12px 40px rgba(0,0,0,0.20);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.20);
 }
-
 
 .lecture-title {
     margin: 0 0 11px;
@@ -798,7 +275,6 @@
     letter-spacing: -0.025em;
 }
 
-
 .lecture-meta {
     display: flex;
     align-items: center;
@@ -810,7 +286,6 @@
     margin-bottom: 19px;
 }
 
-
 .lecture-badge {
     display: inline-flex;
     align-items: center;
@@ -819,8 +294,7 @@
 
     border-radius: 6px;
 
-    border:
-        1px solid var(--cc-blue-border);
+    border: 1px solid var(--cc-blue-border);
 
     background: var(--cc-blue-soft);
 
@@ -835,13 +309,11 @@
     text-transform: uppercase;
 }
 
-
 .lecture-course {
     color: var(--cc-text-soft);
 
     font-size: 13px;
 }
-
 
 .lecture-course i {
     color: var(--cc-blue-light);
@@ -857,10 +329,8 @@
 .lecture-description {
     padding-top: 19px;
 
-    border-top:
-        1px solid var(--cc-border);
+    border-top: 1px solid var(--cc-border);
 }
-
 
 .lecture-description h3 {
     margin: 0 0 8px;
@@ -871,7 +341,6 @@
 
     font-weight: 650;
 }
-
 
 .lecture-description p {
     margin: 0;
@@ -903,10 +372,8 @@
 
     padding-top: 19px;
 
-    border-top:
-        1px solid var(--cc-border);
+    border-top: 1px solid var(--cc-border);
 }
-
 
 .nav-link {
     display: inline-flex;
@@ -920,9 +387,7 @@
 
     padding: 8px 15px;
 
-    border:
-        1px solid var(--cc-border);
-
+    border: 1px solid var(--cc-border);
     border-radius: 8px;
 
     background: rgba(255,255,255,0.015);
@@ -943,7 +408,6 @@
         box-shadow 0.2s ease;
 }
 
-
 .nav-link:hover {
     color: #ffffff;
 
@@ -954,40 +418,23 @@
     transform: translateY(-1px);
 }
 
-
 .nav-link.primary {
     color: #ffffff;
 
-    background:
-        linear-gradient(
-            135deg,
-            var(--cc-blue),
-            var(--cc-blue-dark)
-        );
+    background: linear-gradient(135deg, var(--cc-blue), var(--cc-blue-dark));
 
-    border-color:
-        rgba(96,165,250,0.35);
+    border-color: rgba(96,165,250,0.35);
 
-    box-shadow:
-        0 5px 18px rgba(37,99,235,0.16);
+    box-shadow: 0 5px 18px rgba(37,99,235,0.16);
 }
-
 
 .nav-link.primary:hover {
-    background:
-        linear-gradient(
-            135deg,
-            var(--cc-blue-light),
-            var(--cc-blue)
-        );
+    background: linear-gradient(135deg, var(--cc-blue-light), var(--cc-blue));
 
-    border-color:
-        rgba(147,197,253,0.45);
+    border-color: rgba(147,197,253,0.45);
 
-    box-shadow:
-        0 8px 24px rgba(37,99,235,0.24);
+    box-shadow: 0 8px 24px rgba(37,99,235,0.24);
 }
-
 
 .nav-link.disabled {
     opacity: 0.3;
@@ -1003,45 +450,8 @@
    ========================================================= */
 
 @media (max-width: 768px) {
-
     .lecture-page {
         padding: 13px;
-    }
-
-    .controls-bar {
-        height: auto;
-
-        min-height: 54px;
-
-        padding: 8px 10px;
-
-        gap: 5px;
-
-        overflow-x: auto;
-
-        scrollbar-width: none;
-    }
-
-    .controls-bar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .player-btn {
-        width: 31px;
-        height: 31px;
-    }
-
-    .volume-slider {
-        width: 48px;
-    }
-
-    .video-time {
-        font-size: 10px;
-    }
-
-    .speed-select {
-        height: 30px;
-        font-size: 10px;
     }
 
     .lecture-details {
@@ -1064,20 +474,9 @@
     .nav-link {
         width: 100%;
     }
-
-    .center-play-button {
-        width: 62px;
-        height: 62px;
-    }
-
-    .center-play-button i {
-        font-size: 22px;
-    }
 }
 
-
 @media (max-width: 480px) {
-
     .lecture-page {
         padding: 9px;
     }
@@ -1088,36 +487,6 @@
 
     .player-card {
         border-radius: 10px;
-    }
-
-    .controls-bar {
-        min-height: 50px;
-
-        padding: 7px 8px;
-    }
-
-    .control-separator {
-        height: 18px;
-    }
-
-    .volume-group {
-        gap: 1px;
-    }
-
-    .volume-slider {
-        width: 38px;
-    }
-
-    .seek-group {
-        min-width: 55px;
-    }
-
-    .video-time {
-        font-size: 9px;
-    }
-
-    .speed-select {
-        padding: 0 5px;
     }
 
     .lecture-details {
@@ -1140,11 +509,6 @@
         grid-column: auto;
         grid-row: auto;
     }
-
-    .center-play-button {
-        width: 56px;
-        height: 56px;
-    }
 }
 
 
@@ -1156,18 +520,15 @@
     width: 5px;
 }
 
-
 .lecture-page::-webkit-scrollbar-track {
     background: var(--cc-bg);
 }
-
 
 .lecture-page::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.08);
 
     border-radius: 10px;
 }
-
 
 .lecture-page::-webkit-scrollbar-thumb:hover {
     background: var(--cc-blue);
@@ -1178,11 +539,8 @@
    ACCESSIBILITY
    ========================================================= */
 
-.player-btn:focus-visible,
 .nav-link:focus-visible,
-.back-link:focus-visible,
-.speed-select:focus-visible,
-.center-play-button:focus-visible {
+.back-link:focus-visible {
     outline: 2px solid var(--cc-blue-light);
 
     outline-offset: 2px;
@@ -1194,218 +552,32 @@
 
     <div class="lecture-container">
 
-        <!-- =====================================================
-             BACK
-             ===================================================== -->
-
+        <!-- BACK -->
         <a
             href="{{ url_for('my_courses.course_detail', course_id=course.id) }}"
             class="back-link"
-            onclick="return pauseBeforeNavigate(event)"
         >
             <i class="fas fa-arrow-left"></i>
             <span>Back to Course</span>
         </a>
 
 
-        <!-- =====================================================
-             PLAYER
-             ===================================================== -->
+        <!-- PLAYER -->
+        <div class="player-card" id="playerCard" data-source="sch.capitalcollege.ac.ug">
 
-        <div
-            class="player-card"
-            id="playerCard"
-            data-source="sch.capitalcollege.ac.ug"
-        >
-
-            <div
-                class="video-wrapper"
-                id="videoWrapper"
-            >
-
-                <!-- Loading -->
-
-                <div
-                    class="player-loading"
-                    id="playerLoading"
-                >
-                    <div class="spinner"></div>
-
-                    <span>
-                        Loading lecture...
-                    </span>
-                </div>
-
-
-                <!-- YouTube player -->
-
+            <div class="video-wrapper" id="videoWrapper">
                 <div id="player"></div>
-
-
-                <!-- =================================================
-                     FULL TRANSPARENT PROTECTION / CONTROL LAYER
-
-                     This sits above YouTube.
-
-                     YouTube iframe itself has pointer-events:none,
-                     therefore links inside the actual video cannot
-                     be clicked.
-
-                     The transparent layer captures the interaction.
-                     ================================================= -->
-
-                <div
-                    class="video-interaction-layer"
-                    id="videoInteractionLayer"
-                    aria-label="Video playback controls"
-                    role="button"
-                    tabindex="0"
-                >
-
-                    <button
-                        type="button"
-                        class="center-play-button visible"
-                        id="centerPlayButton"
-                        aria-label="Play video"
-                    >
-                        <i class="fas fa-play"></i>
-                    </button>
-
-                </div>
-
-
-                <!-- =================================================
-                     CONTROLS
-                     ================================================= -->
-
-                <div class="controls-bar">
-
-                    <!-- Play / Pause -->
-
-                    <button
-                        type="button"
-                        id="playPauseBtn"
-                        class="player-btn"
-                        title="Play / Pause"
-                        aria-label="Play / Pause"
-                    >
-                        <i class="fas fa-play"></i>
-                    </button>
-
-
-                    <div class="control-separator"></div>
-
-
-                    <!-- Volume -->
-
-                    <div class="volume-group">
-
-                        <button
-                            type="button"
-                            id="muteBtn"
-                            class="player-btn"
-                            title="Mute / Unmute"
-                            aria-label="Mute / Unmute"
-                        >
-                            <i class="fas fa-volume-high"></i>
-                        </button>
-
-                        <input
-                            type="range"
-                            id="volumeSlider"
-                            class="player-slider volume-slider"
-                            min="0"
-                            max="100"
-                            value="80"
-                            aria-label="Volume"
-                        >
-
-                    </div>
-
-
-                    <div class="control-separator"></div>
-
-
-                    <!-- Seek -->
-
-                    <div class="seek-group">
-
-                        <input
-                            type="range"
-                            id="seekBar"
-                            class="player-slider seek-slider"
-                            min="0"
-                            max="100"
-                            value="0"
-                            aria-label="Video progress"
-                        >
-
-                    </div>
-
-
-                    <!-- Time -->
-
-                    <div class="video-time">
-
-                        <span id="currentTime">0:00</span>
-
-                        <span>/</span>
-
-                        <span id="duration">0:00</span>
-
-                    </div>
-
-
-                    <div class="control-separator"></div>
-
-
-                    <!-- Speed -->
-
-                    <select
-                        id="playbackSpeed"
-                        class="speed-select"
-                        title="Playback speed"
-                        aria-label="Playback speed"
-                    >
-                        <option value="0.5">0.5×</option>
-                        <option value="0.75">0.75×</option>
-                        <option value="1" selected>1×</option>
-                        <option value="1.25">1.25×</option>
-                        <option value="1.5">1.5×</option>
-                        <option value="1.75">1.75×</option>
-                        <option value="2">2×</option>
-                    </select>
-
-
-                    <!-- Fullscreen -->
-
-                    <button
-                        type="button"
-                        id="fullscreenBtn"
-                        class="player-btn fullscreen-btn"
-                        title="Fullscreen"
-                        aria-label="Fullscreen"
-                    >
-                        <i class="fas fa-expand"></i>
-                    </button>
-
-                </div>
-
             </div>
 
         </div>
 
 
-        <!-- =====================================================
-             LECTURE INFORMATION
-             ===================================================== -->
-
+        <!-- LECTURE INFORMATION -->
         <div class="lecture-details">
 
             <h1 class="lecture-title">
                 {{ lecture.title }}
             </h1>
-
 
             <div class="lecture-meta">
 
@@ -1422,59 +594,35 @@
 
 
             {% if lecture.description %}
-
             <div class="lecture-description">
-
-                <h3>
-                    About this lecture
-                </h3>
-
-                <p>
-                    {{ lecture.description }}
-                </p>
-
+                <h3>About this lecture</h3>
+                <p>{{ lecture.description }}</p>
             </div>
-
             {% endif %}
 
 
-            <!-- =================================================
-                 NAVIGATION
-                 ================================================= -->
-
+            <!-- NAVIGATION -->
             <div class="nav-links">
 
                 {% if current_index > 0 %}
-
                 <a
-                    href="{{ url_for(
-                        'my_courses.view_lecture',
-                        lecture_id=all_lectures[current_index - 1].id
-                    ) }}"
+                    href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index - 1].id) }}"
                     class="nav-link"
-                    onclick="return pauseBeforeNavigate(event)"
                 >
                     <i class="fas fa-chevron-left"></i>
                     Previous
                 </a>
-
                 {% else %}
-
                 <span class="nav-link disabled">
                     <i class="fas fa-chevron-left"></i>
                     Previous
                 </span>
-
                 {% endif %}
 
 
                 <a
-                    href="{{ url_for(
-                        'my_courses.course_detail',
-                        course_id=course.id
-                    ) }}"
+                    href="{{ url_for('my_courses.course_detail', course_id=course.id) }}"
                     class="nav-link primary"
-                    onclick="return pauseBeforeNavigate(event)"
                 >
                     <i class="fas fa-layer-group"></i>
                     All Lectures
@@ -1482,26 +630,18 @@
 
 
                 {% if current_index < all_lectures|length - 1 %}
-
                 <a
-                    href="{{ url_for(
-                        'my_courses.view_lecture',
-                        lecture_id=all_lectures[current_index + 1].id
-                    ) }}"
+                    href="{{ url_for('my_courses.view_lecture', lecture_id=all_lectures[current_index + 1].id) }}"
                     class="nav-link primary"
-                    onclick="return pauseBeforeNavigate(event)"
                 >
                     Next
                     <i class="fas fa-chevron-right"></i>
                 </a>
-
                 {% else %}
-
                 <span class="nav-link disabled">
                     Next
                     <i class="fas fa-chevron-right"></i>
                 </span>
-
                 {% endif %}
 
             </div>
@@ -1513,10 +653,7 @@
 </div>
 
 
-<!-- =========================================================
-     FONT AWESOME
-     ========================================================= -->
-
+<!-- FONT AWESOME -->
 <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
@@ -1525,9 +662,7 @@
 
 <script>
 (function () {
-
     "use strict";
-
 
     /* =========================================================
        CONFIGURATION
@@ -1536,9 +671,7 @@
     const SOURCE = "sch.capitalcollege.ac.ug";
 
 
-    /*
-       Extract YouTube video ID safely.
-    */
+    /* Extract YouTube video ID safely */
 
     {% if lecture.youtube_link %}
 
@@ -1558,7 +691,6 @@
 
     {% endif %}
 
-
     const VIDEO_ID = "{{ video_id }}";
 
 
@@ -1566,59 +698,11 @@
        ELEMENTS
        ========================================================= */
 
-    const playerCard =
-        document.getElementById("playerCard");
+    const playerCard   = document.getElementById("playerCard");
+    const videoWrapper = document.getElementById("videoWrapper");
 
-    const videoWrapper =
-        document.getElementById("videoWrapper");
-
-    const interactionLayer =
-        document.getElementById("videoInteractionLayer");
-
-    const centerPlayButton =
-        document.getElementById("centerPlayButton");
-
-    const playPauseBtn =
-        document.getElementById("playPauseBtn");
-
-    const muteBtn =
-        document.getElementById("muteBtn");
-
-    const volumeSlider =
-        document.getElementById("volumeSlider");
-
-    const seekBar =
-        document.getElementById("seekBar");
-
-    const playbackSpeed =
-        document.getElementById("playbackSpeed");
-
-    const fullscreenBtn =
-        document.getElementById("fullscreenBtn");
-
-    const currentTimeEl =
-        document.getElementById("currentTime");
-
-    const durationEl =
-        document.getElementById("duration");
-
-    const loadingEl =
-        document.getElementById("playerLoading");
-
-
-    /* =========================================================
-       STATE
-       ========================================================= */
-
-    let player = null;
-
+    let player  = null;
     let isReady = false;
-
-    let duration = 0;
-
-    let lastVolume = 80;
-
-    let isPlaying = false;
 
 
     /* =========================================================
@@ -1631,276 +715,73 @@
 
 
     /* =========================================================
-       TIME FORMATTER
-       ========================================================= */
-
-    function formatTime(seconds) {
-
-        if (
-            !seconds ||
-            Number.isNaN(seconds) ||
-            seconds < 0
-        ) {
-            return "0:00";
-        }
-
-        const hours =
-            Math.floor(seconds / 3600);
-
-        const minutes =
-            Math.floor((seconds % 3600) / 60);
-
-        const secs =
-            Math.floor(seconds % 60)
-                .toString()
-                .padStart(2, "0");
-
-
-        if (hours > 0) {
-
-            return (
-                hours +
-                ":" +
-                minutes.toString().padStart(2, "0") +
-                ":" +
-                secs
-            );
-
-        }
-
-
-        return minutes + ":" + secs;
-    }
-
-
-    /* =========================================================
-       SLIDER FILL
-       ========================================================= */
-
-    function updateSliderFill(slider) {
-
-        if (!slider) {
-            return;
-        }
-
-        const min =
-            parseFloat(slider.min || 0);
-
-        const max =
-            parseFloat(slider.max || 100);
-
-        const value =
-            parseFloat(slider.value || 0);
-
-        const percentage =
-            max > min
-                ? ((value - min) / (max - min)) * 100
-                : 0;
-
-
-        slider.style.background =
-            `
-            linear-gradient(
-                to right,
-                #2563eb 0%,
-                #2563eb ${percentage}%,
-                rgba(255,255,255,0.08) ${percentage}%,
-                rgba(255,255,255,0.08) 100%
-            )
-            `;
-    }
-
-
-    /* =========================================================
-       UPDATE PLAY BUTTONS
-       ========================================================= */
-
-    function updatePlayButtons() {
-
-        if (!player || !isReady) {
-            return;
-        }
-
-
-        const state =
-            player.getPlayerState();
-
-
-        if (state === YT.PlayerState.PLAYING) {
-
-            isPlaying = true;
-
-
-            playPauseBtn.innerHTML =
-                '<i class="fas fa-pause"></i>';
-
-            playPauseBtn.setAttribute(
-                "aria-label",
-                "Pause"
-            );
-
-
-            centerPlayButton.innerHTML =
-                '<i class="fas fa-pause"></i>';
-
-            centerPlayButton.setAttribute(
-                "aria-label",
-                "Pause video"
-            );
-
-
-            centerPlayButton.classList.add(
-                "playing"
-            );
-
-        }
-
-        else {
-
-            isPlaying = false;
-
-
-            playPauseBtn.innerHTML =
-                '<i class="fas fa-play"></i>';
-
-            playPauseBtn.setAttribute(
-                "aria-label",
-                "Play"
-            );
-
-
-            centerPlayButton.innerHTML =
-                '<i class="fas fa-play"></i>';
-
-            centerPlayButton.setAttribute(
-                "aria-label",
-                "Play video"
-            );
-
-
-            centerPlayButton.classList.remove(
-                "playing"
-            );
-
-
-            centerPlayButton.classList.add(
-                "visible"
-            );
-        }
-    }
-
-
-    /* =========================================================
        YOUTUBE API READY
        ========================================================= */
 
-    window.onYouTubeIframeAPIReady =
-        function () {
-
-            createPlayer();
-
-        };
+    window.onYouTubeIframeAPIReady = function () {
+        createPlayer();
+    };
 
 
     /* =========================================================
        CREATE PLAYER
+       Uses the DEFAULT YouTube controls, while still passing
+       origin / source / branding parameters.
        ========================================================= */
 
     function createPlayer() {
 
         if (!VIDEO_ID) {
-
-            showError(
-                "No video is available for this lecture."
-            );
-
+            showError("No video is available for this lecture.");
             return;
         }
 
-
-        if (
-            typeof YT === "undefined" ||
-            !YT.Player
-        ) {
-
-            setTimeout(
-                createPlayer,
-                100
-            );
-
+        if (typeof YT === "undefined" || !YT.Player) {
+            setTimeout(createPlayer, 100);
             return;
         }
-
 
         try {
 
-            player =
-                new YT.Player(
-                    "player",
-                    {
+            player = new YT.Player("player", {
 
-                        videoId: VIDEO_ID,
+                videoId: VIDEO_ID,
 
-                        playerVars: {
+                playerVars: {
+                    /*
+                     * Native YouTube controls are ENABLED.
+                     * (controls: 1 is the default — we leave it.)
+                     */
 
-                            /*
-                             * Hide native YouTube controls.
-                             * Our own controls are used.
-                             */
+                    modestbranding: 1,   // reduced YouTube branding
+                    rel: 0,              // limit related videos at end
+                    playsinline: 1,      // inline playback on mobile
+                    iv_load_policy: 3,   // hide annotations
 
-                            controls: 0,
+                    /*
+                     * Explicit source / origin identity.
+                     * Required for reliable embedding + API calls.
+                     */
 
-                            modestbranding: 1,
+                    origin: window.location.origin,
 
-                            rel: 0,
+                    /*
+                     * Application source identifier.
+                     */
 
-                            playsinline: 1,
+                    source: SOURCE
+                },
 
-                            iv_load_policy: 3,
+                events: {
+                    onReady:       onPlayerReady,
+                    onStateChange: onPlayerStateChange,
+                    onError:       onPlayerError
+                }
 
-                            disablekb: 1,
+            });
 
-                            fs: 0,
-
-                            /*
-                             * Explicit source/origin identity.
-                             */
-
-                            origin:
-                                window.location.origin,
-
-                            /*
-                             * Application source identifier.
-                             */
-
-                            source: SOURCE
-                        },
-
-
-                        events: {
-
-                            onReady:
-                                onPlayerReady,
-
-                            onStateChange:
-                                onPlayerStateChange,
-
-                            onError:
-                                onPlayerError
-
-                        }
-
-                    }
-                );
-
-        }
-
-        catch (error) {
-
-            showError(
-                "Unable to initialize the video player."
-            );
-
+        } catch (error) {
+            showError("Unable to initialize the video player.");
         }
     }
 
@@ -1910,53 +791,7 @@
        ========================================================= */
 
     function onPlayerReady() {
-
         isReady = true;
-
-
-        if (loadingEl) {
-
-            loadingEl.classList.add(
-                "hidden"
-            );
-
-        }
-
-
-        try {
-
-            player.setVolume(
-                lastVolume
-            );
-
-
-            duration =
-                player.getDuration();
-
-
-            durationEl.textContent =
-                formatTime(duration);
-
-
-            updateSliderFill(
-                seekBar
-            );
-
-
-            updateSliderFill(
-                volumeSlider
-            );
-
-
-            updatePlayButtons();
-
-        }
-
-        catch (error) {
-
-            /* Player may still be initializing. */
-
-        }
     }
 
 
@@ -1965,60 +800,8 @@
        ========================================================= */
 
     function onPlayerStateChange(event) {
-
-        const state =
-            event.data;
-
-
-        if (
-            state === YT.PlayerState.PLAYING
-        ) {
-
-            isPlaying = true;
-
-        }
-
-        else {
-
-            isPlaying = false;
-
-        }
-
-
-        if (
-            duration === 0 &&
-            player &&
-            player.getDuration
-        ) {
-
-            try {
-
-                duration =
-                    player.getDuration();
-
-                durationEl.textContent =
-                    formatTime(duration);
-
-            }
-
-            catch (error) {}
-
-        }
-
-
-        updatePlayButtons();
-
-
-        if (
-            state === YT.PlayerState.ENDED
-        ) {
-
-            centerPlayButton.classList.add(
-                "visible"
-            );
-
-        }
-
+        // Reserved for future use (progress tracking, etc.)
+        void event;
     }
 
 
@@ -2028,691 +811,42 @@
 
     function onPlayerError(event) {
 
-        let message =
-            "Unable to play this video.";
-
+        let message = "Unable to play this video.";
 
         if (event && event.data === 101) {
-
-            message =
-                "This video cannot be played here.";
-
+            message = "This video cannot be played here.";
         }
-
 
         if (event && event.data === 150) {
-
-            message =
-                "This video cannot be embedded.";
-
+            message = "This video cannot be embedded.";
         }
 
-
         showError(message);
-
     }
 
 
     function showError(message) {
 
-        if (!loadingEl) {
+        if (!videoWrapper) {
             return;
         }
 
+        // Remove any existing error node
+        const existing = videoWrapper.querySelector(".player-error");
+        if (existing) {
+            existing.remove();
+        }
 
-        loadingEl.innerHTML =
-            `
-            <i
-                class="fas fa-circle-exclamation"
-                style="
-                    color:#ef4444;
-                    font-size:24px;
-                "
-            ></i>
+        const errorEl = document.createElement("div");
+        errorEl.className = "player-error";
 
-            <span class="player-error">
-                ${message}
-            </span>
-            `;
+        errorEl.innerHTML = `
+            <i class="fas fa-circle-exclamation" style="font-size:24px;"></i>
+            <span>${message}</span>
+        `;
 
-
-        loadingEl.classList.remove(
-            "hidden"
-        );
+        videoWrapper.appendChild(errorEl);
     }
-
-
-    /* =========================================================
-       PLAY / PAUSE
-       ========================================================= */
-
-    function togglePlayPause() {
-
-        if (!player || !isReady) {
-            return;
-        }
-
-
-        try {
-
-            const state =
-                player.getPlayerState();
-
-
-            if (
-                state === YT.PlayerState.PLAYING
-            ) {
-
-                player.pauseVideo();
-
-            }
-
-            else {
-
-                player.playVideo();
-
-            }
-
-        }
-
-        catch (error) {}
-
-    }
-
-
-    /* =========================================================
-       VIDEO OVERLAY CLICK
-       ========================================================= */
-
-    function handleVideoClick(event) {
-
-        /*
-         * Do not allow a click on the button
-         * to bubble and trigger the action twice.
-         */
-
-        if (
-            event.target.closest(
-                "#centerPlayButton"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        togglePlayPause();
-
-    }
-
-
-    /* =========================================================
-       CENTER PLAY BUTTON
-       ========================================================= */
-
-    centerPlayButton.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-            togglePlayPause();
-
-        }
-    );
-
-
-    /* =========================================================
-       FULL TRANSPARENT VIDEO OVERLAY
-       ========================================================= */
-
-    interactionLayer.addEventListener(
-        "click",
-        handleVideoClick
-    );
-
-
-    interactionLayer.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === " " ||
-                event.key === "Enter"
-            ) {
-
-                event.preventDefault();
-
-                togglePlayPause();
-
-            }
-
-        }
-    );
-
-
-    /* =========================================================
-       MAIN CONTROL PLAY BUTTON
-       ========================================================= */
-
-    playPauseBtn.addEventListener(
-        "click",
-        function () {
-
-            togglePlayPause();
-
-        }
-    );
-
-
-    /* =========================================================
-       MUTE
-       ========================================================= */
-
-    muteBtn.addEventListener(
-        "click",
-        function () {
-
-            if (!player || !isReady) {
-                return;
-            }
-
-
-            try {
-
-                if (player.isMuted()) {
-
-                    player.unMute();
-
-                    player.setVolume(
-                        lastVolume || 80
-                    );
-
-
-                    volumeSlider.value =
-                        lastVolume || 80;
-
-
-                    muteBtn.innerHTML =
-                        '<i class="fas fa-volume-high"></i>';
-
-                }
-
-                else {
-
-                    lastVolume =
-                        parseInt(
-                            volumeSlider.value,
-                            10
-                        ) || 80;
-
-
-                    player.mute();
-
-                    volumeSlider.value = 0;
-
-
-                    muteBtn.innerHTML =
-                        '<i class="fas fa-volume-xmark"></i>';
-
-                }
-
-
-                updateSliderFill(
-                    volumeSlider
-                );
-
-            }
-
-            catch (error) {}
-
-        }
-    );
-
-
-    /* =========================================================
-       VOLUME
-       ========================================================= */
-
-    volumeSlider.addEventListener(
-        "input",
-        function () {
-
-            if (!player || !isReady) {
-                return;
-            }
-
-
-            const volume =
-                parseInt(
-                    this.value,
-                    10
-                );
-
-
-            lastVolume = volume;
-
-
-            try {
-
-                if (volume <= 0) {
-
-                    player.mute();
-
-                    muteBtn.innerHTML =
-                        '<i class="fas fa-volume-xmark"></i>';
-
-                }
-
-                else {
-
-                    player.unMute();
-
-                    player.setVolume(
-                        volume
-                    );
-
-                    muteBtn.innerHTML =
-                        '<i class="fas fa-volume-high"></i>';
-
-                }
-
-            }
-
-            catch (error) {}
-
-
-            updateSliderFill(
-                volumeSlider
-            );
-
-        }
-    );
-
-
-    /* =========================================================
-       SEEK
-       ========================================================= */
-
-    seekBar.addEventListener(
-        "input",
-        function () {
-
-            if (
-                !player ||
-                !isReady ||
-                !duration
-            ) {
-
-                return;
-
-            }
-
-
-            const percentage =
-                parseFloat(
-                    this.value
-                ) / 100;
-
-
-            try {
-
-                player.seekTo(
-                    percentage * duration,
-                    true
-                );
-
-            }
-
-            catch (error) {}
-
-
-            updateSliderFill(
-                seekBar
-            );
-
-        }
-    );
-
-
-    /* =========================================================
-       SPEED
-       ========================================================= */
-
-    playbackSpeed.addEventListener(
-        "change",
-        function () {
-
-            if (!player || !isReady) {
-                return;
-            }
-
-
-            try {
-
-                player.setPlaybackRate(
-                    parseFloat(
-                        this.value
-                    )
-                );
-
-            }
-
-            catch (error) {}
-
-        }
-    );
-
-
-    /* =========================================================
-       FULLSCREEN
-       ========================================================= */
-
-    function toggleFullscreen() {
-
-        try {
-
-            if (!document.fullscreenElement) {
-
-                if (
-                    playerCard.requestFullscreen
-                ) {
-
-                    playerCard.requestFullscreen();
-
-                }
-
-                else if (
-                    playerCard.webkitRequestFullscreen
-                ) {
-
-                    playerCard.webkitRequestFullscreen();
-
-                }
-
-            }
-
-            else {
-
-                if (
-                    document.exitFullscreen
-                ) {
-
-                    document.exitFullscreen();
-
-                }
-
-                else if (
-                    document.webkitExitFullscreen
-                ) {
-
-                    document.webkitExitFullscreen();
-
-                }
-
-            }
-
-        }
-
-        catch (error) {}
-
-    }
-
-
-    fullscreenBtn.addEventListener(
-        "click",
-        toggleFullscreen
-    );
-
-
-    /* =========================================================
-       FULLSCREEN ICON
-       ========================================================= */
-
-    function updateFullscreenIcon() {
-
-        if (document.fullscreenElement) {
-
-            fullscreenBtn.innerHTML =
-                '<i class="fas fa-compress"></i>';
-
-        }
-
-        else {
-
-            fullscreenBtn.innerHTML =
-                '<i class="fas fa-expand"></i>';
-
-        }
-
-    }
-
-
-    document.addEventListener(
-        "fullscreenchange",
-        updateFullscreenIcon
-    );
-
-
-    /* =========================================================
-       PROGRESS
-       ========================================================= */
-
-    function updateProgress() {
-
-        if (
-            !player ||
-            !isReady
-        ) {
-
-            return;
-
-        }
-
-
-        try {
-
-            const current =
-                player.getCurrentTime();
-
-
-            if (
-                duration === 0
-            ) {
-
-                duration =
-                    player.getDuration();
-
-            }
-
-
-            if (duration > 0) {
-
-                const percentage =
-                    (current / duration) * 100;
-
-
-                seekBar.value =
-                    percentage;
-
-
-                currentTimeEl.textContent =
-                    formatTime(current);
-
-
-                durationEl.textContent =
-                    formatTime(duration);
-
-
-                updateSliderFill(
-                    seekBar
-                );
-
-            }
-
-        }
-
-        catch (error) {}
-
-    }
-
-
-    setInterval(
-        updateProgress,
-        500
-    );
-
-
-    /* =========================================================
-       NAVIGATION
-       ========================================================= */
-
-    window.pauseBeforeNavigate =
-        function (event) {
-
-            if (
-                player &&
-                isReady &&
-                isPlaying
-            ) {
-
-                try {
-
-                    player.pauseVideo();
-
-                }
-
-                catch (error) {}
-
-            }
-
-
-            return true;
-
-        };
-
-
-    /* =========================================================
-       KEYBOARD CONTROLS
-       ========================================================= */
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            /*
-             * Don't intercept typing.
-             */
-
-            const tag =
-                event.target.tagName;
-
-
-            if (
-                tag === "INPUT" ||
-                tag === "SELECT" ||
-                tag === "TEXTAREA"
-            ) {
-
-                return;
-
-            }
-
-
-            switch (event.key) {
-
-                case " ":
-
-                    event.preventDefault();
-
-                    togglePlayPause();
-
-                    break;
-
-
-                case "ArrowRight":
-
-                    event.preventDefault();
-
-                    if (
-                        player &&
-                        isReady &&
-                        duration
-                    ) {
-
-                        try {
-
-                            player.seekTo(
-                                Math.min(
-                                    player.getCurrentTime() + 5,
-                                    duration
-                                ),
-                                true
-                            );
-
-                        }
-
-                        catch (error) {}
-
-                    }
-
-                    break;
-
-
-                case "ArrowLeft":
-
-                    event.preventDefault();
-
-                    if (
-                        player &&
-                        isReady
-                    ) {
-
-                        try {
-
-                            player.seekTo(
-                                Math.max(
-                                    player.getCurrentTime() - 5,
-                                    0
-                                ),
-                                true
-                            );
-
-                        }
-
-                        catch (error) {}
-
-                    }
-
-                    break;
-
-
-                case "m":
-                case "M":
-
-                    event.preventDefault();
-
-                    muteBtn.click();
-
-                    break;
-
-
-                case "f":
-                case "F":
-
-                    event.preventDefault();
-
-                    toggleFullscreen();
-
-                    break;
-
-            }
-
-        }
-    );
 
 
     /* =========================================================
@@ -2721,56 +855,20 @@
 
     function initialize() {
 
-        updateSliderFill(
-            seekBar
-        );
+        // Avoid loading the API more than once.
+        if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
 
-        updateSliderFill(
-            volumeSlider
-        );
-
-
-        /*
-         * Avoid loading the API more than once.
-         */
-
-        if (
-            document.querySelector(
-                'script[src*="youtube.com/iframe_api"]'
-            )
-        ) {
-
-            if (
-                typeof YT !== "undefined" &&
-                YT.Player
-            ) {
-
+            if (typeof YT !== "undefined" && YT.Player) {
                 createPlayer();
-
             }
 
             return;
-
         }
 
-
-        const script =
-            document.createElement(
-                "script"
-            );
-
-
-        script.src =
-            "https://www.youtube.com/iframe_api";
-
-
+        const script = document.createElement("script");
+        script.src = "https://www.youtube.com/iframe_api";
         script.async = true;
-
-
-        document.head.appendChild(
-            script
-        );
-
+        document.head.appendChild(script);
     }
 
 
@@ -2778,24 +876,10 @@
        START
        ========================================================= */
 
-    if (
-        document.readyState === "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            {
-                once: true
-            }
-        );
-
-    }
-
-    else {
-
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialize, { once: true });
+    } else {
         initialize();
-
     }
 
 })();
